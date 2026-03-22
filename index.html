@@ -401,8 +401,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 </div>
 
 <script>
-// ══ API KEY — paste your Anthropic key here for the brief to work ══
-var ANTHROPIC_KEY = "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";
+
 
 // ══ BUSINESS CONSTANTS — what the tool knows about W10W ══
 var BIZ = {
@@ -486,43 +485,62 @@ var INFRA_ORDERING=[
 
 // ══ PERSISTENT STORAGE ══
 async function saveState() {
+  var state = {
+    staff: staff,
+    week: WEEK,
+    events: teamEvents,
+    checks: checks,
+    updatedAt: new Date().toISOString()
+  };
+  var json = JSON.stringify(state);
+  // Try Claude artifact storage
   try {
-    var state = {
-      staff: staff,
-      week: WEEK,
-      events: teamEvents,
-      checks: checks,
-      updatedAt: new Date().toISOString(),
-      updatedBy: "team"
-    };
-    await window.storage.set("w10w-state", JSON.stringify(state));
-    lastUpdated = state.updatedAt;
-    renderStamp();
-  } catch(e) { console.log("save error:", e); }
+    if(window.storage && typeof window.storage.set === "function") {
+      await window.storage.set("w10w-state", json);
+    }
+  } catch(e) {}
+  // Always also save to localStorage (works on GitHub Pages)
+  try {
+    localStorage.setItem("w10w-state", json);
+  } catch(e) {}
+  lastUpdated = state.updatedAt;
+  renderStamp();
 }
 
 async function loadState() {
+  // Try Claude artifact storage first
   try {
-    var result = await window.storage.get("w10w-state");
-    if(result && result.value) {
-      var state = JSON.parse(result.value);
+    if(window.storage && typeof window.storage.get === "function") {
+      var result = await window.storage.get("w10w-state");
+      if(result && result.value) {
+        var state = JSON.parse(result.value);
+        staff = state.staff || JSON.parse(JSON.stringify(DEFAULT_STAFF));
+        WEEK = state.week || JSON.parse(JSON.stringify(DEFAULT_WEEK));
+        teamEvents = state.events || JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+        checks = state.checks || {};
+        lastUpdated = state.updatedAt || null;
+        return;
+      }
+    }
+  } catch(e) {}
+  // Fallback: localStorage for GitHub Pages / hosted environments
+  try {
+    var saved = localStorage.getItem("w10w-state");
+    if(saved) {
+      var state = JSON.parse(saved);
       staff = state.staff || JSON.parse(JSON.stringify(DEFAULT_STAFF));
       WEEK = state.week || JSON.parse(JSON.stringify(DEFAULT_WEEK));
       teamEvents = state.events || JSON.parse(JSON.stringify(DEFAULT_EVENTS));
       checks = state.checks || {};
       lastUpdated = state.updatedAt || null;
-    } else {
-      staff = JSON.parse(JSON.stringify(DEFAULT_STAFF));
-      WEEK = JSON.parse(JSON.stringify(DEFAULT_WEEK));
-      teamEvents = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-      checks = {};
+      return;
     }
-  } catch(e) {
-    staff = JSON.parse(JSON.stringify(DEFAULT_STAFF));
-    WEEK = JSON.parse(JSON.stringify(DEFAULT_WEEK));
-    teamEvents = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-    checks = {};
-  }
+  } catch(e) {}
+  // Default data
+  staff = JSON.parse(JSON.stringify(DEFAULT_STAFF));
+  WEEK = JSON.parse(JSON.stringify(DEFAULT_WEEK));
+  teamEvents = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  checks = {};
 }
 
 function renderStamp() {
@@ -665,46 +683,94 @@ function buildBriefContext(){
 }
 
 var briefCacheKey = "";
-async function generateBrief(force){
-  var ctx = buildBriefContext();
-  var cacheKey = ctx.substring(0,200);
-  if(!force && briefCache && briefCacheKey===cacheKey){
-    document.getElementById("brief-text").innerHTML=briefCache;
-    return;
-  }
-  document.getElementById("brief-text").className="brief-text brief-loading";
-  document.getElementById("brief-text").textContent="Analysing roster and schedule…";
 
-  try {
-    var resp = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-api-key":ANTHROPIC_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:300,
-        system:"You are the operational brain of WEST10WEST restaurant. You write exactly like the owner Ryan Reynolds — direct, minimal, no filler. You speak to Tanner Floyd (Managing Partner) as his deputy. Short sentences. Specific names and numbers. No corporate language.",
-        messages:[{role:"user",content:ctx}]
-      })
+function generateBrief(force){
+  var h = calcHealth();
+  var barT1s = staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var barT2s = staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
+  var flexStaff = staff.filter(function(s){return s.tier==="Flex";});
+  var hasPlaceholder = staff.some(function(s){return s.name.includes("New hire");});
+  var hasEvents = staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var fLeads = staff.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
+  var trainees = staff.filter(function(s){return s.tier==="Training";});
+  var kaveka = staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
+
+  // Find bar shift gaps this week
+  var barGapDays = [];
+  DAYS.forEach(function(d){
+    (WEEK[d]||[]).forEach(function(sh){
+      if(sh.pos.toLowerCase().includes("bar")){
+        var st = shiftStatus(sh.pid);
+        if(st.cls !== "st-ok") barGapDays.push(d);
+      }
     });
-    var data = await resp.json();
-    if(data.content&&data.content[0]){
-      var text = data.content[0].text;
-      // Bold key names
-      text = text.replace(/\b(Grace|Laura|Eamon|Elena|Nathalie|Tanner|Nikko|Rohith|George|Camille|Kaveka)\b/g,"<strong>$1</strong>");
-      briefCache = text;
-      briefCacheKey = cacheKey;
-      document.getElementById("brief-text").className="brief-text";
-      document.getElementById("brief-text").innerHTML=text;
-      var now=new Date();
-      document.getElementById("brief-stamp").textContent="Generated "+now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})+" at "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  });
+  // Deduplicate days
+  barGapDays = barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
+
+  var sentences = [];
+  var actions = 0;
+
+  // Bar coverage — most critical
+  if(barT1s.length === 0){
+    sentences.push("There is no dedicated T1 bartender on the roster right now — every bar shift this week is at risk across all 7 seats.");
+    actions++;
+  } else if(barT1s.length === 1){
+    var name = barT1s[0].name.split(" ")[0];
+    if(barGapDays.length > 0){
+      sentences.push("<strong>"+name+"</strong> is your only reliable bar cover — "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has a":"have") +" a coverage gap before the schedule goes out.");
     } else {
-      document.getElementById("brief-text").className="brief-text";
-      document.getElementById("brief-text").textContent="Brief unavailable — check roster data.";
+      sentences.push("<strong>"+name+"</strong> is carrying the bar on her own this week. One callout and you're back in last Saturday's position.");
     }
-  } catch(e){
-    document.getElementById("brief-text").className="brief-text";
-    document.getElementById("brief-text").textContent="Brief unavailable — API connection required.";
+    actions++;
+  } else {
+    var names = barT1s.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
+    if(barGapDays.length > 0){
+      sentences.push(names+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap — assign a backup before publishing.");
+      actions++;
+    } else {
+      sentences.push("Bar coverage looks solid this week — "+names+" are both scheduled with backups in place.");
+    }
   }
+
+  // T2 backup bench
+  if(barT2s.length < 2){
+    var t2names = barT2s.length ? barT2s.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ") : "no one";
+    sentences.push("Bar backup bench is thin — "+t2names+(barT2s.length?" is the only T2":", no T2 on the bar")+" — Camille's cross-training session for <strong>Elena</strong> and <strong>Eamon</strong> needs to happen before April 4.");
+    actions++;
+  }
+
+  // Kaveka departure
+  if(kaveka){
+    sentences.push("<strong>Kaveka</strong> exits April 4. Bar infrastructure handoff — cocktail guide, ordering forms, COGS baseline — needs to be complete before then.");
+    actions++;
+  }
+
+  // Trainees
+  if(trainees.length > 0){
+    var tnames = trainees.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ");
+    sentences.push(tnames+(trainees.length===1?" is":" are")+" still in training — supervision load is on the floor leads until they graduate to T3.");
+  }
+
+  // Events role
+  if(!hasEvents){
+    sentences.push("Events Lead is still unfilled — private dining is the single biggest untapped revenue opportunity in 2026 and it's sitting at zero.");
+    actions++;
+  }
+
+  // Closing line
+  sentences.push(actions === 0
+    ? "Coverage is in good shape — nothing critical to resolve before publishing this week."
+    : actions + " thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
+
+  var text = sentences.join(" ");
+  briefCache = text;
+  briefCacheKey = "local";
+
+  document.getElementById("brief-text").className = "brief-text";
+  document.getElementById("brief-text").innerHTML = text;
+  var now = new Date();
+  document.getElementById("brief-stamp").textContent = "Generated " + ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()] + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()] + " " + now.getDate() + " at " + now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
 }
 
 // ══ PILLS ══
@@ -1047,8 +1113,6 @@ async function init(){
   renderStamp();
   generateBrief(false);
 }
-
-init();
 </script>
 </body>
 </html>
