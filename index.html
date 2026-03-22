@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>W10W · Team Coverage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d0d0b;--ink-2:#3a3a36;--ink-3:#6e6e68;--ink-4:#a8a89e;--line:#e8e6e0;--line-2:#d4d1c8;--bg:#f7f5f0;--surface:#fff;--surface-2:#f2f0eb;--green:#1a2e1a;--green-2:#2d4a2d;--green-accent:#3d6b3d;--green-light:#edf4ed;--teal:#0d7a5a;--teal-bg:#e8f5f0;--teal-text:#064a37;--amber:#9a5c00;--amber-bg:#fef3e2;--amber-text:#6b3d00;--red:#b02020;--red-bg:#fdf0f0;--red-text:#7a1515;--blue:#1a5c9a;--blue-bg:#eef4fb;--blue-text:#0d3d6b;--purple:#5a3a9a;--purple-bg:#f0edfb;--purple-text:#3a2070;--r:8px;--r-sm:5px;--r-lg:12px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.5}
+
+/* HEADER */
+.header{background:var(--green);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.04em}
+.logo-name{font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;color:rgba(255,255,255,.9);letter-spacing:.1em;text-transform:uppercase}
+.logo-sep{width:1px;height:16px;background:rgba(255,255,255,.2)}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.5)}
+.header-right{display:flex;align-items:center;gap:14px}
+.status-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:4px 10px;cursor:default;transition:background .15s}
+.status-chip:hover{background:rgba(255,255,255,.13)}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.pulse{animation:pulse 2s infinite}
+.status-dot.amber{background:#f59e0b}
+.status-dot.green{background:#34d399}
+.status-dot.blue{background:#60a5fa}
+.status-dot.red{background:#f87171}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.status-text{font-size:11px;color:rgba(255,255,255,.75);font-family:'Geist Mono',monospace;white-space:nowrap}
+.header-date{font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;color:rgba(255,255,255,.6)}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--line);padding:0 28px;display:flex;align-items:center;gap:2px;overflow-x:auto}
+.nav-tab{padding:0 14px;height:44px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--ink-3);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;letter-spacing:.01em}
+.nav-tab:hover{color:var(--ink)}
+.nav-tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+.nav-badge{font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--red-bg);color:var(--red)}
+.nav-badge.ok{background:var(--teal-bg);color:var(--teal)}
+
+/* LAYOUT */
+.page{max-width:1000px;margin:0 auto;padding:24px 20px 80px}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* TAB INTRO */
+.tab-intro{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:18px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow)}
+.ti-icon{width:32px;height:32px;border-radius:var(--r-sm);background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ti-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.ti-desc{font-size:12px;color:var(--ink-3);line-height:1.6}
+.ti-how{font-size:11px;color:var(--ink-4);margin-top:4px;font-style:italic}
+
+/* HEALTH */
+.health-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.hcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 20px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.hcard.bar::before{background:linear-gradient(90deg,var(--green),var(--green-accent))}
+.hcard.floor::before{background:linear-gradient(90deg,var(--teal),#1aaa7a)}
+.hcard-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px;font-family:'Geist Mono',monospace}
+.hcard-stat{font-size:20px;font-weight:600;margin-bottom:2px;transition:color .4s}
+.hcard-det{font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;margin-bottom:10px}
+.hcard-pills{display:flex;gap:5px;flex-wrap:wrap}
+.hcard-ring{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:52px;height:52px}
+
+/* ALERTS */
+.alert{border-radius:var(--r);padding:10px 14px;font-size:12px;line-height:1.6;margin-bottom:12px;border:1px solid}
+.alert strong{font-weight:600}
+.al-green{background:var(--teal-bg);color:var(--teal-text);border-color:#b3ddd2}
+.al-amber{background:var(--amber-bg);color:var(--amber-text);border-color:#f5d28a}
+.al-red{background:var(--red-bg);color:var(--red-text);border-color:#f0b8b8}
+.al-purple{background:var(--purple-bg);color:var(--purple-text);border-color:#c8bcf0}
+.al-blue{background:var(--blue-bg);color:var(--blue-text);border-color:#b0ccec}
+
+/* PILLS */
+.pill{font-size:10px;font-weight:600;font-family:'Geist Mono',monospace;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;white-space:nowrap}
+.p-green{background:var(--teal-bg);color:var(--teal-text)}
+.p-blue{background:var(--blue-bg);color:var(--blue-text)}
+.p-gray{background:var(--surface-2);color:var(--ink-3)}
+.p-amber{background:var(--amber-bg);color:var(--amber-text)}
+.p-red{background:var(--red-bg);color:var(--red-text)}
+.p-purple{background:var(--purple-bg);color:var(--purple-text)}
+.p-training{background:#fff8e1;color:#7a5500}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.card-hdr{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:600;letter-spacing:.02em}
+.card-sub{font-size:11px;color:var(--ink-3);margin-top:1px}
+
+/* METRICS STRIP */
+.mstrip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.mstrip-cell{padding:12px 16px;border-right:1px solid var(--line);text-align:center}
+.mstrip-cell:last-child{border-right:none}
+.mstrip-num{font-size:21px;font-weight:600;font-family:'Geist Mono',monospace;line-height:1;margin-bottom:4px}
+.mstrip-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-4);font-family:'Geist Mono',monospace}
+
+/* SECTION DIVIDER */
+.sdiv{padding:8px 18px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace;background:var(--surface-2);border-bottom:1px solid var(--line);border-top:1px solid var(--line);display:flex;align-items:center;gap:8px}
+
+/* STAFF ROWS */
+.srow{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line);transition:background .1s}
+.srow:last-child{border-bottom:none}
+.srow:hover{background:var(--surface-2)}
+.srow-name{font-size:13px;font-weight:500;margin-bottom:1px}
+.srow-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.role-lbl{font-size:11px;color:var(--ink-3);cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s,color .15s;display:inline}
+.role-lbl:hover{color:var(--ink);border-bottom-color:var(--ink-3)}
+.role-inp{font-size:11px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:2px 6px;background:var(--bg);color:var(--ink);display:none;width:170px}
+.role-inp:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 2px rgba(61,107,61,.1)}
+.srow-shifts{font-size:10px;color:var(--ink-4);font-family:'Geist Mono',monospace}
+.cross-tag{font-size:10px;background:var(--blue-bg);color:var(--blue-text);padding:1px 6px;border-radius:4px;font-family:'Geist Mono',monospace;font-weight:500}
+.trn-tag{font-size:10px;color:#7a5500}
+.tier-sel{font-size:11px;font-family:'Geist Mono',monospace;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface);color:var(--ink);cursor:pointer}
+.tier-sel:focus{outline:none;border-color:var(--green-accent)}
+.icon-btn{width:26px;height:26px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.icon-btn.del:hover{background:var(--red-bg);color:var(--red-text);border-color:#f0b8b8}
+
+/* ADD STRIP */
+.add-strip{padding:11px 18px;display:flex;gap:8px;flex-wrap:wrap;background:var(--surface-2);border-top:1px solid var(--line)}
+.add-strip input,.add-strip select{font-size:12px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;background:var(--surface);color:var(--ink)}
+.add-strip input{flex:1;min-width:100px}
+.add-strip input:focus,.add-strip select:focus{outline:none;border-color:var(--green-accent)}
+.btn{font-size:12px;font-family:'Geist Mono',monospace;font-weight:500;padding:6px 14px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink);cursor:pointer;transition:all .15s;letter-spacing:.02em;white-space:nowrap}
+.btn:hover{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-primary:hover{background:var(--green-2);border-color:var(--green-2)}
+.btn-sm{font-size:11px;padding:4px 10px}
+
+/* WEEK */
+.week-nav{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.day-btn{font-size:11px;font-family:'Geist Mono',monospace;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);cursor:pointer;transition:all .15s}
+.day-btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.day-btn.active{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.shift-table{width:100%;border-collapse:collapse}
+.shift-thead th{padding:8px 18px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace;text-align:left;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.shift-tbody tr{border-bottom:1px solid var(--line);transition:background .1s}
+.shift-tbody tr:last-child{border-bottom:none}
+.shift-tbody tr:hover{background:var(--surface-2)}
+.shift-tbody td{padding:11px 18px;font-size:13px;vertical-align:top}
+.shift-time{font-family:'Geist Mono',monospace;font-size:11px;color:var(--ink-3)}
+.shift-back{font-size:11px;color:var(--ink-3);margin-top:2px}
+.st-ok{font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--teal)}
+.st-warn{font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--amber)}
+.st-fail{font-size:11px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--red)}
+
+/* WEEK EDITOR */
+.week-edit-hdr{padding:11px 18px;background:var(--surface-2);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.week-edit-row{display:grid;grid-template-columns:90px 120px 1fr auto;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line);align-items:center}
+.week-edit-row:last-child{border-bottom:none}
+.week-edit-row select,.week-edit-row input[type=text]{font-size:11px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:4px 8px;background:var(--surface);color:var(--ink);width:100%}
+.week-edit-row select:focus,.week-edit-row input:focus{outline:none;border-color:var(--green-accent)}
+
+/* CALLOUT */
+.co-sel{width:100%;font-size:13px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:9px 12px;background:var(--surface);color:var(--ink);cursor:pointer}
+.co-sel:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 2px rgba(61,107,61,.1)}
+.cascade-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cascade-row:last-child{border-bottom:none}
+.cascade-num{width:24px;height:24px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--ink-3);flex-shrink:0;margin-top:1px}
+.cascade-num.cam{background:var(--purple-bg);border-color:#c8bcf0;color:var(--purple-text)}
+.cascade-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.cascade-sub{font-size:11px;color:var(--ink-3)}
+
+/* FEEDBACK */
+.fb-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow);margin-bottom:10px}
+.fb-hdr{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.fb-icon{width:28px;height:28px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.fb-icon.critical{background:var(--red-bg)}
+.fb-icon.warning{background:var(--amber-bg)}
+.fb-icon.opportunity{background:var(--blue-bg)}
+.fb-icon.healthy{background:var(--teal-bg)}
+.fb-title{font-size:12px;font-weight:600}
+.fb-ctx{font-size:11px;color:var(--ink-3);margin-top:1px}
+.fb-body{padding:12px 16px;font-size:12px;color:var(--ink-2);line-height:1.7}
+.fb-action{padding:9px 16px;background:var(--surface-2);border-top:1px solid var(--line);font-size:11px;font-weight:600;color:var(--ink-3);font-family:'Geist Mono',monospace;letter-spacing:.02em}
+
+/* INFRA */
+.infra-row{display:flex;align-items:flex-start;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);transition:background .1s;cursor:pointer}
+.infra-row:hover{background:var(--surface-2)}
+.infra-row:last-child{border-bottom:none}
+.infra-chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line-2);background:var(--surface);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;user-select:none}
+.infra-chk.done{background:var(--teal);border-color:var(--teal)}
+.infra-chk.done::after{content:'✓';color:#fff;font-size:9px;font-weight:700}
+.infra-text{font-size:13px;line-height:1.5}
+.infra-owner{font-size:11px;color:var(--ink-3);margin-top:2px;font-family:'Geist Mono',monospace}
+
+/* TIMELINE */
+.tl-row{display:flex;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.tl-row:last-child{border-bottom:none}
+.tl-num{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'Geist Mono',monospace;flex-shrink:0;margin-top:2px}
+.tl-date{font-size:13px;font-weight:600;margin-bottom:2px}
+.tl-desc{font-size:12px;color:var(--ink-3);line-height:1.6}
+
+/* RATE GRID */
+.rate-grid{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.rate-cell{padding:14px 18px;border-right:1px solid var(--line)}
+.rate-cell:last-child{border-right:none}
+.rate-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-4);font-family:'Geist Mono',monospace;margin-bottom:4px}
+.rate-val{font-size:16px;font-weight:600;font-family:'Geist Mono',monospace}
+.rate-note{font-size:11px;color:var(--ink-3);margin-top:2px}
+
+/* HEADER EVENTS MODAL */
+.events-panel{position:absolute;top:56px;right:20px;width:300px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-md);z-index:200;display:none}
+.events-panel.open{display:block}
+.ep-hdr{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.ep-title{font-size:12px;font-weight:600}
+.ep-event{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:10px}
+.ep-event:last-child{border-bottom:none}
+.ep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ep-event-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.ep-event-sub{font-size:11px;color:var(--ink-3)}
+.ep-add{padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:6px}
+.ep-add input,.ep-add select{font-size:11px;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:4px 8px;background:var(--bg);color:var(--ink);flex:1}
+.ep-add input:focus,.ep-add select:focus{outline:none;border-color:var(--green-accent)}
+
+@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.srow{grid-template-columns:1fr auto auto auto}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">W10W</div>
+    <div class="logo-sep"></div>
+    <div class="logo-name">West10West</div>
+    <div class="logo-sep"></div>
+    <div class="logo-sub">Team Coverage</div>
+  </div>
+  <div class="header-right">
+    <div id="header-chips" style="display:flex;gap:8px;position:relative"></div>
+    <div class="header-date" id="live-date"></div>
+  </div>
+</div>
+
+<!-- Events panel (click chip to open) -->
+<div class="events-panel" id="events-panel">
+  <div class="ep-hdr">
+    <div class="ep-title">Team alerts</div>
+    <button class="btn btn-sm" onclick="closeEventsPanel()">✕</button>
+  </div>
+  <div id="ep-events-list"></div>
+  <div class="ep-add">
+    <input type="text" id="ep-name" placeholder="Name / note" />
+    <select id="ep-type">
+      <option value="exit">Exit</option>
+      <option value="hiring">Hiring</option>
+      <option value="onboarding">Onboarding</option>
+      <option value="change">Role change</option>
+    </select>
+    <input type="text" id="ep-date" placeholder="Apr 4" style="width:60px;flex:none" />
+    <button class="btn btn-sm btn-primary" onclick="addEvent()">+</button>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="showTab('roster')">Roster <span class="nav-badge ok" id="nb-roster">—</span></button>
+  <button class="nav-tab" onclick="showTab('week')">Week Schedule</button>
+  <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
+  <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
+  <button class="nav-tab" onclick="showTab('infra')">Infrastructure</button>
+</div>
+
+<div class="page">
+
+<!-- ═══════════ ROSTER ═══════════ -->
+<div id="tab-roster" class="tab-pane active">
+  <div class="tab-intro">
+    <div class="ti-icon">👥</div>
+    <div>
+      <div class="ti-title">Team Roster & Coverage Tiers</div>
+      <div class="ti-desc">The live state of the team. Health scores update the moment you make any change — T1/T2 bar coverage and floor leads are the two numbers that matter most. Grace and Laura appearing in both Bar and Floor reflects their cross-trained status.</div>
+      <div class="ti-how">Click any role label to edit it inline — team placement updates automatically from the role title. Use ⇄ to manually override teams. Delete departures with ✕.</div>
+    </div>
+  </div>
+  <div class="health-row" id="health-row"></div>
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title">Full Roster</div><div class="card-sub">Role edits trigger automatic team re-assignment. Tier changes recalculate health instantly.</div></div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <span class="pill p-green" style="font-size:9px">T1</span>
+        <span class="pill p-blue" style="font-size:9px">T2</span>
+        <span class="pill p-gray" style="font-size:9px">T3</span>
+        <span class="pill p-training" style="font-size:9px">Training</span>
+        <span class="pill p-purple" style="font-size:9px">Consultant</span>
+      </div>
+    </div>
+    <div class="mstrip">
+      <div class="mstrip-cell"><div class="mstrip-num" id="m-t1">—</div><div class="mstrip-lbl">T1 Full</div></div>
+      <div class="mstrip-cell"><div class="mstrip-num" id="m-t2">—</div><div class="mstrip-lbl">T2 Backup</div></div>
+      <div class="mstrip-cell"><div class="mstrip-num" id="m-t3">—</div><div class="mstrip-lbl">T3 Support</div></div>
+      <div class="mstrip-cell"><div class="mstrip-num" id="m-trn">—</div><div class="mstrip-lbl">Training</div></div>
+    </div>
+    <div id="roster-bar"></div>
+    <div id="roster-floor"></div>
+    <div id="roster-kitchen"></div>
+    <div class="add-strip">
+      <input type="text" id="add-name" placeholder="Full name" />
+      <input type="text" id="add-role" placeholder="Role (e.g. Bartender / Server)" />
+      <select id="add-tier" style="font-family:'Geist Mono',monospace;font-size:11px">
+        <option>T1</option><option>T2</option><option>T3</option>
+        <option>Training</option><option>Consultant</option><option>None</option>
+      </select>
+      <button class="btn btn-primary" onclick="addStaff()">+ Add member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ WEEK ═══════════ -->
+<div id="tab-week" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">📅</div>
+    <div>
+      <div class="ti-title">Weekly Schedule & Coverage Validation</div>
+      <div class="ti-desc">Set who's on each shift for each day. Every bar shift gets a live status check — qualified primary and backup are both required for green. Tanner updates this at the start of each week.</div>
+      <div class="ti-how">Select a day, then click "Edit shifts" to assign staff via dropdown. Hit Save to lock it in. Green = covered. Amber = weak coverage. Red = fix before publishing.</div>
+    </div>
+  </div>
+  <div class="week-nav" id="day-btns"></div>
+  <div class="card">
+    <div class="card-hdr">
+      <div><div class="card-title" id="week-card-title">Monday shifts</div><div class="card-sub">Bar shifts require T1/T2 primary + at least one qualified backup.</div></div>
+      <button class="btn btn-sm" onclick="toggleWeekEditor()" id="edit-btn">Edit shifts</button>
+    </div>
+    <div id="week-view">
+      <table class="shift-table">
+        <thead class="shift-thead"><tr><th style="width:90px">Position</th><th style="width:100px">Time</th><th>Assigned · Backup</th><th style="text-align:right;padding-right:18px">Status</th></tr></thead>
+        <tbody id="shift-tbody" class="shift-tbody"></tbody>
+      </table>
+    </div>
+    <div id="week-editor" style="display:none">
+      <div class="week-edit-hdr">
+        <span style="font-size:12px;font-weight:500">Edit assignments for <span id="editor-day-label"></span></span>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="addShiftRow()">+ Shift</button><button class="btn btn-sm btn-primary" onclick="saveWeek()">Save</button></div>
+      </div>
+      <div id="editor-rows"></div>
+    </div>
+  </div>
+  <div id="week-summary"></div>
+</div>
+
+<!-- ═══════════ CALLOUT ═══════════ -->
+<div id="tab-callout" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">🚨</div>
+    <div>
+      <div class="ti-title">Callout Simulator</div>
+      <div class="ti-desc">Run any callout scenario before it happens. Select who called out and see the exact coverage cascade — first call, fallbacks, and whether Tanner or Camille ever need to step in. The Kaveka situation tonight was preventable with this tool.</div>
+      <div class="ti-how">Select the staff member who called out. Work through the numbered cascade in order. Use this at the start of each week to pre-identify your highest callout risk.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--line)">
+      <select class="co-sel" id="callout-sel" onchange="runCallout()"><option value="">Select who called out…</option></select>
+    </div>
+    <div style="padding:16px 18px" id="callout-result"><div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:'Geist Mono',monospace">Select a staff member above</div></div>
+  </div>
+</div>
+
+<!-- ═══════════ FEEDBACK ═══════════ -->
+<div id="tab-feedback" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">💡</div>
+    <div>
+      <div class="ti-title">Operational Insights & Hiring Signals</div>
+      <div class="ti-desc">Live flags from the current roster. W10W runs 9 bar shifts weekly across 7 bar seats at ~$80 average — every coverage gap is quantifiable revenue risk. Recalculates every time the roster changes.</div>
+      <div class="ti-how">Review before publishing the weekly schedule. Critical and Warning flags need a response. Opportunities are longer-horizon investments in team health and revenue.</div>
+    </div>
+  </div>
+  <div id="feedback-cards"></div>
+</div>
+
+<!-- ═══════════ INFRA ═══════════ -->
+<div id="tab-infra" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">🔧</div>
+    <div>
+      <div class="ti-title">Bar Infrastructure Buildout</div>
+      <div class="ti-desc">Camille and Ryan own the build. The new T1 hire inherits a complete system — cocktail guide, ordering forms, COGS tracker, P&L framework — and executes against it from day one.</div>
+      <div class="ti-how">Check items off as they're completed. Target: all infrastructure live before the new T1's first shift. The transition timeline shows the critical path.</div>
+    </div>
+  </div>
+  <div class="card"><div class="card-hdr"><div class="card-title">Camille's consulting scope</div></div><div id="infra-camille"></div></div>
+  <div class="card"><div class="card-hdr"><div class="card-title">Ordering + financial infrastructure</div></div><div id="infra-ordering"></div></div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-title">Camille fee structure</div></div>
+    <div class="rate-grid">
+      <div class="rate-cell"><div class="rate-lbl">Menu dev session</div><div class="rate-val">$500–750</div><div class="rate-note">~3–4 hrs incl. prep</div></div>
+      <div class="rate-cell"><div class="rate-lbl">Staff training</div><div class="rate-val">$300–400</div><div class="rate-note">Per on-shift session</div></div>
+      <div class="rate-cell"><div class="rate-lbl">Emergency shift</div><div class="rate-val">Guest rate + tips</div><div class="rate-note">Bartender rate only</div></div>
+    </div>
+    <div style="padding:11px 18px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--line)">Deliverable-based, not retainer. Q1 target: 2 menu sessions + 1 training session before new T1 starts. Quarterly review thereafter.</div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><div class="card-title">Transition timeline</div></div>
+    <div class="tl-row"><div class="tl-num">1</div><div><div class="tl-date">Now — Apr 4</div><div class="tl-desc">Kaveka transition. Tanner covers bar ops. Grace + Laura as primary T1/T2 bar coverage. Begin Camille engagement and post T1 JD to Indeed.</div></div></div>
+    <div class="tl-row"><div class="tl-num">2</div><div><div class="tl-date">Apr 5 — Apr 18</div><div class="tl-desc">New T1 hire. Camille builds Cocktail Menu Guide + back bar strategy + trains T2s (Elena, Eamon). Ordering forms + Apps Script live. Camille + Ryan establish COGS baseline.</div></div></div>
+    <div class="tl-row"><div class="tl-num">3</div><div><div class="tl-date">Apr 19+</div><div class="tl-desc">New T1 onboarded into full infrastructure. Bar operates independently. Camille on quarterly retainer for menu refresh + P&L review. Health target: 80%+.</div></div></div>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+// ══════════ DATA ══════════
+var staff = [
+  {id:1,name:"New hire (T1)",role:"Bartender",tier:"T1",shifts:0,_teams:["bar"]},
+  {id:2,name:"Camille",role:"Bartender / Consultant",tier:"Consultant",shifts:0},
+  {id:3,name:"Grace Lyons",role:"Bartender / Server",tier:"T1",shifts:41},
+  {id:4,name:"Laura Paganello",role:"Bartender / Server",tier:"T2",shifts:38},
+  {id:5,name:"Nikko Pineda",role:"Bartender",tier:"T2",shifts:2},
+  {id:6,name:"Rohith Ram",role:"Bartender",tier:"T2",shifts:3},
+  {id:7,name:"Tanner Floyd",role:"Managing Partner",tier:"T1",shifts:38,_teams:["bar","floor"]},
+  {id:8,name:"Elena Mucilli",role:"Floor Lead",tier:"T2",shifts:29},
+  {id:9,name:"Nathalie Fernandes",role:"Floor Lead",tier:"T2",shifts:46},
+  {id:10,name:"Chelsea Udoye",role:"Server",tier:"T3",shifts:42},
+  {id:11,name:"Sayer Williams",role:"Host",tier:"T3",shifts:18},
+  {id:12,name:"Eamon Ida",role:"Host",tier:"T2",shifts:6},
+  {id:13,name:"George Witnauer",role:"Server",tier:"Training",shifts:1},
+  {id:14,name:"Adrian Policarpio Angel",role:"Cook",tier:"None",shifts:56},
+  {id:15,name:"Dave Arauz",role:"Line Cook",tier:"None",shifts:55},
+  {id:16,name:"Yatta Diop",role:"Cook",tier:"None",shifts:46},
+  {id:17,name:"Candido Flores",role:"Cook",tier:"None",shifts:13},
+  {id:18,name:"Arturo Peres Jr",role:"Cook",tier:"None",shifts:20},
+  {id:19,name:"Carlos Sicajau",role:"Cook",tier:"None",shifts:37}
+];
+
+// Team events: shown as header chips. Auto-expire past events.
+var teamEvents = [
+  {id:1, name:"Kaveka", type:"exit", date:"Apr 4", dateMs: new Date("2026-04-04").getTime()}
+];
+
+var WEEK = {
+  Sun:[{pos:"Bar AM",time:"11am–5pm",pid:3},{pos:"Bar PM",time:"4–11:30pm",pid:1},{pos:"Server AM",time:"11am–5pm",pid:10},{pos:"Floor PM",time:"4–11:30pm",pid:8}],
+  Mon:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
+  Tue:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
+  Wed:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
+  Thu:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:9}],
+  Fri:[{pos:"Bar",time:"4–11:30pm",pid:3},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:9}],
+  Sat:[{pos:"Bar AM",time:"11am–5pm",pid:3},{pos:"Bar PM",time:"4–11:30pm",pid:1},{pos:"Server AM",time:"11am–5pm",pid:10},{pos:"Floor PM",time:"4–11:30pm",pid:8}]
+};
+var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var activeDay = "Mon";
+var activeTab = "roster";
+var checks = {};
+var weekEditing = false;
+var editorData = [];
+
+var BAR_KW = ["bartender","bar lead","mixologist","bar manager"];
+var FLOOR_KW = ["server","floor lead","host","floor manager","service","waiter","waitress"];
+var KITCHEN_KW = ["cook","chef","kitchen","line","prep","sous","pastry","dishwasher","line cook"];
+var CONSULTANT_KW = ["consultant","contractor","freelance"];
+
+var INFRA_CAMILLE = [
+  {text:"Seasonal cocktail menu refresh (new + rotating drinks)",owner:"Camille + Ryan"},
+  {text:"W10W Cocktail Menu Guide — full rebuild with specs, ratios, garnish",owner:"Camille"},
+  {text:"Back bar curation — premiumization and upsell strategy",owner:"Camille + Ryan"},
+  {text:"Staff technique training sessions (on-shift)",owner:"Camille"},
+  {text:"W10W as lowercase test kitchen — guest tasting + feedback loop",owner:"Camille + Ryan"},
+  {text:"Bar T2 cross-training — teach Elena and Eamon limited emergency menu",owner:"Camille"}
+];
+var INFRA_ORDERING = [
+  {text:"Google Form: weekly spirits + sundry order — triggers formatted email to supplier",owner:"Tanner (submit) · Camille + Ryan (own)"},
+  {text:"Google Form: wine reorder — triggers Tanner + supplier",owner:"Tanner (submit)"},
+  {text:"Par level sheet — bartender fills weekly, form auto-calculates order qty",owner:"T1 Bartender (fill)"},
+  {text:"Apps Script: form submission sends formatted order email",owner:"Ryan (build)"},
+  {text:"COGS tracker — monthly food cost calculation",owner:"Camille + Ryan (own)"},
+  {text:"Bar P&L — quarterly review, Tanner inputs weekly",owner:"Camille + Ryan (own)"}
+];
+
+// ══════════ TEAM INFERENCE ══════════
+function inferTeams(role) {
+  var r = role.toLowerCase();
+  if(CONSULTANT_KW.some(function(k){return r.includes(k);})) return ["bar"];
+  var teams = [];
+  if(BAR_KW.some(function(k){return r.includes(k);})) teams.push("bar");
+  if(FLOOR_KW.some(function(k){return r.includes(k);})) teams.push("floor");
+  if(KITCHEN_KW.some(function(k){return r.includes(k);})) teams.push("kitchen");
+  if(!teams.length) teams.push("floor");
+  return teams;
+}
+function getTeams(s) { return s._teams || inferTeams(s.role); }
+function isCross(s) { return getTeams(s).length > 1; }
+function byId(id) { return staff.find(function(s){return s.id===id;}) || null; }
+function getBackups(excludeId) {
+  return staff.filter(function(s){
+    return s.id!==excludeId && (s.tier==="T1"||s.tier==="T2") && s.tier!=="Training";
+  });
+}
+
+// ══════════ HEALTH — FIXED FORMULA ══════════
+function calcHealth() {
+  var barActive = staff.filter(function(s){return getTeams(s).includes("bar") && s.tier!=="Consultant";});
+  var bT1 = barActive.filter(function(s){return s.tier==="T1";}).length;
+  var bT2 = barActive.filter(function(s){return s.tier==="T2";}).length;
+  var bTrn = barActive.filter(function(s){return s.tier==="Training";}).length;
+  var barScore = Math.max(0, Math.min(100, bT1*32 + bT2*16 - bTrn*10));
+  if(bT1===0) barScore = Math.min(barScore, 12);
+
+  var floorActive = staff.filter(function(s){return getTeams(s).includes("floor");});
+  var leads = floorActive.filter(function(s){return s.role.toLowerCase().includes("floor lead");}).length;
+  var fT1 = floorActive.filter(function(s){return s.tier==="T1";}).length;
+  var fT2 = floorActive.filter(function(s){return s.tier==="T2";}).length;
+  var fT3 = floorActive.filter(function(s){return s.tier==="T3";}).length;
+  var fTrn = floorActive.filter(function(s){return s.tier==="Training";}).length;
+  // T1 floor = 16pts (more capable than T2), T2 = 10pts, T3 = 3pts minimal presence, leads weight separately
+  var floorScore = Math.max(0, Math.min(100, leads*22 + fT1*16 + fT2*10 + fT3*3 - fTrn*8));
+
+  return {barScore:barScore,bT1:bT1,bT2:bT2,bTrn:bTrn,floorScore:floorScore,leads:leads,fT1:fT1,fT2:fT2,fT3:fT3,fTrn:fTrn};
+}
+
+function healthLabel(score) {
+  if(score>=75) return {label:"Healthy",color:"var(--teal)"};
+  if(score>=45) return {label:"Manageable",color:"var(--amber)"};
+  return {label:"At risk",color:"var(--red)"};
+}
+
+function ring(score, stroke, pct_id, ring_id) {
+  var C=131.9, off=(C - C*(score/100)).toFixed(1);
+  return '<svg class="hcard-ring" viewBox="0 0 54 54">' +
+    '<circle cx="27" cy="27" r="21" fill="none" stroke="var(--line)" stroke-width="3.5"/>' +
+    '<circle cx="27" cy="27" r="21" fill="none" stroke="'+stroke+'" stroke-width="3.5" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'" stroke-linecap="round" transform="rotate(-90 27 27)" style="transition:stroke-dashoffset .5s ease"/>' +
+    '<text x="27" y="32" text-anchor="middle" font-size="11" font-family="Geist Mono,monospace" font-weight="600" fill="'+stroke+'">'+score+'%</text>' +
+    '</svg>';
+}
+
+function renderHealth() {
+  var h = calcHealth();
+  var bh = healthLabel(h.barScore), fh = healthLabel(h.floorScore);
+
+  function pills(h, team) {
+    var out="";
+    if(team==="bar") {
+      out += h.bT1===0?'<span class="pill p-red">No T1</span>':'<span class="pill p-green">'+h.bT1+' T1</span>';
+      out += h.bT2===0?'<span class="pill p-amber">No backup</span>':'<span class="pill p-blue">'+h.bT2+' T2</span>';
+      if(h.bTrn>0) out+='<span class="pill p-training">'+h.bTrn+' training</span>';
+    } else {
+      out += h.leads<2?'<span class="pill p-amber">'+h.leads+' lead</span>':'<span class="pill p-green">'+h.leads+' leads</span>';
+      if(h.fT1>0) out+='<span class="pill p-green">'+h.fT1+' T1</span>';
+      out += '<span class="pill p-blue">'+h.fT2+' T2</span>';
+      if(h.fTrn>0) out+='<span class="pill p-training">'+h.fTrn+' training</span>';
+    }
+    return out;
+  }
+
+  document.getElementById("health-row").innerHTML =
+    '<div class="hcard bar"><div class="hcard::before"></div>' +
+    '<div class="hcard-lbl">Bar team health</div>' +
+    '<div class="hcard-stat" style="color:'+bh.color+'">'+bh.label+'</div>' +
+    '<div class="hcard-det">'+h.bT1+' T1 · '+h.bT2+' T2'+(h.bTrn?' · '+h.bTrn+' training':'')+'</div>' +
+    '<div class="hcard-pills">'+pills(h,"bar")+'</div>' +
+    ring(h.barScore, bh.color) +
+    '</div>' +
+    '<div class="hcard floor">' +
+    '<div class="hcard-lbl">Floor team health</div>' +
+    '<div class="hcard-stat" style="color:'+fh.color+'">'+fh.label+'</div>' +
+    '<div class="hcard-det">'+h.leads+' leads · '+h.fT1+' T1 · '+h.fT2+' T2'+(h.fTrn?' · '+h.fTrn+' training':'')+'</div>' +
+    '<div class="hcard-pills">'+pills(h,"floor")+'</div>' +
+    ring(h.floorScore, fh.color) +
+    '</div>';
+
+  var issues = (h.bT1===0?1:0)+(h.bT2===0?1:0)+(h.leads<2?1:0);
+  var nb = document.getElementById("nb-roster");
+  if(nb){nb.textContent=issues===0?"OK":issues+" alert"+(issues>1?"s":""); nb.className="nav-badge "+(issues===0?"ok":"");}
+}
+
+// ══════════ ROSTER RENDER ══════════
+function tierPill(t) {
+  var m={T1:"p-green",T2:"p-blue",T3:"p-gray",Training:"p-training",Consultant:"p-purple"};
+  return m[t]?'<span class="pill '+m[t]+'" style="font-size:10px">'+t+'</span>':"";
+}
+
+function sRow(s) {
+  var cross = isCross(s)?'<span class="cross-tag">cross-trained</span>':"";
+  var trn = s.tier==="Training"?'<span class="trn-tag">· onboarding</span>':"";
+  var shifts = s.shifts>0?'<span class="srow-shifts">'+s.shifts+'sh</span>':"";
+  var tOpts = ["T1","T2","T3","Training","Consultant","None"].map(function(t){return '<option'+(s.tier===t?" selected":"")+'>'+t+'</option>';}).join("");
+  return '<div class="srow" id="sr-'+s.id+'">' +
+    '<div><div class="srow-name">'+s.name+'</div>' +
+    '<div class="srow-meta">' +
+    '<span class="role-lbl" id="rl-'+s.id+'" onclick="startEdit('+s.id+')" title="Click to edit role">'+s.role+'</span>' +
+    '<input class="role-inp" id="ri-'+s.id+'" value="'+s.role+'" onblur="saveEdit('+s.id+')" onkeydown="if(event.key===\'Enter\')saveEdit('+s.id+');if(event.key===\'Escape\')cancelEdit('+s.id+')" />' +
+    cross+trn+shifts+'</div></div>' +
+    tierPill(s.tier) +
+    '<select class="tier-sel" onchange="setTier('+s.id+',this.value)">'+tOpts+'</select>' +
+    '<button class="icon-btn" onclick="overrideTeams('+s.id+')" title="Edit team assignment">⇄</button>' +
+    '<button class="icon-btn del" onclick="removeStaff('+s.id+')" title="Remove">✕</button>' +
+    '</div>';
+}
+
+function section(label, members, id) {
+  var inner = members.length ? members.map(sRow).join("") : '<div style="padding:12px 18px;font-size:12px;color:var(--ink-4);font-family:\'Geist Mono\',monospace">No staff in this group.</div>';
+  return '<div id="'+id+'"><div class="sdiv">'+label+'<span style="font-weight:400;color:var(--ink-4)">'+members.length+'</span></div>'+inner+'</div>';
+}
+
+function renderRoster() {
+  var bar = staff.filter(function(s){return getTeams(s).includes("bar");});
+  var floor = staff.filter(function(s){return getTeams(s).includes("floor");});
+  var kitchen = staff.filter(function(s){return getTeams(s).includes("kitchen");});
+
+  // Replace sections safely
+  ["roster-bar","roster-floor","roster-kitchen"].forEach(function(id, i){
+    var teams=[bar,floor,kitchen], labels=["Bar team","Floor team","Kitchen"];
+    var existing = document.getElementById(id);
+    if(existing) existing.outerHTML = section(labels[i], teams[i], id);
+  });
+
+  var t1=0,t2=0,t3=0,trn=0;
+  staff.filter(function(s){return !getTeams(s).includes("kitchen");}).forEach(function(s){
+    if(s.tier==="T1")t1++;else if(s.tier==="T2")t2++;else if(s.tier==="T3")t3++;else if(s.tier==="Training")trn++;
+  });
+  document.getElementById("m-t1").textContent=t1;
+  document.getElementById("m-t2").textContent=t2;
+  document.getElementById("m-t3").textContent=t3;
+  document.getElementById("m-trn").textContent=trn;
+
+  renderHealth();
+  populateCallout();
+  renderFeedback();
+  renderHeaderChips();
+}
+
+// ══════════ ROLE EDIT ══════════
+function startEdit(id) {
+  var l=document.getElementById("rl-"+id),i=document.getElementById("ri-"+id);
+  if(l&&i){l.style.display="none";i.style.display="inline-block";i.focus();i.select();}
+}
+function saveEdit(id) {
+  var i=document.getElementById("ri-"+id); if(!i)return;
+  var v=i.value.trim(); var s=byId(id);
+  if(s&&v){
+    var oldT=inferTeams(s.role).join(","), newT=inferTeams(v).join(",");
+    s.role=v;
+    // Only clear manual override if the new role inference differs meaningfully
+    if(oldT!==newT && !s._manualTeams) s._teams=null;
+  }
+  renderRoster();
+}
+function cancelEdit(id) {
+  var s=byId(id),l=document.getElementById("rl-"+id),i=document.getElementById("ri-"+id);
+  if(s&&l&&i){i.value=s.role;l.style.display="";i.style.display="none";}
+}
+function setTier(id,val) {
+  var s=byId(id); if(s)s.tier=val;
+  renderRoster();
+  if(activeTab==="week") renderWeek();
+}
+function overrideTeams(id) {
+  var s=byId(id); if(!s)return;
+  var cur=getTeams(s).join(", ");
+  var v=prompt("Teams for "+s.name+"\nCurrent: "+cur+"\n\nEnter: bar, floor, kitchen (comma-separated)",cur);
+  if(v===null)return;
+  var valid=["bar","floor","kitchen"];
+  var t=v.split(",").map(function(x){return x.trim().toLowerCase();}).filter(function(x){return valid.includes(x);});
+  s._teams=t.length?t:["floor"];
+  s._manualTeams=true;
+  renderRoster();
+}
+function removeStaff(id) {
+  var s=byId(id); if(!s)return;
+  if(!confirm("Remove "+s.name+" from the roster?"))return;
+  staff=staff.filter(function(x){return x.id!==id;});
+  renderRoster();
+  if(activeTab==="week") renderWeek();
+}
+function addStaff() {
+  var n=document.getElementById("add-name").value.trim(); if(!n)return;
+  var r=document.getElementById("add-role").value.trim()||"Staff";
+  var t=document.getElementById("add-tier").value;
+  staff.push({id:Date.now(),name:n,role:r,tier:t,shifts:0,_teams:null});
+  document.getElementById("add-name").value="";
+  document.getElementById("add-role").value="";
+  renderRoster();
+}
+
+// ══════════ HEADER CHIPS ══════════
+var TYPE_CONFIG = {
+  exit:{dot:"amber",label:function(e){return e.name+" exits "+e.date;}},
+  hiring:{dot:"blue",label:function(e){return "Hiring: "+e.name;}},
+  onboarding:{dot:"green",label:function(e){return e.name+" onboarding"+( e.date?" · "+e.date:"");}},
+  change:{dot:"blue",label:function(e){return e.name+" · "+e.date;}},
+};
+
+function renderHeaderChips() {
+  var now = Date.now();
+  // Filter out expired exit events (past their date)
+  var active = teamEvents.filter(function(e){
+    if(e.type==="exit" && e.dateMs && e.dateMs < now) return false;
+    return true;
+  });
+  var container = document.getElementById("header-chips");
+  if(!active.length){container.innerHTML='';return;}
+  container.innerHTML = active.map(function(e){
+    var cfg = TYPE_CONFIG[e.type]||TYPE_CONFIG.change;
+    return '<div class="status-chip" onclick="toggleEventsPanel()" title="Click to manage team alerts">' +
+      '<div class="status-dot pulse '+cfg.dot+'"></div>' +
+      '<span class="status-text">'+cfg.label(e)+'</span>' +
+      '</div>';
+  }).join("") + (active.length>1?'':'');
+  renderEventsList();
+}
+
+function renderEventsList() {
+  var el = document.getElementById("ep-events-list");
+  if(!el)return;
+  if(!teamEvents.length){el.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--ink-4)">No active alerts.</div>';return;}
+  el.innerHTML = teamEvents.map(function(e,i){
+    var cfg=TYPE_CONFIG[e.type]||TYPE_CONFIG.change;
+    return '<div class="ep-event">' +
+      '<div class="ep-dot '+cfg.dot+'" style="background:'+(e.type==="exit"?"#f59e0b":e.type==="hiring"?"#60a5fa":e.type==="onboarding"?"#34d399":"#a78bfa")+'"></div>' +
+      '<div style="flex:1"><div class="ep-event-name">'+e.name+'</div><div class="ep-event-sub">'+(e.date||e.type)+'</div></div>' +
+      '<button class="icon-btn del" onclick="removeEvent('+i+')" style="flex-shrink:0">✕</button>' +
+      '</div>';
+  }).join("");
+}
+
+function addEvent() {
+  var name=document.getElementById("ep-name").value.trim(); if(!name)return;
+  var type=document.getElementById("ep-type").value;
+  var date=document.getElementById("ep-date").value.trim();
+  var dateMs=0;
+  if(date){try{dateMs=new Date(date+", 2026").getTime();}catch(e){}}
+  teamEvents.push({id:Date.now(),name:name,type:type,date:date,dateMs:dateMs});
+  document.getElementById("ep-name").value="";
+  document.getElementById("ep-date").value="";
+  renderHeaderChips();
+}
+function removeEvent(i){teamEvents.splice(i,1);renderHeaderChips();}
+function toggleEventsPanel(){var p=document.getElementById("events-panel");p.classList.toggle("open");}
+function closeEventsPanel(){document.getElementById("events-panel").classList.remove("open");}
+document.addEventListener("click",function(e){var p=document.getElementById("events-panel");if(p&&p.classList.contains("open")&&!p.contains(e.target)&&!document.getElementById("header-chips").contains(e.target))closeEventsPanel();});
+
+// ══════════ WEEK ══════════
+function shiftStatus(pid) {
+  var p=byId(pid);
+  if(!p||p.tier==="None"||p.tier==="T3"||p.tier==="Consultant"||p.tier==="Training") return {lbl:"No primary",cls:"st-fail"};
+  var backs=getBackups(pid);
+  if(p.tier==="T1"&&backs.length>=1) return {lbl:"Covered",cls:"st-ok"};
+  if(p.tier==="T1"&&backs.length===0) return {lbl:"No backup",cls:"st-warn"};
+  if(p.tier==="T2") return {lbl:"T2 primary",cls:"st-warn"};
+  return {lbl:"At risk",cls:"st-fail"};
+}
+
+function renderDayBtns() {
+  document.getElementById("day-btns").innerHTML = DAYS.map(function(d){
+    return '<button class="day-btn'+(d===activeDay?" active":"")+'" onclick="setDay(\''+d+'\')">'+d+'</button>';
+  }).join("");
+}
+function setDay(d){activeDay=d;renderDayBtns();renderWeek();document.getElementById("week-card-title").textContent=d+" shifts";}
+
+function renderWeek() {
+  var shifts=WEEK[activeDay]||[]; var probs=0;
+  var rows=shifts.map(function(sh){
+    var p=byId(sh.pid); var pn=p?p.name:"Unassigned"; var pt=p?p.tier:"—";
+    var backs=getBackups(sh.pid).map(function(b){return b.name;}).join(", ")||"None";
+    var st=shiftStatus(sh.pid); if(st.cls!=="st-ok")probs++;
+    var isBar=sh.pos.toLowerCase().includes("bar");
+    return '<tr><td style="font-weight:500">'+sh.pos+(isBar?'<span class="pill p-green" style="margin-left:6px;font-size:9px">bar</span>':'')+'</td>' +
+      '<td class="shift-time">'+sh.time+'</td>' +
+      '<td><div>'+pn+' '+tierPill(pt)+'</div><div class="shift-back">Backup: '+backs+'</div></td>' +
+      '<td style="text-align:right;padding-right:18px"><span class="'+st.cls+'">'+st.lbl+'</span></td></tr>';
+  }).join("");
+  document.getElementById("shift-tbody").innerHTML=rows||'<tr><td colspan="4" style="padding:20px 18px;text-align:center;color:var(--ink-4);font-family:\'Geist Mono\',monospace;font-size:11px">No shifts scheduled</td></tr>';
+  document.getElementById("week-summary").innerHTML = probs===0
+    ?'<div class="alert al-green"><strong>All clear.</strong> Every shift on '+activeDay+' has qualified coverage.</div>'
+    :'<div class="alert al-amber"><strong>'+probs+' shift'+(probs>1?"s":"")+' need attention</strong> on '+activeDay+' before publishing.</div>';
+}
+
+function toggleWeekEditor(){
+  weekEditing=!weekEditing;
+  document.getElementById("week-view").style.display=weekEditing?"none":"block";
+  document.getElementById("week-editor").style.display=weekEditing?"block":"none";
+  document.getElementById("edit-btn").textContent=weekEditing?"Cancel":"Edit shifts";
+  document.getElementById("editor-day-label").textContent=activeDay;
+  if(weekEditing) buildEditorRows();
+}
+function buildEditorRows(){
+  editorData=(WEEK[activeDay]||[]).map(function(sh){return {pos:sh.pos,time:sh.time,pid:sh.pid};});
+  renderEditorRows();
+}
+function renderEditorRows(){
+  var staffOpts='<option value="0">— Unassigned —</option>'+staff.map(function(s){return '<option value="'+s.id+'">'+s.name+' ('+s.tier+')</option>';}).join("");
+  document.getElementById("editor-rows").innerHTML=editorData.map(function(sh,i){
+    return '<div class="week-edit-row">' +
+      '<input type="text" value="'+sh.pos+'" placeholder="Position" onchange="editorData['+i+'].pos=this.value" />' +
+      '<input type="text" value="'+sh.time+'" placeholder="Time" onchange="editorData['+i+'].time=this.value" />' +
+      '<select onchange="editorData['+i+'].pid=parseInt(this.value)">'+staff.map(function(s){return '<option value="'+s.id+'"'+(s.id===sh.pid?" selected":"")+'>'+s.name+'</option>';}).join("")+'</select>' +
+      '<button class="icon-btn del" onclick="editorData.splice('+i+',1);renderEditorRows()" title="Remove">✕</button>' +
+      '</div>';
+  }).join("");
+}
+function addShiftRow(){editorData.push({pos:"Shift",time:"4–11:30pm",pid:0});renderEditorRows();}
+function saveWeek(){WEEK[activeDay]=editorData.slice();toggleWeekEditor();renderWeek();}
+
+// ══════════ CALLOUT ══════════
+function populateCallout(){
+  var sel=document.getElementById("callout-sel"); var cur=sel.value;
+  sel.innerHTML='<option value="">Select who called out…</option>';
+  staff.forEach(function(s){sel.innerHTML+='<option value="'+s.id+'"'+(s.id==cur?" selected":"")+'>'+s.name+' — '+s.role+'</option>';});
+}
+function runCallout(){
+  var id=parseInt(document.getElementById("callout-sel").value);
+  var el=document.getElementById("callout-result");
+  if(!id){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select a staff member above</div>';return;}
+  var called=staff.find(function(s){return s.id===id;}); if(!called)return;
+  var backs=getBackups(id); var html="";
+  if(called.tier==="T1"){
+    if(backs.length){
+      html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Bar needs cover — work through the cascade in order.</div><div>';
+      backs.forEach(function(b,i){
+        html+='<div class="cascade-row"><div class="cascade-num">'+(i+1)+'</div><div><div class="cascade-name">'+b.name+' '+tierPill(b.tier)+'</div><div class="cascade-sub">'+b.role+(b.tier==="T2"?" · limited menu, confirm availability":"")+'</div></div></div>';
+      });
+      html+='<div class="cascade-row"><div class="cascade-num cam">C</div><div><div class="cascade-name">Camille '+tierPill("Consultant")+'</div><div class="cascade-sub">Last resort emergency shift · guest bartender rate + tips · contact directly</div></div></div></div>';
+    } else {
+      html='<div class="alert al-red"><strong>'+called.name+' out — zero backup exists.</strong> Direct revenue risk: 7 bar seats, ~$80 average, no cover. Cross-train a T2 this week.</div>';
+    }
+  } else if(called.tier==="T2"){
+    var ob=getBackups(id);
+    html='<div class="alert al-green"><strong>'+called.name+' calls out.</strong> T2 only — bar primary unaffected. Other qualified: '+(ob.length?ob.map(function(b){return b.name;}).join(", "):"none on roster")+'.</div>';
+  } else if(called.tier==="Training"){
+    html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Onboarding — limited impact. Flag to Tanner for floor coverage check on the day.</div>';
+  } else if(called.tier==="Consultant"){
+    html='<div class="alert al-purple">Camille is session-based, not on the shift schedule. No coverage impact. Reschedule any planned development session.</div>';
+  } else {
+    html='<div class="alert al-green"><strong>'+called.name+'</strong> calling out does not affect bar or floor coverage.</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ══════════ FEEDBACK ENGINE ══════════
+function renderFeedback() {
+  var h=calcHealth(); var cards=[];
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var hasPlaceholder=staff.some(function(s){return s.name.includes("New hire");});
+  var barBackups=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
+  var floorLeads=staff.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
+  var trainees=staff.filter(function(s){return s.tier==="Training";});
+  var crossCount=staff.filter(function(s){return isCross(s);}).length;
+  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var weeklyBarShifts=9; var seatsAtRisk=7; var avgSpend=80;
+  var shiftRevRisk=seatsAtRisk*avgSpend;
+
+  if(h.bT1===0) cards.push({type:"critical",icon:"🚨",title:"No T1 bartender — immediate hire required",ctx:"9 bar shifts/week uncovered",body:"Without a T1 bartender, every service is at risk on all "+seatsAtRisk+" bar seats. At $"+avgSpend+" average that's up to $"+shiftRevRisk+" per service. Grace and Laura provide T1/T2 coverage but a dedicated hire is required for operational stability. Post the Indeed listing this week and engage Camille immediately.",action:"Post bartender JD to Indeed · Contact Camille to start"});
+
+  if(hasPlaceholder) cards.push({type:"warning",icon:"⚠️",title:"Placeholder in roster — replace on hire",ctx:"'New hire (T1)' still present",body:"The placeholder exists to keep the health score honest while hiring is active. Replace it with the actual hire's name and role the day they sign. The callout cascade and week schedule both reference this entry.",action:"Update placeholder when hire is confirmed"});
+
+  if(h.bT1===1&&!hasPlaceholder) cards.push({type:"warning",icon:"⚠️",title:"Single T1 bartender — single point of failure",ctx:"One callout = coverage collapse",body:"Tonight's Kaveka situation was exactly this scenario. One T1 calling out with no qualified backup forces Tanner into service or degrades the experience for "+seatsAtRisk+" bar seats. Target: minimum 2 T1 bar staff on the roster at all times. Evaluate Nikko and Rohith for T1 promotion after Camille's training session.",action:"Evaluate Nikko + Rohith for T1 promotion post-training"});
+
+  if(h.bT2<2) cards.push({type:"warning",icon:"⚠️",title:"Bar backup bench too thin (need 2+ T2s)",ctx:"Current: "+h.bT2+" T2 backup"+(h.bT2===1?"":"s"),body:"A resilient bar needs at least 2 T2s who can run a limited menu independently. Right now you have "+h.bT2+". Camille's cross-training session for Elena and Eamon is the fastest path — one on-shift session with a 5-drink spec sheet is enough to get them to T2.",action:"Schedule Camille T2 training — Elena + Eamon priority"});
+
+  if(crossCount<3) cards.push({type:"opportunity",icon:"💡",title:"Expand cross-training — more flexibility, more resilience",ctx:crossCount+" cross-trained staff currently",body:"Grace and Laura set the template: Bartender/Server means they can cover bar or floor on any night. Eamon is next — Host/Bartender puts him at T2 bar with Camille's training. Sayer moving to Host/Server gives floor more depth. Each cross-trained addition reduces single-point-of-failure risk.",action:"Set cross-training targets for Q2: Eamon (Host → Host/Bartender), Sayer (Host → Host/Server)"});
+
+  if(h.leads<2) cards.push({type:"warning",icon:"⚠️",title:"Floor lead coverage at minimum",ctx:h.leads+" active floor lead"+(h.leads===1?"":"s"),body:"Elena and Nathalie are your two leads. If either calls out, service runs without a designated lead. Both should be empowered as full decision-makers during service — not just shift supervisors. Consider documenting the Floor Lead SOP so either can run a service independently.",action:"Confirm Floor Lead SOP documentation with Elena + Nathalie"});
+
+  if(trainees.length>1) cards.push({type:"warning",icon:"⚠️",title:"Multiple onboarding staff reduce operational health",ctx:trainees.map(function(s){return s.name;}).join(", "),body:"More than 2 training staff at once adds supervision load without contributing full capacity. Set clear graduation milestones: 4 weeks to T3, 8 weeks to T2 evaluation. George is your active onboarding case — update his tier when he graduates.",action:"Set graduation timeline for each trainee — update tier when ready"});
+
+  if(!hasEvents) cards.push({type:"opportunity",icon:"💡",title:"Events Lead role open — direct revenue upside",ctx:"Private dining is an untapped channel",body:"W10W's 23-seat intimate format is highly bookable for private dining. An Events Lead on commission-forward structure (small base retainer + % of private events revenue) costs near-zero unless they're generating. Two private bookings at $2,000+ each per month = the role pays for itself. The JD is already drafted.",action:"Post Events Lead to Indeed — commission-forward structure"});
+
+  if(h.barScore>=75&&h.floorScore>=75&&!hasPlaceholder) cards.push({type:"healthy",icon:"✅",title:"Coverage is in strong shape",ctx:"Bar "+h.barScore+"% · Floor "+h.floorScore+"%",body:"Both teams are above the health threshold. The goal from here is redundancy: any single callout handled without a manager stepping in. Continue cross-training and maintain the infra build.",action:"Maintain and review quarterly"});
+
+  var critCount=cards.filter(function(c){return c.type==="critical"||c.type==="warning";}).length;
+  var nb=document.getElementById("nb-feedback");
+  if(nb){nb.textContent=critCount>0?critCount+" action"+(critCount>1?"s":""):"OK";nb.className="nav-badge "+(critCount===0?"ok":"");}
+
+  document.getElementById("feedback-cards").innerHTML=cards.map(function(c){
+    return '<div class="fb-card">' +
+      '<div class="fb-hdr"><div class="fb-icon '+c.type+'">'+c.icon+'</div>' +
+      '<div><div class="fb-title">'+c.title+'</div><div class="fb-ctx">'+c.ctx+'</div></div></div>' +
+      '<div class="fb-body">'+c.body+'</div>' +
+      '<div class="fb-action">→ '+c.action+'</div>' +
+      '</div>';
+  }).join("");
+}
+
+// ══════════ INFRA ══════════
+function renderInfra(){
+  function rows(arr,pfx){
+    return arr.map(function(item,i){
+      var k=pfx+i;
+      return '<div class="infra-row" onclick="toggleCheck(\''+k+'\')">' +
+        '<div class="infra-chk'+(checks[k]?" done":"") +'" id="chk-'+k+'"></div>' +
+        '<div><div class="infra-text">'+item.text+'</div><div class="infra-owner">Owner: '+item.owner+'</div></div>' +
+        '</div>';
+    }).join("");
+  }
+  document.getElementById("infra-camille").innerHTML=rows(INFRA_CAMILLE,"c");
+  document.getElementById("infra-ordering").innerHTML=rows(INFRA_ORDERING,"o");
+}
+function toggleCheck(k){
+  checks[k]=!checks[k];
+  var el=document.getElementById("chk-"+k);
+  if(el)el.className="infra-chk"+(checks[k]?" done":"");
+}
+
+// ══════════ TAB NAV ══════════
+function showTab(t){
+  activeTab=t;
+  document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){
+    el.className="nav-tab"+(["roster","week","callout","feedback","infra"][i]===t?" active":"");
+  });
+  document.getElementById("tab-"+t).classList.add("active");
+  if(t==="week"){renderDayBtns();renderWeek();}
+  if(t==="callout")populateCallout();
+  if(t==="infra")renderInfra();
+}
+
+// ══════════ DATE ══════════
+function updateDate(){
+  var d=new Date(), days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("live-date").textContent=days[d.getDay()]+" "+months[d.getMonth()]+" "+d.getDate();
+}
+updateDate();
+
+// ══════════ INIT ══════════
+renderRoster();
+renderDayBtns();
+renderFeedback();
+renderHeaderChips();
+</script>
+</body>
+</html>
