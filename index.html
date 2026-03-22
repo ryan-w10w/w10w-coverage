@@ -401,31 +401,37 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 </div>
 
 <script>
+// ══ BUSINESS CONSTANTS ══
+var BIZ={name:"WEST10WEST",seats:23,barSeats:7,avgSpend:80,barShiftsPerWeek:9,eventsTarget:150000};
 
-
-// ══ BUSINESS CONSTANTS — what the tool knows about W10W ══
-var BIZ = {
-  name: "WEST10WEST",
-  seats: 23, barSeats: 7, avgSpend: 80,
-  barShiftsPerWeek: 9,
-  eventsTarget: 150000,
-  kavekaDeparture: "Apr 4, 2026",
-  tannerRole: "Tanner is Managing Partner. He sets the standard, provides feedback promptly, and removes blockers. He should never need to bartend.",
-  brieferContext: "W10W is a 23-seat restaurant at 242 West 10th Street, West Village NYC. Bar is 7 of 23 seats. Average spend ~$80. Bar runs 9 shifts per week. Events target $120-180k in 2026. Kaveka (Bar Lead) is departing April 4. Camille is a cocktail consultant engaged for infrastructure build. Ryan is the owner — direct, minimal, outcome-driven. Tanner is Managing Partner. Brief must be written the way Ryan would speak to Tanner: short, direct, no fluff, specific names and numbers."
+// ══ JD DATA (sourced from Google Drive) ══
+var JDS={
+  bartender:{
+    title:"Bartender",
+    body:"WEST10WEST\n242 West 10th Street, New York, NY 10014\n\nWe are a 23-seat restaurant in the West Village doing approximately $1.1M in annual revenue. The bar is central to our experience and this is a key role in a small, high-performing team.\n\nCOMPENSATION\n$16/hr base + pooled tips averaging $30-35/tippable hour\nProjected annual (full-time): $47,000-$55,000\n\nSCHEDULE OPTIONS\nFull-time: 4-5 shifts per week\nPart-time: 2-3 shifts per week\n\nWHAT WE ARE LOOKING FOR\n- 2+ years fine dining or cocktail bar experience\n- Strong command of classic and contemporary cocktail technique\n- Warm hospitality and genuine engagement with guests\n- Calm and efficient under pressure\n- Team-first approach\n\nThis role reports to our Managing Partner. We are a small team and expect a high standard from everyone.\n\nTo apply, send a resume and one sentence about why this role interests you."
+  },
+  server:{
+    title:"Server",
+    body:"WEST10WEST\n242 West 10th Street, New York, NY 10014\n\nWe are a 23-seat restaurant in the West Village. We do approximately $1.1M in annual revenue and offer an intimate, carefully crafted dining experience.\n\nCOMPENSATION\n$16/hr base + pooled tips averaging $30-35/tippable hour\n\nSCHEDULE OPTIONS\nFull-time: 4-5 shifts per week\nPart-time: 2-3 shifts per week\n\nWHAT WE ARE LOOKING FOR\n- 1+ years fine dining server experience\n- Knowledge of wine and cocktails preferred\n- Excellent communication and warmth with guests\n- Team-first mindset\n\nTo apply, send a resume and one sentence about why this role interests you."
+  },
+  events:{
+    title:"Events Lead",
+    body:"WEST10WEST\n242 West 10th Street, New York, NY 10014\n\nPrivate events target: $120,000-$180,000 in 2026. We are looking for a driven Events Lead to own and grow our private events program.\n\nCOMPENSATION\nBase retainer + commission on events revenue booked\n\nSCHEDULE\n~15-20 hrs/week, flexible\n\nWHAT WE ARE LOOKING FOR\n- Experience in events coordination or hospitality sales\n- Strong communicator and relationship builder\n- Self-directed and organized\n- Passion for food, beverage, and hospitality\n\nTo apply, reach out directly with a brief note on relevant experience."
+  }
 };
 
-// ══ DEFAULT STATE ══
-var DEFAULT_STAFF = [
+// ══ DEFAULT STAFF ══
+var DEFAULT_STAFF=[
   {id:1,name:"New hire (open)",role:"Bartender",tier:"None",shifts:0,_teams:["bar"]},
   {id:2,name:"Camille",role:"Bartender / Consultant",tier:"Consultant",shifts:0},
   {id:3,name:"Grace Lyons",role:"Bartender / Server",tier:"T1",shifts:41},
-  {id:4,name:"Laura Paganello",role:"Bartender / Server",tier:"T2",shifts:38},
+  {id:4,name:"Laura Paganello",role:"Bartender / Server",tier:"T1",shifts:38},
   {id:5,name:"Nikko Pineda",role:"Bartender",tier:"Flex",shifts:2},
   {id:6,name:"Rohith Ram",role:"Bartender",tier:"Flex",shifts:3},
   {id:7,name:"Tanner Floyd",role:"Managing Partner",tier:"None",shifts:38,_teams:["bar","floor"]},
   {id:8,name:"Elena Mucilli",role:"Floor Lead",tier:"T1",shifts:29},
   {id:9,name:"Nathalie Fernandes",role:"Floor Lead",tier:"T1",shifts:46},
-  {id:10,name:"Chelsea Udoye",role:"Server",tier:"T3",shifts:42},
+  {id:10,name:"Chelsea Udoye",role:"Server",tier:"T1",shifts:42},
   {id:11,name:"Sayer Williams",role:"Host / Server",tier:"T1",shifts:18},
   {id:12,name:"Eamon Ida",role:"Host",tier:"None",shifts:6},
   {id:13,name:"George Witnauer",role:"Bartender",tier:"Training",shifts:1},
@@ -436,169 +442,112 @@ var DEFAULT_STAFF = [
   {id:18,name:"Arturo Peres Jr",role:"Cook",tier:"None",shifts:20}
 ];
 
-var DEFAULT_WEEK = {
-  Sun:[{pos:"Bar AM",time:"11am–5pm",pid:3},{pos:"Bar PM",time:"4–11:30pm",pid:1},{pos:"Server AM",time:"11am–5pm",pid:10},{pos:"Floor PM",time:"4–11:30pm",pid:8}],
-  Mon:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
-  Tue:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
-  Wed:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:8}],
-  Thu:[{pos:"Bar",time:"4–11:30pm",pid:1},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:9}],
-  Fri:[{pos:"Bar",time:"4–11:30pm",pid:3},{pos:"Server",time:"4–11:30pm",pid:10},{pos:"Floor Lead",time:"4–11:30pm",pid:9}],
-  Sat:[{pos:"Bar AM",time:"11am–5pm",pid:3},{pos:"Bar PM",time:"4–11:30pm",pid:1},{pos:"Server AM",time:"11am–5pm",pid:10},{pos:"Floor PM",time:"4–11:30pm",pid:8}]
+var DEFAULT_WEEK={
+  Sun:[{pos:"Bar AM",time:"11am-5pm",pid:3},{pos:"Bar PM",time:"4-11:30pm",pid:4},{pos:"Server AM",time:"11am-5pm",pid:10},{pos:"Floor PM",time:"4-11:30pm",pid:8}],
+  Mon:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:8}],
+  Tue:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:8}],
+  Wed:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
+  Thu:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
+  Fri:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
+  Sat:[{pos:"Bar AM",time:"11am-5pm",pid:4},{pos:"Bar PM",time:"4-11:30pm",pid:3},{pos:"Server AM",time:"11am-5pm",pid:11},{pos:"Floor PM",time:"4-11:30pm",pid:8}]
 };
 
-var DEFAULT_EVENTS = [{id:1,name:"Kaveka",type:"exit",date:"Apr 4",dateMs:new Date("2026-04-04").getTime()}];
-
-var DEFAULT_CHECKS = {};
+var DEFAULT_EVENTS=[{id:1,name:"Kaveka",type:"exit",date:"Apr 4",dateMs:new Date("2026-04-04").getTime()}];
 
 // ══ STATE ══
-var staff = [], WEEK = {}, teamEvents = [], checks = {};
-var DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-var activeDay = "Mon", activeTab = "roster";
-var weekEditing = false, editorData = [];
-var lastUpdated = null, lastUpdatedBy = null;
-var briefCache = null, briefCacheKey = "";
-
-// ══ KEYWORDS ══
-var BAR_KW=["bartender","bar lead","bar manager","mixologist"];
-var FLOOR_KW=["server","floor lead","host","hostess","floor manager","waiter","waitress"];
-var KITCHEN_KW=["cook","chef","kitchen","line","prep","sous","pastry","dishwasher"];
-var CONSUL_KW=["consultant","contractor","freelance"];
-var MGMT_KW=["managing partner","general manager","owner","founder"];
+var staff=[],WEEK={},teamEvents=[],checks={};
+var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+var activeDay="Mon",activeTab="roster",weekEditing=false,editorData=[];
+var lastUpdated=null,calloutSelected=[],currentJD=null;
 
 // ══ INFRA DATA ══
 var INFRA_CAMILLE=[
   {text:"Seasonal cocktail menu refresh (new + rotating drinks)",owner:"Camille + Ryan"},
-  {text:"W10W Cocktail Menu Guide — full rebuild with specs, ratios, garnish",owner:"Camille"},
-  {text:"Back bar curation — premiumization and upsell strategy",owner:"Camille + Ryan"},
+  {text:"W10W Cocktail Menu Guide - full rebuild with specs, ratios, garnish",owner:"Camille"},
+  {text:"Back bar curation - premiumization and upsell strategy",owner:"Camille + Ryan"},
   {text:"Staff technique training sessions (on-shift)",owner:"Camille"},
-  {text:"W10W as lowercase test kitchen — guest tasting + feedback loop",owner:"Camille + Ryan"},
-  {text:"Bar T2 cross-training — teach Elena and Eamon limited emergency menu",owner:"Camille"}
+  {text:"W10W as lowercase test kitchen - guest tasting + feedback loop",owner:"Camille + Ryan"},
+  {text:"Bar T2 cross-training - teach Elena and Eamon limited emergency menu",owner:"Camille"}
 ];
 var INFRA_ORDERING=[
-  {text:"Google Form: weekly spirits + sundry order — triggers formatted email to supplier",owner:"Tanner (submit) · Camille + Ryan (own)"},
-  {text:"Google Form: wine reorder — triggers Tanner + supplier",owner:"Tanner (submit)"},
-  {text:"Par level sheet — bartender fills weekly, form auto-calculates order qty",owner:"T1 Bartender (fill)"},
-  {text:"Apps Script: form submission sends formatted order email automatically",owner:"Ryan (build)"},
-  {text:"COGS tracker — monthly food cost calculation",owner:"Camille + Ryan (own)"},
-  {text:"Bar P&L — quarterly review, Tanner inputs weekly",owner:"Camille + Ryan (own)"}
+  {text:"Google Form: weekly spirits + sundry order - triggers formatted email to supplier",owner:"Tanner (submit) / Camille + Ryan (own)"},
+  {text:"Google Form: wine reorder - triggers Tanner + supplier",owner:"Tanner (submit)"},
+  {text:"Par level sheet - bartender fills weekly, form auto-calculates order qty",owner:"T1 Bartender (fill)"},
+  {text:"Apps Script: form submission sends formatted order email",owner:"Ryan (build)"},
+  {text:"COGS tracker - monthly food cost calculation",owner:"Camille + Ryan (own)"},
+  {text:"Bar P&L - quarterly review, Tanner inputs weekly",owner:"Camille + Ryan (own)"}
 ];
 
-// ══ PERSISTENT STORAGE ══
-async function saveState() {
-  var state = {
-    staff: staff,
-    week: WEEK,
-    events: teamEvents,
-    checks: checks,
-    updatedAt: new Date().toISOString()
-  };
-  var json = JSON.stringify(state);
-  // Try Claude artifact storage
-  try {
-    if(window.storage && typeof window.storage.set === "function") {
-      await window.storage.set("w10w-state", json);
-    }
-  } catch(e) {}
-  // Always also save to localStorage (works on GitHub Pages)
-  try {
-    localStorage.setItem("w10w-state", json);
-  } catch(e) {}
-  lastUpdated = state.updatedAt;
-  renderStamp();
+// ══ STORAGE ══
+async function saveState(){
+  var state={staff:staff,week:WEEK,events:teamEvents,checks:checks,updatedAt:new Date().toISOString()};
+  var json=JSON.stringify(state);
+  try{if(window.storage&&typeof window.storage.set==="function") await window.storage.set("w10w-state",json);}catch(e){}
+  try{localStorage.setItem("w10w-state",json);}catch(e){}
+  lastUpdated=state.updatedAt;renderStamp();
 }
-
-async function loadState() {
-  // Try Claude artifact storage first
-  try {
-    if(window.storage && typeof window.storage.get === "function") {
-      var result = await window.storage.get("w10w-state");
-      if(result && result.value) {
-        var state = JSON.parse(result.value);
-        staff = state.staff || JSON.parse(JSON.stringify(DEFAULT_STAFF));
-        WEEK = state.week || JSON.parse(JSON.stringify(DEFAULT_WEEK));
-        teamEvents = state.events || JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-        checks = state.checks || {};
-        lastUpdated = state.updatedAt || null;
-        return;
-      }
+async function loadState(){
+  try{
+    if(window.storage&&typeof window.storage.get==="function"){
+      var r=await window.storage.get("w10w-state");
+      if(r&&r.value){var s=JSON.parse(r.value);staff=s.staff||JSON.parse(JSON.stringify(DEFAULT_STAFF));WEEK=s.week||JSON.parse(JSON.stringify(DEFAULT_WEEK));teamEvents=s.events||JSON.parse(JSON.stringify(DEFAULT_EVENTS));checks=s.checks||{};lastUpdated=s.updatedAt||null;return;}
     }
-  } catch(e) {}
-  // Fallback: localStorage for GitHub Pages / hosted environments
-  try {
-    var saved = localStorage.getItem("w10w-state");
-    if(saved) {
-      var state = JSON.parse(saved);
-      staff = state.staff || JSON.parse(JSON.stringify(DEFAULT_STAFF));
-      WEEK = state.week || JSON.parse(JSON.stringify(DEFAULT_WEEK));
-      teamEvents = state.events || JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-      checks = state.checks || {};
-      lastUpdated = state.updatedAt || null;
-      return;
-    }
-  } catch(e) {}
-  // Default data
-  staff = JSON.parse(JSON.stringify(DEFAULT_STAFF));
-  WEEK = JSON.parse(JSON.stringify(DEFAULT_WEEK));
-  teamEvents = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
-  checks = {};
+  }catch(e){}
+  try{
+    var saved=localStorage.getItem("w10w-state");
+    if(saved){var s=JSON.parse(saved);staff=s.staff||JSON.parse(JSON.stringify(DEFAULT_STAFF));WEEK=s.week||JSON.parse(JSON.stringify(DEFAULT_WEEK));teamEvents=s.events||JSON.parse(JSON.stringify(DEFAULT_EVENTS));checks=s.checks||{};lastUpdated=s.updatedAt||null;return;}
+  }catch(e){}
+  staff=JSON.parse(JSON.stringify(DEFAULT_STAFF));
+  WEEK=JSON.parse(JSON.stringify(DEFAULT_WEEK));
+  teamEvents=JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  checks={};
 }
-
-function renderStamp() {
-  var el = document.getElementById("stamp-text");
-  if(!el) return;
-  if(!lastUpdated) { el.textContent = "Not yet saved"; return; }
-  var d = new Date(lastUpdated);
-  var days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  var months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  el.textContent = "Last updated " + days[d.getDay()] + " " + months[d.getMonth()] + " " + d.getDate() + " at " + d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+function renderStamp(){
+  var el=document.getElementById("stamp-text");if(!el)return;
+  if(!lastUpdated){el.textContent="Not yet saved";return;}
+  var d=new Date(lastUpdated);
+  var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  el.textContent="Last updated "+D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate()+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
 }
 
 // ══ TEAM INFERENCE ══
-function inferTeams(role) {
-  var r = role.toLowerCase();
-  if(CONSUL_KW.some(function(k){return r.includes(k);})) return ["bar"];
-  if(MGMT_KW.some(function(k){return r.includes(k);})) return ["bar","floor"];
+var BAR_KW=["bartender","bar lead","bar manager","mixologist"];
+var FLOOR_KW=["server","floor lead","host","hostess","floor manager","waiter","waitress"];
+var KITCHEN_KW=["cook","chef","kitchen","line","prep","sous","pastry","dishwasher"];
+function inferTeams(role){
+  var r=role.toLowerCase();
+  if(["consultant","contractor","freelance"].some(function(k){return r.includes(k);})) return["bar"];
+  if(["managing partner","general manager","owner","founder"].some(function(k){return r.includes(k);})) return["bar","floor"];
   var t=[];
   if(BAR_KW.some(function(k){return r.includes(k);})) t.push("bar");
   if(FLOOR_KW.some(function(k){return r.includes(k);})) t.push("floor");
   if(KITCHEN_KW.some(function(k){return r.includes(k);})) t.push("kitchen");
-  return t.length ? t : ["floor"];
+  return t.length?t:["floor"];
 }
 function getTeams(s){return s._teams||inferTeams(s.role);}
 function isCross(s){return getTeams(s).length>1;}
 function byId(id){return staff.find(function(s){return s.id===id;})||null;}
-function getBackups(excludeId){
-  return staff.filter(function(s){return s.id!==excludeId&&(s.tier==="T1"||s.tier==="T2")&&s.tier!=="Training";});
-}
-function getFlexStaff(excludeId){
-  return staff.filter(function(s){return s.id!==excludeId&&s.tier==="Flex";});
-}
+function getBackups(excludeId){return staff.filter(function(s){return s.id!==excludeId&&(s.tier==="T1"||s.tier==="T2")&&s.tier!=="Training";});}
+function getFlexStaff(excludeId){return staff.filter(function(s){return s.id!==excludeId&&s.tier==="Flex";});}
 
 // ══ HEALTH ══
-function calcHealth() {
-  var barActive=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";});
-  var bT1=barActive.filter(function(s){return s.tier==="T1";}).length;
-  var bT2=barActive.filter(function(s){return s.tier==="T2";}).length;
-  var bTrn=barActive.filter(function(s){return s.tier==="Training";}).length;
-  var barScore=Math.max(0,Math.min(100,bT1*32+bT2*16-bTrn*10));
-  if(bT1===0) barScore=Math.min(barScore,12);
-
-  var floorActive=staff.filter(function(s){return getTeams(s).includes("floor");});
-  var leads=floorActive.filter(function(s){return s.role.toLowerCase().includes("floor lead");}).length;
-  var fT1=floorActive.filter(function(s){return s.tier==="T1";}).length;
-  var fT2=floorActive.filter(function(s){return s.tier==="T2";}).length;
-  var fT3=floorActive.filter(function(s){return s.tier==="T3";}).length;
-  var fTrn=floorActive.filter(function(s){return s.tier==="Training";}).length;
-  var floorScore=Math.max(0,Math.min(100,leads*22+fT1*16+fT2*10+fT3*3-fTrn*8));
-
-  return {barScore:barScore,bT1:bT1,bT2:bT2,bTrn:bTrn,floorScore:floorScore,leads:leads,fT1:fT1,fT2:fT2,fTrn:fTrn};
+function calcHealth(){
+  var ba=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";});
+  var bT1=ba.filter(function(s){return s.tier==="T1";}).length;
+  var bT2=ba.filter(function(s){return s.tier==="T2";}).length;
+  var bTrn=ba.filter(function(s){return s.tier==="Training";}).length;
+  var bs=Math.max(0,Math.min(100,bT1*32+bT2*16-bTrn*10));
+  if(bT1===0) bs=Math.min(bs,12);
+  var fa=staff.filter(function(s){return getTeams(s).includes("floor");});
+  var leads=fa.filter(function(s){return s.role.toLowerCase().includes("floor lead");}).length;
+  var fT1=fa.filter(function(s){return s.tier==="T1";}).length;
+  var fT2=fa.filter(function(s){return s.tier==="T2";}).length;
+  var fT3=fa.filter(function(s){return s.tier==="T3";}).length;
+  var fTrn=fa.filter(function(s){return s.tier==="Training";}).length;
+  var fs=Math.max(0,Math.min(100,leads*22+fT1*16+fT2*10+fT3*3-fTrn*8));
+  return{bs:bs,bT1:bT1,bT2:bT2,bTrn:bTrn,fs:fs,leads:leads,fT1:fT1,fT2:fT2,fT3:fT3,fTrn:fTrn};
 }
-
-function healthLabel(score){
-  if(score>=75) return{label:"Healthy",color:"var(--teal)"};
-  if(score>=45) return{label:"Manageable",color:"var(--amber)"};
-  return{label:"At risk",color:"var(--red)"};
-}
+function healthLabel(s){if(s>=75)return{label:"Healthy",color:"var(--teal)"};if(s>=45)return{label:"Manageable",color:"var(--amber)"};return{label:"At risk",color:"var(--red)"};}
 
 function ring(score,stroke){
   var C=131.9,off=(C-C*(score/100)).toFixed(1);
@@ -610,16 +559,14 @@ function ring(score,stroke){
 }
 
 function renderHealth(){
-  var h=calcHealth();
-  var bh=healthLabel(h.barScore),fh=healthLabel(h.floorScore);
-
-  function pills(h,team){
+  var h=calcHealth();var bh=healthLabel(h.bs),fh=healthLabel(h.fs);
+  function pp(h,t){
     var o="";
-    if(team==="bar"){
+    if(t==="bar"){
       o+=h.bT1===0?'<span class="pill p-red">No T1</span>':'<span class="pill p-green">'+h.bT1+' T1</span>';
-      o+=h.bT2===0?'<span class="pill p-amber">No backup</span>':'<span class="pill p-blue">'+h.bT2+' T2</span>';
+      o+=h.bT2===0?'<span class="pill p-amber">No T2</span>':'<span class="pill p-blue">'+h.bT2+' T2</span>';
       if(h.bTrn>0) o+='<span class="pill p-training">'+h.bTrn+' training</span>';
-    } else {
+    }else{
       o+=h.leads<2?'<span class="pill p-amber">'+h.leads+' lead</span>':'<span class="pill p-green">'+h.leads+' leads</span>';
       if(h.fT1>0) o+='<span class="pill p-green">'+h.fT1+' T1</span>';
       o+='<span class="pill p-blue">'+h.fT2+' T2</span>';
@@ -627,156 +574,104 @@ function renderHealth(){
     }
     return o;
   }
-
   document.getElementById("health-row").innerHTML=
     '<div class="hcard bar"><div class="hcard-lbl">Bar team health</div>'+
     '<div class="hcard-stat" style="color:'+bh.color+'">'+bh.label+'</div>'+
     '<div class="hcard-det">'+h.bT1+' T1 · '+h.bT2+' T2'+(h.bTrn?' · '+h.bTrn+' training':'')+'</div>'+
-    '<div class="hcard-pills">'+pills(h,"bar")+'</div>'+ring(h.barScore,bh.color)+'</div>'+
+    '<div class="hcard-pills">'+pp(h,"bar")+'</div>'+ring(h.bs,bh.color)+'</div>'+
     '<div class="hcard floor"><div class="hcard-lbl">Floor team health</div>'+
     '<div class="hcard-stat" style="color:'+fh.color+'">'+fh.label+'</div>'+
     '<div class="hcard-det">'+h.leads+' leads · '+(h.fT1+h.fT2)+' support'+(h.fTrn?' · '+h.fTrn+' training':'')+'</div>'+
-    '<div class="hcard-pills">'+pills(h,"floor")+'</div>'+ring(h.floorScore,fh.color)+'</div>';
-
+    '<div class="hcard-pills">'+pp(h,"floor")+'</div>'+ring(h.fs,fh.color)+'</div>';
   var issues=(h.bT1===0?1:0)+(h.bT2<1?1:0)+(h.leads<2?1:0);
   var nb=document.getElementById("nb-roster");
   if(nb){nb.textContent=issues===0?"OK":issues+" alert"+(issues>1?"s":"");nb.className="nav-badge "+(issues===0?"ok":"");}
 }
 
-// ══ AI BRIEF ══
-function buildBriefContext(){
-  var h=calcHealth();
-  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
-  var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
-  var hasPlaceholder=staff.some(function(s){return s.name.includes("New hire");});
-  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var fLeads=staff.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
-  var trainees=staff.filter(function(s){return s.tier==="Training";});
-  var kavekaDeparted=!staff.some(function(s){return s.name.toLowerCase().includes("kaveka");});
-
-  // Week schedule summary
-  var barCoveredDays=[], barUncoveredDays=[];
-  DAYS.forEach(function(d){
-    var shifts=(WEEK[d]||[]).filter(function(sh){return sh.pos.toLowerCase().includes("bar");});
-    shifts.forEach(function(sh){
-      var st=shiftStatus(sh.pid);
-      if(st.cls==="st-ok") barCoveredDays.push(d);
-      else barUncoveredDays.push(d);
-    });
-  });
-
-  var ctx="CURRENT ROSTER STATE:\n";
-  ctx+="Bar T1 bartenders (non-Tanner): "+barT1s.map(function(s){return s.name;}).join(", ")||"None"+".\n";
-  ctx+="Bar T2 backups: "+barT2s.map(function(s){return s.name;}).join(", ")||"None"+".\n";
-  ctx+="Floor leads: "+fLeads.map(function(s){return s.name;}).join(", ")+".\n";
-  ctx+="Trainees: "+(trainees.length?trainees.map(function(s){return s.name;}).join(", "):"None")+".\n";
-  ctx+="Events Lead on roster: "+(hasEvents?"Yes":"No — position open")+".\n";
-  ctx+="Kaveka still on roster: "+(kavekaDeparted?"Departed":"Departing Apr 4")+".\n";
-  ctx+="Placeholder 'New hire' in roster: "+(hasPlaceholder?"Yes":"No")+".\n";
-  ctx+="Bar shifts covered this week: "+barCoveredDays.join(", ")||"None"+".\n";
-  ctx+="Bar shifts with gaps: "+barUncoveredDays.join(", ")||"None"+".\n";
-  ctx+="Bar health score: "+h.barScore+"%.\n";
-  ctx+="Floor health score: "+h.floorScore+"%.\n";
-  ctx+="\nBUSINESS CONTEXT:\n"+BIZ.brieferContext+"\n";
-  ctx+="\nWRITE A BRIEF FOR TANNER. Rules: 3-5 sentences max. No headers. No bullet points. Name specific people and specific numbers. Written exactly like Ryan would say it — direct, no filler words. Surface the 2-3 most important things he needs to act on this week based purely on what you see in the roster. End with how many things need resolving before the schedule is published. Do not repeat what the health scores say in percentage terms — translate it into operational reality.";
-  return ctx;
-}
-
-var briefCacheKey = "";
-
-function generateBrief(force){
-  var h = calcHealth();
-  var barT1s = staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
-  var barT2s = staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
-  var flexStaff = staff.filter(function(s){return s.tier==="Flex";});
-  var hasPlaceholder = staff.some(function(s){return s.name.includes("New hire");});
-  var hasEvents = staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var fLeads = staff.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
-  var trainees = staff.filter(function(s){return s.tier==="Training";});
-  var kaveka = staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
-
-  // Find bar shift gaps this week
-  var barGapDays = [];
-  DAYS.forEach(function(d){
-    (WEEK[d]||[]).forEach(function(sh){
-      if(sh.pos.toLowerCase().includes("bar")){
-        var st = shiftStatus(sh.pid);
-        if(st.cls !== "st-ok") barGapDays.push(d);
-      }
-    });
-  });
-  // Deduplicate days
-  barGapDays = barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
-
-  var sentences = [];
-  var actions = 0;
-
-  // Bar coverage — most critical
-  if(barT1s.length === 0){
-    sentences.push("There is no dedicated T1 bartender on the roster right now — every bar shift this week is at risk across all 7 seats.");
-    actions++;
-  } else if(barT1s.length === 1){
-    var name = barT1s[0].name.split(" ")[0];
-    if(barGapDays.length > 0){
-      sentences.push("<strong>"+name+"</strong> is your only reliable bar cover — "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has a":"have") +" a coverage gap before the schedule goes out.");
-    } else {
-      sentences.push("<strong>"+name+"</strong> is carrying the bar on her own this week. One callout and you're back in last Saturday's position.");
-    }
-    actions++;
-  } else {
-    var names = barT1s.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
-    if(barGapDays.length > 0){
-      sentences.push(names+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap — assign a backup before publishing.");
-      actions++;
-    } else {
-      sentences.push("Bar coverage looks solid this week — "+names+" are both scheduled with backups in place.");
-    }
-  }
-
-  // T2 backup bench
-  if(barT2s.length < 2){
-    var t2names = barT2s.length ? barT2s.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ") : "no one";
-    sentences.push("Bar backup bench is thin — "+t2names+(barT2s.length?" is the only T2":", no T2 on the bar")+" — Camille's cross-training session for <strong>Elena</strong> and <strong>Eamon</strong> needs to happen before April 4.");
-    actions++;
-  }
-
-  // Kaveka departure
-  if(kaveka){
-    sentences.push("<strong>Kaveka</strong> exits April 4. Bar infrastructure handoff — cocktail guide, ordering forms, COGS baseline — needs to be complete before then.");
-    actions++;
-  }
-
-  // Trainees
-  if(trainees.length > 0){
-    var tnames = trainees.map(function(s){return "<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ");
-    sentences.push(tnames+(trainees.length===1?" is":" are")+" still in training — supervision load is on the floor leads until they graduate to T3.");
-  }
-
-  // Events role
-  if(!hasEvents){
-    sentences.push("Events Lead is still unfilled — private dining is the single biggest untapped revenue opportunity in 2026 and it's sitting at zero.");
-    actions++;
-  }
-
-  // Closing line
-  sentences.push(actions === 0
-    ? "Coverage is in good shape — nothing critical to resolve before publishing this week."
-    : actions + " thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
-
-  var text = sentences.join(" ");
-  briefCache = text;
-  briefCacheKey = "local";
-
-  document.getElementById("brief-text").className = "brief-text";
-  document.getElementById("brief-text").innerHTML = text;
-  var now = new Date();
-  document.getElementById("brief-stamp").textContent = "Generated " + ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][now.getDay()] + " " + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][now.getMonth()] + " " + now.getDate() + " at " + now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-}
-
-// ══ PILLS ══
+// ══ TIER PILL ══
 function tierPill(t){
   var m={T1:"p-green",T2:"p-blue",T3:"p-gray",Training:"p-training",Consultant:"p-purple",Flex:"p-amber"};
   return m[t]?'<span class="pill '+m[t]+'">'+t+'</span>':"";
+}
+
+// ══ SCHEDULE INTELLIGENCE ══
+function analyzeScheduleConflicts(){
+  var conflicts=[],warnings=[];
+  // Clopening detection: close (11:30pm) followed by open (11am) next day on Sat/Sun
+  DAYS.forEach(function(day,dayIdx){
+    var todayShifts=WEEK[day]||[];
+    var nextDay=DAYS[(dayIdx+1)%7];
+    var nextShifts=WEEK[nextDay]||[];
+    var closers=todayShifts.filter(function(sh){return sh.time&&sh.time.includes("11:30");}).map(function(sh){return sh.pid;});
+    if(nextDay==="Sat"||nextDay==="Sun"){
+      var openers=nextShifts.filter(function(sh){return sh.time&&(sh.time.includes("11am")||sh.time.includes("11:00"));}).map(function(sh){return sh.pid;});
+      closers.forEach(function(pid){
+        if(openers.indexOf(pid)>-1){
+          var p=byId(pid);
+          if(p) conflicts.push({type:"clopening",staff:p.name,day1:day,day2:nextDay,
+            msg:p.name.split(" ")[0]+" closes "+day+" (11:30pm) then opens "+nextDay+" (11am) - only ~11hrs off."});
+        }
+      });
+    }
+  });
+  // Back-to-back days off check
+  var staffWorkDays={};
+  staff.forEach(function(s){staffWorkDays[s.id]=[];});
+  DAYS.forEach(function(day,idx){
+    (WEEK[day]||[]).forEach(function(sh){if(staffWorkDays[sh.pid]) staffWorkDays[sh.pid].push(idx);});
+  });
+  staff.forEach(function(s){
+    var workDays=staffWorkDays[s.id]||[];
+    if(workDays.length<4) return;
+    var offDays=[0,1,2,3,4,5,6].filter(function(i){return workDays.indexOf(i)===-1;});
+    if(offDays.length<2) return;
+    var hasConsec=false;
+    for(var i=0;i<offDays.length-1;i++){if(offDays[i+1]-offDays[i]===1){hasConsec=true;break;}}
+    // Also check Sun-Sat wrap
+    if(!hasConsec&&offDays.indexOf(0)>-1&&offDays.indexOf(6)>-1) hasConsec=true;
+    if(!hasConsec) warnings.push({type:"split-days-off",staff:s.name,
+      msg:s.name.split(" ")[0]+" works "+workDays.length+" days with no back-to-back days off"});
+  });
+  return{conflicts:conflicts,warnings:warnings};
+}
+
+// ══ BRIEF ══
+function generateBrief(force){
+  var h=calcHealth();
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
+  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var kaveka=staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
+  var barGapDays=[];
+  DAYS.forEach(function(d){
+    (WEEK[d]||[]).forEach(function(sh){
+      if(sh.pos.toLowerCase().includes("bar")){var st=shiftStatus(sh.pid);if(st.cls!=="st-ok")barGapDays.push(d);}
+    });
+  });
+  barGapDays=barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
+  var conflicts=analyzeScheduleConflicts();
+  var sentences=[];var actions=0;
+  if(barT1s.length===0){sentences.push("No dedicated T1 bartender on the roster -- every bar shift this week is at risk across all 7 seats.");actions++;}
+  else if(barT1s.length===1){
+    var n=barT1s[0].name.split(" ")[0];
+    if(barGapDays.length>0){sentences.push("<strong>"+n+"</strong> is your only reliable bar cover -- "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has":"have")+" a coverage gap before the schedule goes out.");actions++;}
+    else{sentences.push("<strong>"+n+"</strong> is carrying the bar solo this week. One callout and you're back in last Saturday's position.");actions++;}
+  }else{
+    var ns=barT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
+    if(barGapDays.length>0){sentences.push(ns+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap -- assign a backup before publishing.");actions++;}
+    else sentences.push("Bar coverage solid -- "+ns+" both scheduled with backups.");
+  }
+  if(barT2s.length<2){sentences.push("Bar backup bench is thin -- Camille's cross-training session for <strong>Elena</strong> and <strong>Eamon</strong> needs to happen before April 4.");actions++;}
+  if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
+  if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
+  if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff -- cocktail guide, ordering forms, COGS baseline -- must be done before then.");
+  if(!hasEvents){sentences.push("Events Lead still open -- private dining is untapped revenue and the JD is ready to post.");actions++;}
+  sentences.push(actions===0?"Coverage looks good -- nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
+  document.getElementById("brief-text").className="brief-text";
+  document.getElementById("brief-text").innerHTML=sentences.join(" ");
+  var now=new Date();
+  var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("brief-stamp").textContent="Generated "+D[now.getDay()]+" "+M[now.getMonth()]+" "+now.getDate()+" at "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
 }
 
 // ══ ROSTER RENDER ══
@@ -793,62 +688,52 @@ function sRow(s){
     cross+trn+sh+'</div></div>'+
     tierPill(s.tier)+
     '<select class="tier-sel" onchange="setTier('+s.id+',this.value)">'+opts+'</select>'+
-    '<button class="icon-btn" onclick="overrideTeams('+s.id+')" title="Override teams">⇄</button>'+
-    '<button class="icon-btn del" onclick="removeStaff('+s.id+')" title="Remove">✕</button>'+
+    '<button class="icon-btn" onclick="ovTeams('+s.id+')" title="Override teams">⇄</button>'+
+    '<button class="icon-btn del" onclick="delStaff('+s.id+')" title="Remove">✕</button>'+
     '</div>';
 }
-
-function section(label,members,domId){
-  var inner=members.length?members.map(sRow).join(""):'<div style="padding:12px 18px;font-size:12px;color:var(--ink-4);font-family:\'Geist Mono\',monospace">No staff in this group.</div>';
-  return'<div id="'+domId+'"><div class="sdiv">'+label+'<span style="font-weight:400;color:var(--ink-4)">'+members.length+'</span></div>'+inner+'</div>';
+function sec(lbl,members,id){
+  var inner=members.length?members.map(sRow).join(""):'<div style="padding:12px 18px;font-size:12px;color:var(--ink-4)">No staff in this group.</div>';
+  return'<div id="'+id+'"><div class="sdiv">'+lbl+'<span style="font-weight:400;color:var(--ink-4)">'+members.length+'</span></div>'+inner+'</div>';
 }
-
 function renderRoster(){
   var bar=staff.filter(function(s){return getTeams(s).includes("bar");});
   var floor=staff.filter(function(s){return getTeams(s).includes("floor");});
   var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen");});
   ["roster-bar","roster-floor","roster-kitchen"].forEach(function(id,i){
-    var el=document.getElementById(id);
-    var teams=[bar,floor,kitchen],labels=["Bar team","Floor team","Kitchen"];
-    if(el) el.outerHTML=section(labels[i],teams[i],id);
+    var el=document.getElementById(id);var t=[bar,floor,kitchen],l=["Bar team","Floor team","Kitchen"];
+    if(el) el.outerHTML=sec(l[i],t[i],id);
   });
   var t1=0,t2=0,t3=0,trn=0;
   staff.filter(function(s){return!getTeams(s).includes("kitchen");}).forEach(function(s){
     if(s.tier==="T1")t1++;else if(s.tier==="T2")t2++;else if(s.tier==="T3")t3++;else if(s.tier==="Training")trn++;
   });
   ["m-t1","m-t2","m-t3","m-trn"].forEach(function(id,i){document.getElementById(id).textContent=[t1,t2,t3,trn][i];});
-  renderHealth();
-  populateCallout();
-  renderFeedback();
-  renderHeaderChips();
-  renderStamp();
+  renderHealth();populateCallout();renderFeedback();renderHeaderChips();renderStamp();
+  generateBrief(false);
 }
 
-// ══ EDIT ══
+// ══ ROLE EDIT ══
 function startEdit(id){var l=document.getElementById("rl-"+id),i=document.getElementById("ri-"+id);if(l&&i){l.style.display="none";i.style.display="inline-block";i.focus();i.select();}}
 function saveEdit(id){
-  var i=document.getElementById("ri-"+id);if(!i)return;
-  var v=i.value.trim();var s=byId(id);
-  if(s&&v){var old=inferTeams(s.role).join(","),nw=inferTeams(v).join(",");s.role=v;if(old!==nw&&!s._manualTeams)s._teams=null;}
-  renderRoster();saveState();briefCache=null;
+  var i=document.getElementById("ri-"+id);if(!i)return;var v=i.value.trim();var s=byId(id);
+  if(s&&v){var old=inferTeams(s.role).join(","),nw=inferTeams(v).join(",");s.role=v;if(old!==nw&&!s._mt)s._teams=null;}
+  renderRoster();saveState();
 }
 function cancelEdit(id){var s=byId(id),l=document.getElementById("rl-"+id),i=document.getElementById("ri-"+id);if(s&&l&&i){i.value=s.role;l.style.display="";i.style.display="none";}}
-function setTier(id,val){var s=byId(id);if(s)s.tier=val;renderRoster();if(activeTab==="week")renderWeek();saveState();briefCache=null;}
-function overrideTeams(id){
+function setTier(id,val){var s=byId(id);if(s)s.tier=val;renderRoster();if(activeTab==="week")renderWeek();saveState();}
+function ovTeams(id){
   var s=byId(id);if(!s)return;
-  var cur=getTeams(s).join(", ");
+  var cur=(s._teams||inferTeams(s.role)).join(", ");
   var v=prompt("Teams for "+s.name+"\nCurrent: "+cur+"\n\nEnter: bar, floor, kitchen (comma-separated)",cur);
   if(v===null)return;
   var valid=["bar","floor","kitchen"];
   var t=v.split(",").map(function(x){return x.trim().toLowerCase();}).filter(function(x){return valid.includes(x);});
-  s._teams=t.length?t:null;s._manualTeams=true;
-  renderRoster();saveState();
+  s._teams=t.length?t:null;s._mt=true;renderRoster();saveState();
 }
-function removeStaff(id){
-  var s=byId(id);if(!s)return;
-  if(!confirm("Remove "+s.name+" from the roster?"))return;
-  staff=staff.filter(function(x){return x.id!==id;});
-  renderRoster();if(activeTab==="week")renderWeek();saveState();briefCache=null;
+function delStaff(id){
+  var s=byId(id);if(!s)return;if(!confirm("Remove "+s.name+"?"))return;
+  staff=staff.filter(function(x){return x.id!==id;});renderRoster();if(activeTab==="week")renderWeek();saveState();
 }
 function addStaff(){
   var n=document.getElementById("add-name").value.trim();if(!n)return;
@@ -856,40 +741,28 @@ function addStaff(){
   var t=document.getElementById("add-tier").value;
   staff.push({id:Date.now(),name:n,role:r,tier:t,shifts:0});
   document.getElementById("add-name").value="";document.getElementById("add-role").value="";
-  renderRoster();saveState();briefCache=null;
+  renderRoster();saveState();
 }
 
 // ══ HEADER EVENTS ══
-var TYPE_CFG={
-  exit:{dot:"amber",label:function(e){return e.name+" exits "+e.date;}},
-  hiring:{dot:"blue",label:function(e){return "Hiring: "+e.name;}},
-  onboarding:{dot:"green",label:function(e){return e.name+" onboarding"+(e.date?" · "+e.date:"");}},
-  change:{dot:"blue",label:function(e){return e.name+" · "+e.date;}}
-};
+var TC={exit:{dot:"amber",label:function(e){return e.name+" exits "+e.date;}},hiring:{dot:"blue",label:function(e){return"Hiring: "+e.name;}},onboarding:{dot:"green",label:function(e){return e.name+" onboarding"+(e.date?" · "+e.date:"");}},change:{dot:"blue",label:function(e){return e.name+" · "+e.date;}}};
 function renderHeaderChips(){
   var now=Date.now();
   var active=teamEvents.filter(function(e){if(e.type==="exit"&&e.dateMs&&e.dateMs<now)return false;return true;});
   var wrap=document.getElementById("header-chips");
-  if(!active.length){wrap.innerHTML="";return;}
-  wrap.innerHTML=active.map(function(e){
-    var cfg=TYPE_CFG[e.type]||TYPE_CFG.change;
-    return'<div class="status-chip" onclick="toggleEP()" title="Manage team alerts">'+
-      '<div class="status-dot '+cfg.dot+'"></div>'+
-      '<span class="status-text">'+cfg.label(e)+'</span>'+
-    '</div>';
+  wrap.innerHTML=active.map(function(e){var cfg=TC[e.type]||TC.change;
+    return'<div class="status-chip" onclick="toggleEP()" title="Manage alerts"><div class="status-dot pulse '+cfg.dot+'"></div><span class="status-text">'+cfg.label(e)+'</span></div>';
   }).join("");
   renderEPList();
 }
 function renderEPList(){
   var el=document.getElementById("ep-list");if(!el)return;
-  el.innerHTML=teamEvents.map(function(e,i){
-    var colors={exit:"#f59e0b",hiring:"#60a5fa",onboarding:"#34d399",change:"#a78bfa"};
-    return'<div class="ep-event">'+
-      '<div class="ep-dot" style="background:'+(colors[e.type]||"#a78bfa")+'"></div>'+
+  var colors={exit:"#f59e0b",hiring:"#60a5fa",onboarding:"#34d399",change:"#a78bfa"};
+  el.innerHTML=teamEvents.length?teamEvents.map(function(e,i){
+    return'<div class="ep-event"><div class="ep-dot" style="background:'+(colors[e.type]||"#a78bfa")+'"></div>'+
       '<div style="flex:1"><div class="ep-name">'+e.name+'</div><div class="ep-sub">'+(e.date||e.type)+'</div></div>'+
-      '<button class="icon-btn del" onclick="removeEvent('+i+')" style="flex-shrink:0">✕</button>'+
-    '</div>';
-  }).join("")||'<div style="padding:12px 16px;font-size:12px;color:var(--ink-4)">No active alerts.</div>';
+      '<button class="icon-btn del" onclick="removeEvent('+i+')" style="flex-shrink:0">✕</button></div>';
+  }).join(""):'<div style="padding:12px 16px;font-size:12px;color:var(--ink-4)">No active alerts.</div>';
 }
 function toggleEP(){document.getElementById("events-panel").classList.toggle("open");}
 function closeEP(){document.getElementById("events-panel").classList.remove("open");}
@@ -908,13 +781,13 @@ document.addEventListener("click",function(e){
   if(p&&p.classList.contains("open")&&!p.contains(e.target)&&(!c||!c.contains(e.target)))closeEP();
 });
 
-// ══ WEEK ══
+// ══ WEEK SCHEDULE ══
 function shiftStatus(pid){
   var p=byId(pid);
-  if(!p||["None","T3","Consultant","Training"].includes(p.tier))return{lbl:"No primary",cls:"st-fail"};
-  var backs=getBackups(pid);
-  if(p.tier==="T1"&&backs.length>=1)return{lbl:"Covered",cls:"st-ok"};
-  if(p.tier==="T1"&&backs.length===0)return{lbl:"No backup",cls:"st-warn"};
+  if(!p||["None","T3","Consultant","Training","Flex"].includes(p.tier))return{lbl:"No primary",cls:"st-fail"};
+  var bk=getBackups(pid);
+  if(p.tier==="T1"&&bk.length>=1)return{lbl:"Covered",cls:"st-ok"};
+  if(p.tier==="T1"&&bk.length===0)return{lbl:"No backup",cls:"st-warn"};
   if(p.tier==="T2")return{lbl:"T2 primary",cls:"st-warn"};
   return{lbl:"At risk",cls:"st-fail"};
 }
@@ -925,21 +798,27 @@ function renderDayBtns(){
 }
 function setDay(d){activeDay=d;renderDayBtns();renderWeek();document.getElementById("week-card-title").textContent=d+" shifts";}
 function renderWeek(){
+  var conflicts=analyzeScheduleConflicts();
+  var conflictNames=conflicts.conflicts.map(function(c){return c.staff;});
   var shifts=WEEK[activeDay]||[],probs=0;
   var rows=shifts.map(function(sh){
     var p=byId(sh.pid);var pn=p?p.name:"Unassigned";var pt=p?p.tier:"—";
-    var backs=getBackups(sh.pid).map(function(b){return b.name;}).join(", ")||"None";
+    var bk=getBackups(sh.pid).map(function(b){return b.name;}).join(", ")||"None";
     var st=shiftStatus(sh.pid);if(st.cls!=="st-ok")probs++;
     var isBar=sh.pos.toLowerCase().includes("bar");
+    var flagClopen=p&&conflictNames.indexOf(p.name)>-1;
     return'<tr><td style="font-weight:500">'+sh.pos+(isBar?'<span class="pill p-green" style="margin-left:6px;font-size:9px">bar</span>':'')+'</td>'+
       '<td class="shift-time">'+sh.time+'</td>'+
-      '<td><div>'+pn+' '+tierPill(pt)+'</div><div class="shift-back">Backup: '+backs+'</div></td>'+
+      '<td><div>'+pn+' '+tierPill(pt)+(flagClopen?'<span style="font-size:10px;color:var(--red);font-weight:600;margin-left:6px">⚠ clopening</span>':'')+'</div><div class="shift-back">Backup: '+bk+'</div></td>'+
       '<td style="text-align:right;padding-right:18px"><span class="'+st.cls+'">'+st.lbl+'</span></td></tr>';
   }).join("");
   document.getElementById("shift-tbody").innerHTML=rows||'<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--ink-4);font-family:\'Geist Mono\',monospace;font-size:11px">No shifts scheduled</td></tr>';
-  document.getElementById("week-summary").innerHTML=probs===0
+  var sumHtml=probs===0
     ?'<div class="alert al-green"><strong>All clear.</strong> Every shift on '+activeDay+' has qualified coverage.</div>'
     :'<div class="alert al-amber"><strong>'+probs+' shift'+(probs>1?"s":"")+' need attention</strong> on '+activeDay+' before publishing.</div>';
+  if(conflicts.conflicts.length>0) sumHtml+='<div class="alert al-red" style="margin-top:8px"><strong>Clopening risk:</strong> '+conflicts.conflicts.map(function(c){return c.msg;}).join(" | ")+'</div>';
+  if(conflicts.warnings.length>0) sumHtml+='<div class="alert al-amber" style="margin-top:8px"><strong>Days off:</strong> '+conflicts.warnings.map(function(w){return w.msg;}).join(" | ")+'</div>';
+  document.getElementById("week-summary").innerHTML=sumHtml;
 }
 function toggleWeekEditor(){
   weekEditing=!weekEditing;
@@ -947,11 +826,7 @@ function toggleWeekEditor(){
   document.getElementById("week-editor").style.display=weekEditing?"block":"none";
   document.getElementById("edit-btn").textContent=weekEditing?"Cancel":"Edit shifts";
   document.getElementById("editor-day-lbl").textContent=activeDay;
-  if(weekEditing)buildEditorRows();
-}
-function buildEditorRows(){
-  editorData=(WEEK[activeDay]||[]).map(function(sh){return{pos:sh.pos,time:sh.time,pid:sh.pid};});
-  renderEditorRows();
+  if(weekEditing){editorData=(WEEK[activeDay]||[]).map(function(sh){return{pos:sh.pos,time:sh.time,pid:sh.pid};});renderEditorRows();}
 }
 function renderEditorRows(){
   document.getElementById("editor-rows").innerHTML=editorData.map(function(sh,i){
@@ -965,108 +840,192 @@ function renderEditorRows(){
     '</div>';
   }).join("");
 }
-function addShiftRow(){editorData.push({pos:"Shift",time:"4–11:30pm",pid:0});renderEditorRows();}
-function saveWeek(){
-  WEEK[activeDay]=editorData.slice();
-  toggleWeekEditor();renderWeek();
-  saveState();briefCache=null;
-}
+function addShiftRow(){editorData.push({pos:"Shift",time:"4-11:30pm",pid:0});renderEditorRows();}
+function saveWeek(){WEEK[activeDay]=editorData.slice();toggleWeekEditor();renderWeek();saveState();}
 
-// ══ CALLOUT ══
+// ══ CALLOUT MULTI-SELECT ══
 function populateCallout(){
-  var sel=document.getElementById("callout-sel"),cur=sel.value;
-  sel.innerHTML='<option value="">Select who called out…</option>';
-  staff.forEach(function(s){sel.innerHTML+='<option value="'+s.id+'"'+(s.id==cur?" selected":"")+'>'+s.name+' — '+s.role+'</option>';});
+  var wrap=document.getElementById("callout-checkboxes");if(!wrap)return;
+  var eligible=staff.filter(function(s){return s.tier!=="None"&&!getTeams(s).includes("kitchen");});
+  wrap.innerHTML=eligible.map(function(s){
+    var sel=calloutSelected.indexOf(s.id)>-1;
+    return'<span class="co-chip'+(sel?" selected":"")+'" onclick="toggleCoChip('+s.id+')">'+
+      s.name.split(" ")[0]+' '+tierPill(s.tier)+
+    '</span>';
+  }).join("");
+  var cnt=document.getElementById("callout-count");
+  if(cnt) cnt.textContent=calloutSelected.length>0?calloutSelected.length+" person"+(calloutSelected.length>1?"s":"")+" out":"";
+}
+function toggleCoChip(id){
+  var idx=calloutSelected.indexOf(id);
+  if(idx>-1)calloutSelected.splice(idx,1);else calloutSelected.push(id);
+  populateCallout();
+}
+function clearCallout(){
+  calloutSelected=[];populateCallout();
+  document.getElementById("callout-result").innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select staff above then hit Simulate</div>';
 }
 function runCallout(){
-  var id=parseInt(document.getElementById("callout-sel").value);
   var el=document.getElementById("callout-result");
-  if(!id){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select a staff member above</div>';return;}
-  var called=staff.find(function(s){return s.id===id;});if(!called)return;
-  var backs=getBackups(id);
-  var flex=getFlexStaff(id);
+  if(!calloutSelected.length){
+    el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select staff above then hit Simulate</div>';return;
+  }
+  var calledOut=calloutSelected.map(function(id){return byId(id);}).filter(Boolean);
+  var calledIds=calloutSelected;
+  var barOut=calledOut.filter(function(s){return getTeams(s).includes("bar")&&(s.tier==="T1"||s.tier==="T2");});
+  var leadOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
+  var availBar=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&(s.tier==="T1"||s.tier==="T2")&&getTeams(s).includes("bar");});
+  var availFlex=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&s.tier==="Flex";});
   var html="";
-  if(called.tier==="T1"){
-    if(backs.length){
-      html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Bar needs cover — work through this cascade in order.</div><div>';
-      backs.forEach(function(b,i){
+  var names=calledOut.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" + ");
+  var sev=(barOut.length>0&&availBar.length===0)?"al-red":(barOut.length>0?"al-amber":"al-green");
+  html+='<div class="alert '+sev+'" style="margin-bottom:14px">'+names+' out.';
+  if(barOut.length>0) html+=" "+barOut.length+" bar staff missing.";
+  if(leadOut.length>0) html+=" "+leadOut.length+" floor lead"+(leadOut.length>1?"s":"")+" missing.";
+  if(barOut.length===0&&leadOut.length===0) html+=" No critical coverage impact on bar or floor.";
+  html+="</div>";
+  if(barOut.length>0){
+    var risk=BIZ.barSeats*BIZ.avgSpend;
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'+
+      '<div style="background:var(--red-bg);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--red)">$'+risk+'</div><div style="font-size:10px;color:var(--red-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">At risk/service</div></div>'+
+      '<div style="background:var(--amber-bg);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--amber)">'+availBar.length+'</div><div style="font-size:10px;color:var(--amber-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Bar backups left</div></div>'+
+      '<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace">'+calledOut.length+'</div><div style="font-size:10px;color:var(--ink-3);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">People out</div></div>'+
+    '</div>';
+    html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Bar coverage cascade</div>';
+    if(availBar.length>0){
+      availBar.forEach(function(b,i){
         html+='<div class="cascade-row"><div class="cascade-num">'+(i+1)+'</div><div>'+
           '<div class="cascade-name">'+b.name+' '+tierPill(b.tier)+'</div>'+
           '<div class="cascade-sub">'+b.role+(b.tier==="T2"?" · limited menu, confirm availability":"")+'</div>'+
         '</div></div>';
       });
-      if(flex.length){
+      if(availFlex.length){
         html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);border-color:#f5d28a;color:var(--amber-text)">?</div><div>'+
-          '<div class="cascade-name">'+flex.map(function(f){return f.name;}).join(", ")+' '+tierPill("Flex")+'</div>'+
-          '<div class="cascade-sub">Ex-employees — may be available but not guaranteed. Reach out directly, no expectation.</div>'+
+          '<div class="cascade-name">'+availFlex.map(function(f){return f.name;}).join(", ")+' '+tierPill("Flex")+'</div>'+
+          '<div class="cascade-sub">Ex-employees -- may be available, not guaranteed. No expectation.</div>'+
         '</div></div>';
       }
       html+='<div class="cascade-row"><div class="cascade-num cam">C</div><div>'+
         '<div class="cascade-name">Camille '+tierPill("Consultant")+'</div>'+
-        '<div class="cascade-sub">Last resort · guest bartender rate + tips · contact directly</div>'+
-      '</div></div></div>';
-    } else {
-      html='<div class="alert al-red"><strong>'+called.name+' out — zero qualified backup.</strong> Direct revenue risk: 7 bar seats, ~$80 average, no cover.';
-      if(flex.length) html+=' Flex staff ('+flex.map(function(f){return f.name;}).join(", ")+') may be reachable — not guaranteed.';
-      html+='</div>';
+        '<div class="cascade-sub">Last resort · guest rate + tips · contact directly</div>'+
+      '</div></div>';
+    }else{
+      html+='<div class="alert al-red"><strong>Zero bar backups available.</strong>';
+      if(availFlex.length) html+=' Flex: '+availFlex.map(function(f){return f.name;}).join(", ")+' (not guaranteed).';
+      html+=' Camille as absolute last resort.</div>';
     }
-  } else if(called.tier==="T2"){
-    var ob=getBackups(id);
-    html='<div class="alert al-green"><strong>'+called.name+' calls out.</strong> T2 only — bar primary unaffected. Other qualified: '+(ob.length?ob.map(function(b){return b.name;}).join(", "):"none on roster")+'.</div>';
-  } else if(called.tier==="Training"){
-    html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Onboarding — limited impact. Flag to Tanner for floor coverage check.</div>';
-  } else if(called.tier==="Consultant"){
-    html='<div class="alert al-purple">Camille is session-based, not on the shift schedule. No coverage impact. Reschedule any planned development session.</div>';
-  } else if(called.tier==="Flex"){
-    html='<div class="alert al-amber"><strong>'+called.name+'</strong> is flex — no scheduled shifts. If they were informally covering something, check the week schedule for gaps.</div>';
-  } else {
-    html='<div class="alert al-green"><strong>'+called.name+'</strong> calling out does not affect bar or floor coverage.</div>';
+  }
+  if(leadOut.length>0){
+    var remLeads=staff.filter(function(s){return s.role.toLowerCase().includes("floor lead")&&calledIds.indexOf(s.id)===-1;});
+    html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:14px 0 8px">Floor lead impact</div>';
+    if(remLeads.length>0){
+      html+='<div class="alert al-amber">'+leadOut.map(function(s){return s.name.split(" ")[0];}).join(" + ")+' out -- '+remLeads.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ")+' holds the floor. Confirm before service.</div>';
+    }else{
+      html+='<div class="alert al-red"><strong>No floor leads available.</strong> Tanner needs to step in or elevate a T1 for the shift.</div>';
+    }
   }
   el.innerHTML=html;
 }
 
-// ══ FEEDBACK ══
+// ══ FEEDBACK / INSIGHTS ══
 function renderFeedback(){
   var h=calcHealth();var cards=[];
   var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
-  var hasPlaceholder=staff.some(function(s){return s.name.includes("New hire");});
   var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
   var fLeads=staff.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
   var trainees=staff.filter(function(s){return s.tier==="Training";});
   var crossN=staff.filter(function(s){return isCross(s);}).length;
   var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var shiftRevRisk=BIZ.barSeats*BIZ.avgSpend;
+  var shiftRisk=BIZ.barSeats*BIZ.avgSpend;
   var monthlyEvents=Math.round(BIZ.eventsTarget/12);
+  var conflicts=analyzeScheduleConflicts();
+  var t1Needed=Math.ceil(BIZ.barShiftsPerWeek/4);
+  var t1Current=barT1s.length;
+  var t1Gap=Math.max(0,t1Needed-t1Current);
 
-  if(h.bT1===0) cards.push({type:"critical",icon:"🚨",title:"No T1 bartender — immediate hire required",ctx:"9 bar shifts/week uncovered",body:"Without a T1 bartender, every service is at risk on all "+BIZ.barSeats+" bar seats. At $"+BIZ.avgSpend+" average that's up to $"+shiftRevRisk+" per service. Grace and Laura provide T1/T2 coverage but a dedicated hire is required. Post the Indeed listing this week and engage Camille immediately.",action:"Post bartender JD to Indeed · Contact Camille to start"});
-  if(hasPlaceholder) cards.push({type:"warning",icon:"⚠️",title:"Placeholder T1 still in roster",ctx:"'New hire' is not a real person yet",body:"The brief and callout cascade treat this as a real staff member. Replace it with the actual hire's name and role the day they sign. False coverage data is worse than no data.",action:"Update placeholder when hire is confirmed"});
-  if(h.bT1===1&&!hasPlaceholder) cards.push({type:"warning",icon:"⚠️",title:"Single T1 bartender — single point of failure",ctx:"One callout = coverage collapse",body:"One T1 carrying "+BIZ.barShiftsPerWeek+" bar shifts is exactly tonight's Kaveka situation. Target minimum 2 active T1 bar staff. Nikko and Rohith should both be evaluated for T1 promotion after Camille's training session.",action:"Evaluate Nikko + Rohith for T1 promotion post-training"});
-  if(h.bT2<2) cards.push({type:"warning",icon:"⚠️",title:"Bar backup bench too thin (need 2+ T2s)",ctx:"Current: "+h.bT2+" T2 backup"+(h.bT2===1?"":"s"),body:"A resilient bar needs at least 2 T2s who can run a limited menu independently. Camille's cross-training session for Elena and Eamon is the fastest fix — one on-shift session with a 5-drink spec sheet is enough.",action:"Schedule Camille T2 training — Elena + Eamon priority"});
-  if(crossN<3) cards.push({type:"opportunity",icon:"💡",title:"Cross-training adds resilience",ctx:crossN+" cross-trained staff currently",body:"Grace and Laura set the template. Priority: Eamon (Host → Host/Bartender) gives bar a T2 with Camille's training. Sayer (Host → Host/Server) gives floor more depth. Each addition reduces single-point-of-failure risk.",action:"Set cross-training targets: Eamon + Sayer this quarter"});
-  if(fLeads.length<2) cards.push({type:"warning",icon:"⚠️",title:"Floor lead coverage at minimum",ctx:fLeads.length+" active floor lead"+(fLeads.length===1?"":"s"),body:"Elena and Nathalie are your two leads. If either calls out, service runs without a designated lead. Both need a named callout delegate who can run the floor and make decisions independently.",action:"Confirm Floor Lead SOP with Elena + Nathalie"});
-  if(trainees.length>1) cards.push({type:"warning",icon:"⚠️",title:"Multiple trainees — watch supervision load",ctx:trainees.map(function(s){return s.name;}).join(", "),body:"More than 2 training staff at once adds supervision load without contributing full capacity. Set graduation milestones: 4 weeks to T3, 8 weeks to T2 evaluation. Update their tier when ready.",action:"Set graduation timeline per trainee"});
-  if(!hasEvents) cards.push({type:"opportunity",icon:"💡",title:"Events Lead — open revenue position",ctx:"Private dining target: $"+BIZ.eventsTarget.toLocaleString()+" in 2026",body:"W10W's 23-seat format is highly bookable for private dining. An Events Lead on commission-forward structure costs near-zero unless they're generating. At ~$"+monthlyEvents.toLocaleString()+"/month target, two private bookings cover the role. The JD is drafted.",action:"Post Events Lead to Indeed — commission-forward structure"});
-  if(h.barScore>=75&&h.floorScore>=75&&!hasPlaceholder&&h.bT2>=2) cards.push({type:"healthy",icon:"✅",title:"Coverage in strong shape",ctx:"Bar "+h.barScore+"% · Floor "+h.floorScore+"%",body:"Both teams above threshold with adequate backup depth. The goal from here is redundancy — any single callout handled without a manager stepping in. Continue cross-training and maintain the infra build.",action:"Review quarterly"});
+  if(conflicts.conflicts.length>0){
+    cards.push({type:"critical",icon:"⚠️",title:"Clopening conflict in schedule",ctx:conflicts.conflicts.length+" turnaround"+(conflicts.conflicts.length>1?"s":"")+" flagged",
+      body:conflicts.conflicts.map(function(c){return c.msg;}).join(" | ")+" -- staff need at least 12hrs between close and open. Fix before publishing.",
+      action:"Edit Week Schedule -- adjust "+conflicts.conflicts[0].staff.split(" ")[0]+"'s shifts",hire:null});
+  }
+  if(conflicts.warnings.length>0){
+    cards.push({type:"warning",icon:"📅",title:"Split days off",ctx:conflicts.warnings.length+" staff member"+(conflicts.warnings.length>1?"s":"")+" affected",
+      body:conflicts.warnings.map(function(w){return w.msg;}).join("; ")+". Single rest days increase callout risk. Aim for back-to-back days off.",
+      action:"Review week schedule and consolidate days off",hire:null});
+  }
+  if(h.bT1===0){
+    cards.push({type:"critical",icon:"🚨",title:"No T1 bartender -- hire immediately",ctx:"All "+BIZ.barShiftsPerWeek+" bar shifts/week at risk",
+      body:"Zero T1 bar coverage. At "+BIZ.barShiftsPerWeek+" shifts/week and 4 shifts per person, you need "+t1Needed+" T1s for full resilience. Currently "+t1Current+". Option A: 1 full-time (4-5 shifts) -- fastest path. Option B: 2 part-time (2-3 shifts each) -- more flexibility.",
+      action:"Post bartender JD",hire:"bartender"});
+  }else if(t1Gap>0){
+    cards.push({type:"warning",icon:"⚠️",title:"Bar T1 headcount below target (need "+t1Needed+")",ctx:"Current: "+t1Current+", target: "+t1Needed+" for "+BIZ.barShiftsPerWeek+" shifts/week",
+      body:"With "+t1Current+" T1 bartender"+(t1Current===1?"":"s")+" and "+BIZ.barShiftsPerWeek+" shifts/week, each person averages "+(BIZ.barShiftsPerWeek/Math.max(t1Current,1)).toFixed(1)+" shifts -- above the sustainable 4-5. "+t1Gap+" additional hire"+(t1Gap>1?"s":"")+" needed. Full-time gives consistency; two part-time gives scheduling flexibility.",
+      action:"Post bartender JD",hire:"bartender"});
+  }
+  if(barT2s.length<2) cards.push({type:"warning",icon:"⚠️",title:"Bar backup bench too thin (need 2+ T2s)",ctx:"Current: "+h.bT2+" T2 backup"+(h.bT2===1?"":"s"),body:"A resilient bar needs at least 2 T2s who can run a limited menu. Camille's cross-training session for Elena and Eamon is the fastest fix.",action:"Schedule Camille T2 training",hire:null});
+  if(crossN<3) cards.push({type:"opportunity",icon:"💡",title:"Expand cross-training for resilience",ctx:crossN+" cross-trained staff currently",body:"Grace and Laura set the template. Next: Eamon (Host to Host/Bartender) with Camille training, Sayer (Host to Host/Server). Each addition reduces single-point-of-failure risk.",action:"Cross-training targets: Eamon + Sayer this quarter",hire:null});
+  if(fLeads.length<2) cards.push({type:"warning",icon:"⚠️",title:"Floor lead coverage at minimum",ctx:fLeads.length+" active floor lead"+(fLeads.length===1?"":"s"),body:"Elena and Nathalie are your two leads. Both need a named delegate who can run the floor independently if either calls out.",action:"Confirm Floor Lead SOP with Elena + Nathalie",hire:null});
+  if(trainees.length>0) cards.push({type:"warning",icon:"⚠️",title:"Active onboarding -- supervision load",ctx:trainees.map(function(s){return s.name.split(" ")[0];}).join(", ")+" in training",body:"Training staff add supervision load without full capacity. Set milestones: 4 weeks to T3, 8 weeks to T2 evaluation.",action:"Set graduation timeline per trainee",hire:null});
+  if(!hasEvents) cards.push({type:"opportunity",icon:"💡",title:"Events Lead -- open revenue position",ctx:"Private dining target: $"+BIZ.eventsTarget.toLocaleString()+" in 2026",body:"W10W's 23-seat format is highly bookable for private dining. Commission-forward structure means near-zero cost unless generating. At $"+monthlyEvents.toLocaleString()+"/month target, two bookings cover the role. JD is ready to post.",action:"Post Events Lead to Indeed",hire:"events"});
+  if(h.bs>=75&&h.fs>=75&&t1Gap===0&&h.bT2>=2&&conflicts.conflicts.length===0){
+    cards.push({type:"healthy",icon:"✅",title:"Coverage in strong shape",ctx:"Bar "+h.bs+"% · Floor "+h.fs+"%",body:"Both teams above threshold, backup bench adequate, no schedule conflicts. Goal: any single callout handled without a manager stepping in.",action:"Review quarterly",hire:null});
+  }
 
   var critCount=cards.filter(function(c){return c.type==="critical"||c.type==="warning";}).length;
   var nb=document.getElementById("nb-feedback");
   if(nb){nb.textContent=critCount>0?critCount+" action"+(critCount>1?"s":""):"OK";nb.className="nav-badge "+(critCount===0?"ok":"");}
 
   document.getElementById("feedback-cards").innerHTML=cards.map(function(c){
+    var actionEl=c.hire
+      ?'<button class="btn btn-sm btn-primary" onclick="openHiringModal(\''+c.hire+'\')" style="margin-top:4px">→ View JD + Post to Indeed</button>'
+      :'<span style="font-size:11px;font-weight:600;color:var(--ink-3);font-family:\'Geist Mono\',monospace">→ '+c.action+'</span>';
     return'<div class="fb-card">'+
       '<div class="fb-hdr"><div class="fb-icon '+c.type+'">'+c.icon+'</div>'+
       '<div><div class="fb-title">'+c.title+'</div><div class="fb-ctx">'+c.ctx+'</div></div></div>'+
       '<div class="fb-body">'+c.body+'</div>'+
-      '<div class="fb-action">→ '+c.action+'</div>'+
+      '<div class="fb-action">'+actionEl+'</div>'+
     '</div>';
   }).join("");
 }
 
+// ══ HIRING MODAL ══
+function openHiringModal(role){
+  var jd=JDS[role];if(!jd)return;currentJD=jd;
+  document.getElementById("modal-title").textContent="Post: "+jd.title;
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var rec="";
+  if(role==="bartender"){
+    var needed=Math.ceil(BIZ.barShiftsPerWeek/4);var cur=barT1s.length;var gap=Math.max(0,needed-cur);
+    if(gap>=2) rec="You need "+needed+" T1 bartenders for "+BIZ.barShiftsPerWeek+" shifts/week. Currently "+cur+". Recommend "+gap+" additional hire"+(gap>1?"s":"")+". Option A: one full-time (4-5 shifts/week) -- fastest path, builds culture. Option B: two part-time (2-3 shifts each) -- more flexibility, two relationships to manage.";
+    else if(gap===1) rec="One additional T1 bartender gives full coverage redundancy. Full-time at 4 shifts/week is cleanest -- one person, full accountability.";
+    else rec="Bar T1 coverage is currently adequate. A part-time hire as backup investment is worth considering ahead of summer.";
+  }else if(role==="server"){rec="A cross-trained Bartender/Server hire adds the most value -- one headcount that covers both bar and floor gaps.";}
+  else if(role==="events"){rec="At $"+Math.round(BIZ.eventsTarget/12).toLocaleString()+"/month target, two private bookings per month covers the role. Commission-forward means near-zero downside if they underperform.";}
+  document.getElementById("modal-recommendation").textContent=rec;
+  document.getElementById("modal-jd").textContent=jd.body;
+  document.getElementById("modal-schedule-options").innerHTML=
+    '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px">'+
+    '<div style="font-size:12px;font-weight:600;margin-bottom:4px">Full-time (4-5 shifts/week)</div>'+
+    '<div style="font-size:11px;color:var(--ink-3)">Max consistency · one hire to onboard · cleaner for tip pool · single point of accountability</div>'+
+    '</div>'+
+    '<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px">'+
+    '<div style="font-size:12px;font-weight:600;margin-bottom:4px">Two part-time (2-3 shifts each)</div>'+
+    '<div style="font-size:11px;color:var(--ink-3)">Built-in backup · scheduling flexibility · two relationships to manage · higher onboarding overhead</div>'+
+    '</div>';
+  document.getElementById("hiring-modal").classList.add("open");
+}
+function closeHiringModal(){document.getElementById("hiring-modal").classList.remove("open");}
+function openIndeed(){
+  if(!currentJD)return;
+  var params="jobtitle="+encodeURIComponent(currentJD.title)+"&company=WEST10WEST&location=New+York%2C+NY+10014&description="+encodeURIComponent(currentJD.body);
+  window.open("https://employers.indeed.com/job/create?"+params,"_blank");
+}
+document.addEventListener("click",function(e){if(e.target===document.getElementById("hiring-modal"))closeHiringModal();});
+
 // ══ INFRA ══
 function renderInfra(){
   function rows(arr,pfx){
-    return arr.map(function(item,i){
-      var k=pfx+i;
+    return arr.map(function(item,i){var k=pfx+i;
       return'<div class="infra-row" onclick="toggleCheck(\''+k+'\')">'+
         '<div class="infra-chk'+(checks[k]?" done":"")+'" id="ck-'+k+'"></div>'+
         '<div><div class="infra-text">'+item.text+'</div><div class="infra-owner">Owner: '+item.owner+'</div></div>'+
@@ -1076,24 +1035,18 @@ function renderInfra(){
   document.getElementById("infra-camille").innerHTML=rows(INFRA_CAMILLE,"c");
   document.getElementById("infra-ordering").innerHTML=rows(INFRA_ORDERING,"o");
 }
-function toggleCheck(k){
-  checks[k]=!checks[k];
-  var el=document.getElementById("ck-"+k);
-  if(el)el.className="infra-chk"+(checks[k]?" done":"");
-  saveState();
-}
+function toggleCheck(k){checks[k]=!checks[k];var el=document.getElementById("ck-"+k);if(el)el.className="infra-chk"+(checks[k]?" done":"");saveState();}
 
 // ══ TAB NAV ══
 function showTab(t){
   activeTab=t;
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){
-    el.className="nav-tab"+(["roster","week","callout","feedback","infra"][i]===t?" active":"");
-  });
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra"][i]===t?" active":"");});
   document.getElementById("tab-"+t).classList.add("active");
   if(t==="week"){renderDayBtns();renderWeek();}
   if(t==="callout")populateCallout();
   if(t==="infra")renderInfra();
+  if(t==="roster")generateBrief(false);
 }
 
 // ══ DATE ══
@@ -1108,6 +1061,7 @@ async function init(){
   await loadState();
   renderRoster();
   renderDayBtns();
+  renderWeek();
   renderFeedback();
   renderHeaderChips();
   renderStamp();
@@ -1115,6 +1069,7 @@ async function init(){
 }
 
 init();
+
 </script>
 </body>
 </html>
