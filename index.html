@@ -297,7 +297,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
       <input type="text" id="add-name" placeholder="Full name"/>
       <input type="text" id="add-role" placeholder="Role (e.g. Bartender / Server)"/>
       <select id="add-tier" style="font-family:'Geist Mono',monospace;font-size:11px">
-        <option>T1</option><option>T2</option><option>T3</option><option>Training</option><option>Consultant</option><option>None</option>
+        <option>T1</option><option>T2</option><option>T3</option><option>Training</option><option>Consultant</option><option>Flex</option><option>None</option>
       </select>
       <button class="btn btn-primary" onclick="addStaff()">+ Add member</button>
     </div>
@@ -401,6 +401,9 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 </div>
 
 <script>
+// ══ API KEY — paste your Anthropic key here for the brief to work ══
+var ANTHROPIC_KEY = "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";
+
 // ══ BUSINESS CONSTANTS — what the tool knows about W10W ══
 var BIZ = {
   name: "WEST10WEST",
@@ -414,25 +417,24 @@ var BIZ = {
 
 // ══ DEFAULT STATE ══
 var DEFAULT_STAFF = [
-  {id:1,name:"New hire (T1)",role:"Bartender",tier:"T1",shifts:0,_teams:["bar"]},
+  {id:1,name:"New hire (open)",role:"Bartender",tier:"None",shifts:0,_teams:["bar"]},
   {id:2,name:"Camille",role:"Bartender / Consultant",tier:"Consultant",shifts:0},
   {id:3,name:"Grace Lyons",role:"Bartender / Server",tier:"T1",shifts:41},
   {id:4,name:"Laura Paganello",role:"Bartender / Server",tier:"T2",shifts:38},
-  {id:5,name:"Nikko Pineda",role:"Bartender",tier:"T2",shifts:2},
-  {id:6,name:"Rohith Ram",role:"Bartender",tier:"T2",shifts:3},
-  {id:7,name:"Tanner Floyd",role:"Managing Partner",tier:"T1",shifts:38,_teams:["bar","floor"]},
-  {id:8,name:"Elena Mucilli",role:"Floor Lead",tier:"T2",shifts:29},
-  {id:9,name:"Nathalie Fernandes",role:"Floor Lead",tier:"T2",shifts:46},
+  {id:5,name:"Nikko Pineda",role:"Bartender",tier:"Flex",shifts:2},
+  {id:6,name:"Rohith Ram",role:"Bartender",tier:"Flex",shifts:3},
+  {id:7,name:"Tanner Floyd",role:"Managing Partner",tier:"None",shifts:38,_teams:["bar","floor"]},
+  {id:8,name:"Elena Mucilli",role:"Floor Lead",tier:"T1",shifts:29},
+  {id:9,name:"Nathalie Fernandes",role:"Floor Lead",tier:"T1",shifts:46},
   {id:10,name:"Chelsea Udoye",role:"Server",tier:"T3",shifts:42},
-  {id:11,name:"Sayer Williams",role:"Host",tier:"T3",shifts:18},
-  {id:12,name:"Eamon Ida",role:"Host",tier:"T2",shifts:6},
-  {id:13,name:"George Witnauer",role:"Server",tier:"Training",shifts:1},
+  {id:11,name:"Sayer Williams",role:"Host / Server",tier:"T1",shifts:18},
+  {id:12,name:"Eamon Ida",role:"Host",tier:"None",shifts:6},
+  {id:13,name:"George Witnauer",role:"Bartender",tier:"Training",shifts:1},
   {id:14,name:"Adrian Policarpio Angel",role:"Cook",tier:"None",shifts:56},
   {id:15,name:"Dave Arauz",role:"Line Cook",tier:"None",shifts:55},
   {id:16,name:"Yatta Diop",role:"Cook",tier:"None",shifts:46},
   {id:17,name:"Candido Flores",role:"Cook",tier:"None",shifts:13},
-  {id:18,name:"Arturo Peres Jr",role:"Cook",tier:"None",shifts:20},
-  {id:19,name:"Carlos Sicajau",role:"Cook",tier:"None",shifts:37}
+  {id:18,name:"Arturo Peres Jr",role:"Cook",tier:"None",shifts:20}
 ];
 
 var DEFAULT_WEEK = {
@@ -549,6 +551,9 @@ function isCross(s){return getTeams(s).length>1;}
 function byId(id){return staff.find(function(s){return s.id===id;})||null;}
 function getBackups(excludeId){
   return staff.filter(function(s){return s.id!==excludeId&&(s.tier==="T1"||s.tier==="T2")&&s.tier!=="Training";});
+}
+function getFlexStaff(excludeId){
+  return staff.filter(function(s){return s.id!==excludeId&&s.tier==="Flex";});
 }
 
 // ══ HEALTH ══
@@ -673,7 +678,7 @@ async function generateBrief(force){
   try {
     var resp = await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"application/json","x-api-key":ANTHROPIC_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
       body:JSON.stringify({
         model:"claude-sonnet-4-20250514",
         max_tokens:300,
@@ -704,7 +709,7 @@ async function generateBrief(force){
 
 // ══ PILLS ══
 function tierPill(t){
-  var m={T1:"p-green",T2:"p-blue",T3:"p-gray",Training:"p-training",Consultant:"p-purple"};
+  var m={T1:"p-green",T2:"p-blue",T3:"p-gray",Training:"p-training",Consultant:"p-purple",Flex:"p-amber"};
   return m[t]?'<span class="pill '+m[t]+'">'+t+'</span>':"";
 }
 
@@ -713,7 +718,7 @@ function sRow(s){
   var cross=isCross(s)?'<span class="cross-tag">cross-trained</span>':"";
   var trn=s.tier==="Training"?'<span class="trn-tag">· onboarding</span>':"";
   var sh=s.shifts>0?'<span class="srow-shifts">'+s.shifts+'sh</span>':"";
-  var opts=["T1","T2","T3","Training","Consultant","None"].map(function(t){return'<option'+(s.tier===t?" selected":"")+'>'+t+'</option>';}).join("");
+  var opts=["T1","T2","T3","Training","Consultant","Flex","None"].map(function(t){return'<option'+(s.tier===t?" selected":"")+'>'+t+'</option>';}).join("");
   return'<div class="srow" id="sr-'+s.id+'">'+
     '<div><div class="srow-name">'+s.name+'</div>'+
     '<div class="srow-meta">'+
@@ -912,7 +917,9 @@ function runCallout(){
   var el=document.getElementById("callout-result");
   if(!id){el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select a staff member above</div>';return;}
   var called=staff.find(function(s){return s.id===id;});if(!called)return;
-  var backs=getBackups(id);var html="";
+  var backs=getBackups(id);
+  var flex=getFlexStaff(id);
+  var html="";
   if(called.tier==="T1"){
     if(backs.length){
       html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Bar needs cover — work through this cascade in order.</div><div>';
@@ -922,12 +929,20 @@ function runCallout(){
           '<div class="cascade-sub">'+b.role+(b.tier==="T2"?" · limited menu, confirm availability":"")+'</div>'+
         '</div></div>';
       });
+      if(flex.length){
+        html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);border-color:#f5d28a;color:var(--amber-text)">?</div><div>'+
+          '<div class="cascade-name">'+flex.map(function(f){return f.name;}).join(", ")+' '+tierPill("Flex")+'</div>'+
+          '<div class="cascade-sub">Ex-employees — may be available but not guaranteed. Reach out directly, no expectation.</div>'+
+        '</div></div>';
+      }
       html+='<div class="cascade-row"><div class="cascade-num cam">C</div><div>'+
         '<div class="cascade-name">Camille '+tierPill("Consultant")+'</div>'+
         '<div class="cascade-sub">Last resort · guest bartender rate + tips · contact directly</div>'+
       '</div></div></div>';
     } else {
-      html='<div class="alert al-red"><strong>'+called.name+' out — zero qualified backup.</strong> Direct revenue risk: 7 bar seats, ~$80 average, no cover. Cross-train a T2 this week.</div>';
+      html='<div class="alert al-red"><strong>'+called.name+' out — zero qualified backup.</strong> Direct revenue risk: 7 bar seats, ~$80 average, no cover.';
+      if(flex.length) html+=' Flex staff ('+flex.map(function(f){return f.name;}).join(", ")+') may be reachable — not guaranteed.';
+      html+='</div>';
     }
   } else if(called.tier==="T2"){
     var ob=getBackups(id);
@@ -936,6 +951,8 @@ function runCallout(){
     html='<div class="alert al-amber"><strong>'+called.name+' calls out.</strong> Onboarding — limited impact. Flag to Tanner for floor coverage check.</div>';
   } else if(called.tier==="Consultant"){
     html='<div class="alert al-purple">Camille is session-based, not on the shift schedule. No coverage impact. Reschedule any planned development session.</div>';
+  } else if(called.tier==="Flex"){
+    html='<div class="alert al-amber"><strong>'+called.name+'</strong> is flex — no scheduled shifts. If they were informally covering something, check the week schedule for gaps.</div>';
   } else {
     html='<div class="alert al-green"><strong>'+called.name+'</strong> calling out does not affect bar or floor coverage.</div>';
   }
