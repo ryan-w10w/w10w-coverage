@@ -2199,7 +2199,7 @@ function renderBeSummary(){
   var monthlyAvgStatic=Math.round(weeklyAvgStatic*52/12);
   var isLive=beMonthlyLive!==null;
   var monthlyAvg=isLive?beMonthlyLive:monthlyAvgStatic;
-  var salesLabel=isLive?"Last 30 days (live)":"12-month trailing";
+  var salesLabel=isLive?"This month (live)":"12-month avg";
   var salesColor=isLive?"var(--teal)":"var(--ink-3)";
 
   var surplus=monthlyAvg-monthlyBe;
@@ -2276,62 +2276,65 @@ function renderBeLive(sales){
   '</div>';
 }
 
+function squareNetFromOrders(orders){
+  // Confirmed formula matching Square dashboard exactly
+  // net = total - tax - tip - service_charge
+  return orders.reduce(function(s,o){
+    var total=(o.total_money&&o.total_money.amount)||0;
+    var tax=(o.total_tax_money&&o.total_tax_money.amount)||0;
+    var tip=(o.total_tip_money&&o.total_tip_money.amount)||0;
+    var svc=(o.total_service_charge_money&&o.total_service_charge_money.amount)||0;
+    return s+(total-tax-tip-svc);
+  },0)/100;
+}
+
+function squareOrdersFetch(startIso, endIso, onSuccess, onFail){
+  var ordersUrl="https://connect.squareup.com/v2/orders/search";
+  var body=JSON.stringify({
+    location_ids:["LHSVRCNXBB7E8"],
+    query:{filter:{
+      date_time_filter:{created_at:{start_at:startIso,end_at:endIso}},
+      state_filter:{states:["COMPLETED"]}
+    }},
+    limit:500
+  });
+  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({url:ordersUrl,method:"POST",body:body})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.orders!==undefined) onSuccess(d.orders);
+    else onFail();
+  })
+  .catch(function(){onFail();});
+}
+
 function loadLiveSales(){
   beLiveLoading=true;
   var now=new Date();
   var start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
-  var url="https://connect.squareup.com/v2/payments?location_id=LHSVRCNXBB7E8&begin_time="+start+"&end_time="+now.toISOString()+"&limit=200";
-  var token=typeof SQUARE_TOKEN!=="undefined"?SQUARE_TOKEN:null;
-  function onData(payments){
-    var net=payments.reduce(function(s,p){
-      var total=(p.total_money&&p.total_money.amount)?p.total_money.amount:0;
-      var tax=(p.total_tax_money&&p.total_tax_money.amount)?p.total_tax_money.amount:0;
-      var tip=(p.tip_money&&p.tip_money.amount)?p.tip_money.amount:0;
-      return s+(total-tax-tip);
-    },0)/100;
-    beLiveSales=net;beLiveLoading=false;renderBeLive(net);
-  }
-  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:url,method:"GET"})})
-  .then(function(r){return r.json();})
-  .then(function(d){if(d.payments!==undefined)onData(d.payments);else if(token)fetch(url,{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json();}).then(function(d2){if(d2.payments)onData(d2.payments);else renderBeLive(0);}).catch(function(){renderBeLive(0);});else renderBeLive(0);})
-  .catch(function(){if(token)fetch(url,{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json();}).then(function(d2){if(d2.payments)onData(d2.payments);else renderBeLive(0);}).catch(function(){renderBeLive(0);});else renderBeLive(0);});
+  squareOrdersFetch(start, now.toISOString(),
+    function(orders){
+      var net=squareNetFromOrders(orders);
+      beLiveSales=net;beLiveLoading=false;renderBeLive(net);
+    },
+    function(){beLiveLoading=false;renderBeLive(0);}
+  );
 }
 
 function loadMonthlySales(){
   beMonthlyLoading=true;
   var now=new Date();
-  var start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-30).toISOString();
-  var url="https://connect.squareup.com/v2/payments?location_id=LHSVRCNXBB7E8&begin_time="+start+"&end_time="+now.toISOString()+"&limit=200";
-  var token=typeof SQUARE_TOKEN!=="undefined"?SQUARE_TOKEN:null;
-
-  function onData(payments){
-    // Net sales = total - tax - tip, in dollars
-    var net=payments.reduce(function(s,p){
-      var total=(p.total_money&&p.total_money.amount)?p.total_money.amount:0;
-      var tax=(p.total_tax_money&&p.total_tax_money.amount)?p.total_tax_money.amount:0;
-      var tip=(p.tip_money&&p.tip_money.amount)?p.tip_money.amount:0;
-      return s+(total-tax-tip);
-    },0)/100;
-    beMonthlyLive=Math.round(net);
-    beMonthlyLoading=false;
-    renderBeSummary(); // re-render tiles with live figure
-  }
-
-  function tryDirect(){
-    if(!token){beMonthlyLoading=false;return;}
-    fetch(url,{headers:{"Authorization":"Bearer "+token,"Square-Version":"2024-01-18"}})
-    .then(function(r){return r.json();})
-    .then(function(d){if(d.payments)onData(d.payments);else{beMonthlyLoading=false;}})
-    .catch(function(){beMonthlyLoading=false;});
-  }
-
-  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:url,method:"GET"})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.payments!==undefined) onData(d.payments);
-    else tryDirect();
-  })
-  .catch(function(){tryDirect();});
+  // Pull from start of current calendar month for accurate "this month" figure
+  var start=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
+  squareOrdersFetch(start, now.toISOString(),
+    function(orders){
+      var net=squareNetFromOrders(orders);
+      beMonthlyLive=Math.round(net*100)/100;
+      beMonthlyLoading=false;
+      renderBeSummary();
+    },
+    function(){beMonthlyLoading=false;}
+  );
 }
 
 async function init(){
