@@ -798,21 +798,24 @@ function calcKitchenHealth(){
 
   var score=0;
   if(!canOpen){
-    if(leadCooks.length===0) score=0;       // No lead = 0, full closure risk
-    else if(allCooks.length<2) score=10;    // Only 1 cook total
-    else if(porters.length===0) score=15;   // No porter
+    if(leadCooks.length===0) score=0;
+    else if(allCooks.length<2) score=10;
+    else if(porters.length===0) score=15;
     score=Math.min(score,24);
   } else {
-    // 1 porter = hard cap at 50 (manageable, never healthy)
-    // Must have 2 porters to break past 50
-    score=50;
+    // Base: minimum viable (1 lead + 1 line + 1 porter) = 40
+    score=40;
+    // 2nd lead cook: major resilience gain (+15)
     if(leadCooks.length>=2) score+=15;
-    score+=Math.min(lineCooks.length,2)*5;
-    // Porter resilience: 1 porter = 0 bonus (already at cap), 2 porters = +20
+    // Line cook depth: each cook up to 3 adds meaningful coverage (+8 each)
+    score+=Math.min(lineCooks.length,3)*8;
+    // Porter depth: 2nd porter required for weekend service
     if(porters.length>=2) score+=20;
+    else score+=5;
+    // Full resilience bonus
     if(leadCooks.length>=2&&lineCooks.length>=2&&porters.length>=2) score+=5;
-    // Hard cap: 1 porter = max 50% regardless of cook depth
-    if(porters.length<2) score=Math.min(score,50);
+    // 1 porter hard cap at 72 — cannot be Healthy without 2nd porter
+    if(porters.length<2) score=Math.min(score,72);
     score=Math.min(score,100);
   }
 
@@ -1832,25 +1835,17 @@ function loadTipData() {
 
 
 function processTipData(payments) {
+  // Group tips by team member name
   var byStaff = {};
   payments.forEach(function(p) {
     var tipAmt = (p.tip_money && p.tip_money.amount) ? p.tip_money.amount : 0;
     if (tipAmt === 0) return;
-    var totalAmt = (p.total_money && p.total_money.amount) ? p.total_money.amount : 0;
-    var billAmt = totalAmt > tipAmt ? totalAmt - tipAmt : totalAmt; // bill before tip
     var name = (p.team_member_id || 'Unknown');
-    if (!byStaff[name]) byStaff[name] = { transactions: 0, totalTips: 0, totalBill: 0 };
+    // Try to match to staff roster name via note/receipt_url or team_member_id
+    if (!byStaff[name]) byStaff[name] = { transactions: 0, totalTips: 0, tipAmounts: [] };
     byStaff[name].transactions++;
     byStaff[name].totalTips += tipAmt;
-    byStaff[name].totalBill += billAmt;
-  });
-
-  // Calculate avg tip % (tip / pre-tip bill) and pool %
-  var totalPool = Object.keys(byStaff).reduce(function(sum, k){ return sum + byStaff[k].totalTips; }, 0);
-  Object.keys(byStaff).forEach(function(k){
-    var d = byStaff[k];
-    d.poolPct = totalPool > 0 ? Math.round((d.totalTips / totalPool) * 100) : 0;
-    d.avgTipPct = d.totalBill > 0 ? Math.round((d.totalTips / d.totalBill) * 100) : 0;
+    byStaff[name].tipAmounts.push(tipAmt);
   });
 
   tipData = byStaff;
@@ -1873,11 +1868,11 @@ function renderTipPlaceholder() {
     '<div style="font-size:11px;color:var(--ink-3);margin-bottom:20px">Get your token: Square Dashboard → Developers → Access tokens → Production. This is read-only access to payment data.</div>' +
     '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Preview — sample data</div>' +
     renderTipCardsHtml([
-      { name: "Grace Lyons", role: "Bartender / Server", tipPerTx: 42.50, transactions: 18, total: 765, pct: 100, avgTipPct: 22 },
-      { name: "Elena Mucilli", role: "Floor Lead", tipPerTx: 38.20, transactions: 22, total: 840, pct: 93, avgTipPct: 20 },
-      { name: "Chelsea Udoye", role: "Server", tipPerTx: 35.80, transactions: 19, total: 680, pct: 84, avgTipPct: 19 },
-      { name: "Laura Paganello", role: "Bartender / Server", tipPerTx: 33.10, transactions: 15, total: 497, pct: 78, avgTipPct: 18 },
-      { name: "Nathalie Fernandes", role: "Floor Lead", tipPerTx: 29.40, transactions: 20, total: 588, pct: 69, avgTipPct: 16 }
+      { name: "Grace Lyons", role: "Bartender / Server", tipPerTx: 42.50, transactions: 18, total: 765, pct: 100 },
+      { name: "Elena Mucilli", role: "Floor Lead", tipPerTx: 38.20, transactions: 22, total: 840, pct: 93 },
+      { name: "Chelsea Udoye", role: "Server", tipPerTx: 35.80, transactions: 19, total: 680, pct: 84 },
+      { name: "Laura Paganello", role: "Bartender / Server", tipPerTx: 33.10, transactions: 15, total: 497, pct: 78 },
+      { name: "Nathalie Fernandes", role: "Floor Lead", tipPerTx: 29.40, transactions: 20, total: 588, pct: 69 }
     ], true);
 }
 
@@ -1900,7 +1895,6 @@ function renderTipCardsHtml(staffList, isPreview) {
     html += '<div class="tip-stat"><div class="tip-stat-val" style="color:' + color + '">$' + s.tipPerTx.toFixed(0) + '</div><div class="tip-stat-lbl">Tip/tx</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">' + s.transactions + '</div><div class="tip-stat-lbl">Transactions</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">$' + (s.total||0).toFixed(0) + '</div><div class="tip-stat-lbl">Total tips</div></div>';
-    html += '<div class="tip-stat"><div class="tip-stat-val" style="color:var(--ink-3)">' + (s.avgTipPct||0) + '%</div><div class="tip-stat-lbl">Avg tip %</div></div>';
     html += '</div>';
     html += '</div>';
   });
@@ -1923,9 +1917,7 @@ function renderTipCards(byStaff) {
       tipPerTx: avg,
       transactions: d.transactions,
       total: d.totalTips / 100,
-      pct: 100,
-      poolPct: d.poolPct || 0,
-      avgTipPct: d.avgTipPct || 0
+      pct: 100
     };
   }).sort(function(a,b){ return b.tipPerTx - a.tipPerTx; });
 
