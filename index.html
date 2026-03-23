@@ -380,6 +380,39 @@ input::placeholder{color:var(--ink-4)}
 .be-live-stats{display:flex;gap:28px;margin-top:12px}
 .be-live-stat-val{font-size:17px;font-weight:600;font-family:'Geist Mono',monospace;color:#fff;letter-spacing:-.5px}
 .be-live-stat-lbl{font-size:9px;color:rgba(255,255,255,.45);font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+
+/* PROJECTION CARD */
+.proj-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:0}
+.proj-hdr{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.proj-title{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.proj-sub{font-size:11px;color:var(--ink-3);margin-top:1px}
+.proj-body{padding:20px}
+.proj-scenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.proj-scenario{border-radius:var(--r-lg);padding:16px;border:1px solid var(--line)}
+.proj-scenario.conservative{background:var(--red-bg);border-color:#f5c0c0}
+.proj-scenario.base{background:linear-gradient(135deg,#1a2e1a,#243d24);border-color:transparent}
+.proj-scenario.optimistic{background:var(--teal-bg);border-color:#a8ddd0}
+.proj-scenario-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:'Geist Mono',monospace}
+.proj-scenario.conservative .proj-scenario-lbl{color:var(--red-text)}
+.proj-scenario.base .proj-scenario-lbl{color:rgba(255,255,255,.5)}
+.proj-scenario.optimistic .proj-scenario-lbl{color:var(--teal-text)}
+.proj-scenario-val{font-size:28px;font-weight:300;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.proj-scenario.conservative .proj-scenario-val{color:var(--red)}
+.proj-scenario.base .proj-scenario-val{color:#fff}
+.proj-scenario.optimistic .proj-scenario-val{color:var(--teal)}
+.proj-scenario-desc{font-size:11px;line-height:1.5}
+.proj-scenario.conservative .proj-scenario-desc{color:var(--red-text)}
+.proj-scenario.base .proj-scenario-desc{color:rgba(255,255,255,.55)}
+.proj-scenario.optimistic .proj-scenario-desc{color:var(--teal-text)}
+.proj-factors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.proj-factor{background:var(--surface-2);border-radius:var(--r-lg);padding:12px 14px;border:1px solid var(--line)}
+.proj-factor-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-4);font-family:'Geist Mono',monospace;margin-bottom:5px}
+.proj-factor-val{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.proj-factor-sub{font-size:11px;color:var(--ink-3)}
+.proj-progress-wrap{height:5px;background:var(--surface-3);border-radius:3px;margin-top:8px;overflow:hidden}
+.proj-progress-fill{height:100%;border-radius:3px;background:var(--teal);transition:width .5s}
+.proj-progress-fill.warn{background:var(--amber)}
+.proj-progress-fill.bad{background:var(--red)}
 </style>
 </head>
 <body>
@@ -643,19 +676,23 @@ input::placeholder{color:var(--ink-4)}
       <div class="ti-how">Reports are pulled live from the Google Sheet. Refresh to get the latest. Recurring flags appear when something is mentioned 2+ times in the window.</div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
-    <button class="btn btn-primary btn-sm" onclick="loadShiftReports()">↻ Refresh reports</button>
-    <select id="shift-range-sel" class="tier-sel" onchange="loadShiftReports()" style="width:auto">
-      <option value="7">Last 7 days</option>
-      <option value="14" selected>Last 14 days</option>
-      <option value="30">Last 30 days</option>
-    </select>
-    <span id="shift-load-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+  <div class="card">
+    <div class="card-hdr">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="loadShiftReports()">↻ Refresh</button>
+        <select id="shift-range-sel" class="tier-sel" onchange="loadShiftReports()" style="width:auto">
+          <option value="7">Last 7 days</option>
+          <option value="14" selected>Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+      </div>
+      <span id="shift-load-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+    </div>
+    <div style="padding:16px 20px">
+      <div id="shift-flags" style="margin-bottom:8px"></div>
+      <div id="shift-cards"></div>
+    </div>
   </div>
-  <!-- Flags -->
-  <div id="shift-flags" style="margin-bottom:16px"></div>
-  <!-- Individual reports -->
-  <div id="shift-cards"></div>
 </div>
 
 <!-- BREAK-EVEN TAB -->
@@ -670,6 +707,7 @@ input::placeholder{color:var(--ink-4)}
   </div>
   <div id="be-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px"></div>
   <div id="be-live-card" style="margin-bottom:16px"></div>
+  <div id="be-projection" style="margin-bottom:16px"></div>
   <div class="card">
     <div class="card-hdr">
       <div class="card-title">Break-even by night — staffing adjusted</div>
@@ -2183,8 +2221,160 @@ var BE_NIGHTS=[
 var beLiveSales=null,beLiveLoading=false;
 var beMonthlyLive=null,beMonthlyLoading=false;
 
+
+// == PROJECTION ENGINE ==
+// Day weights derived from 12-month avg sales relative to weekly total
+// This is the single most important signal for projecting remaining days
+var BE_DAY_WEIGHTS = (function(){
+  var total = BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0);
+  var w = {};
+  BE_NIGHTS.forEach(function(n){ w[n.day] = n.avgSales / total; });
+  return w;
+})();
+
+function renderProjection(){
+  var el = document.getElementById("be-projection");
+  if(!el) return;
+
+  var now = new Date();
+  var dayOfMonth = now.getDate();
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  var daysElapsed = dayOfMonth;
+  var daysRemaining = daysInMonth - dayOfMonth;
+
+  // Monthly break-even (static)
+  var weeklyBe = BE_NIGHTS.reduce(function(s,n){return s+n.beTarget;},0);
+  var monthlyBe = Math.round(weeklyBe * 52 / 12);
+
+  // What days are remaining this month? Build a weighted sales estimate
+  var remainingDayNames = [];
+  for(var d = dayOfMonth+1; d <= daysInMonth; d++){
+    var dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(now.getFullYear(),now.getMonth(),d).getDay()];
+    remainingDayNames.push(dayName);
+  }
+
+  // Weekly avg net sales (12-month trailing)
+  var weeklyAvgSales = BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0);
+  var dailyAvg = weeklyAvgSales / 7;
+
+  // Weight remaining days by their day-of-week contribution
+  var remainingWeighted = remainingDayNames.reduce(function(s,day){
+    return s + (BE_DAY_WEIGHTS[day] || 1/7) * weeklyAvgSales;
+  },0);
+
+  // MTD actual (from live Square data if available)
+  var mtdActual = beMonthlyLive || null;
+
+  // If no live data, estimate MTD from elapsed days weighted by day-of-week
+  if(mtdActual === null){
+    var elapsedDayNames = [];
+    for(var d2 = 1; d2 <= dayOfMonth; d2++){
+      var dn = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(now.getFullYear(),now.getMonth(),d2).getDay()];
+      elapsedDayNames.push(dn);
+    }
+    mtdActual = elapsedDayNames.reduce(function(s,day){
+      return s + (BE_DAY_WEIGHTS[day]||1/7) * weeklyAvgSales;
+    },0);
+  }
+
+  // Run rate: annualise from MTD to project full month
+  // Weighted remaining days give a smarter projection than simple daily average
+  var projBase = Math.round(mtdActual + remainingWeighted);
+
+  // Growth signal: compare trailing weekly vs 12mo average
+  // (We use the nightly averages as our best proxy for growth trend)
+  // Conservative: -12% (one bad stretch, weather, slow season)
+  // Base: weighted day projection
+  // Optimistic: +12% (strong weekend, events, seasonal pop)
+  var projConservative = Math.round(projBase * 0.88);
+  var projOptimistic   = Math.round(projBase * 1.12);
+
+  // What's needed per remaining night to hit break-even?
+  var neededToBreakeven = Math.max(0, monthlyBe - mtdActual);
+  var neededPerNight = daysRemaining > 0 ? Math.round(neededToBreakeven / daysRemaining) : 0;
+
+  // Progress toward break-even
+  var pctTowardBe = Math.min(120, Math.round((mtdActual / monthlyBe) * 100));
+  var progressClass = pctTowardBe >= 100 ? "" : pctTowardBe >= 70 ? " warn" : " bad";
+
+  // MoM signal — compare this month's run rate to avg monthly sales
+  var monthlyAvgSales = Math.round(weeklyAvgSales * 52 / 12);
+  var runRatePct = Math.round((projBase / monthlyAvgSales) * 100);
+  var momSignal = runRatePct >= 105 ? "tracking above average" : runRatePct >= 95 ? "tracking in line with average" : "tracking below average";
+  var momColor = runRatePct >= 105 ? "var(--teal)" : runRatePct >= 95 ? "var(--amber)" : "var(--red)";
+
+  var liveTag = beMonthlyLive !== null
+    ? '<span style="margin-left:6px;font-size:9px;background:var(--teal-bg);color:var(--teal-text);padding:1px 6px;border-radius:8px;font-weight:700">LIVE MTD</span>'
+    : '<span style="margin-left:6px;font-size:9px;background:var(--amber-bg);color:var(--amber-text);padding:1px 6px;border-radius:8px;font-weight:700">EST MTD</span>';
+
+  el.innerHTML = '<div class="proj-card">' +
+    '<div class="proj-hdr">' +
+      '<div>' +
+        '<div class="proj-title">Monthly revenue projection' + liveTag + '</div>' +
+        '<div class="proj-sub">Weighted by day-of-week · ' + daysElapsed + ' days elapsed · ' + daysRemaining + ' days remaining</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="proj-body">' +
+
+      // Three scenarios
+      '<div class="proj-scenarios">' +
+        '<div class="proj-scenario conservative">' +
+          '<div class="proj-scenario-lbl">Conservative</div>' +
+          '<div class="proj-scenario-val">$' + projConservative.toLocaleString() + '</div>' +
+          '<div class="proj-scenario-desc">-12% from base. Slow stretch, no strong weekends.</div>' +
+        '</div>' +
+        '<div class="proj-scenario base">' +
+          '<div class="proj-scenario-lbl">Base case</div>' +
+          '<div class="proj-scenario-val">$' + projBase.toLocaleString() + '</div>' +
+          '<div class="proj-scenario-desc">MTD actual + remaining days weighted by day-of-week avg.</div>' +
+        '</div>' +
+        '<div class="proj-scenario optimistic">' +
+          '<div class="proj-scenario-lbl">Optimistic</div>' +
+          '<div class="proj-scenario-val">$' + projOptimistic.toLocaleString() + '</div>' +
+          '<div class="proj-scenario-desc">+12% from base. Strong weekends, possible private events.</div>' +
+        '</div>' +
+      '</div>' +
+
+      // Factor tiles
+      '<div class="proj-factors">' +
+
+        '<div class="proj-factor">' +
+          '<div class="proj-factor-lbl">MTD net sales</div>' +
+          '<div class="proj-factor-val">$' + Math.round(mtdActual).toLocaleString() + ' of $' + monthlyBe.toLocaleString() + ' break-even</div>' +
+          '<div class="proj-factor-sub">' + pctTowardBe + '% toward monthly break-even</div>' +
+          '<div class="proj-progress-wrap"><div class="proj-progress-fill' + progressClass + '" style="width:' + Math.min(100,pctTowardBe) + '%"></div></div>' +
+        '</div>' +
+
+        '<div class="proj-factor">' +
+          '<div class="proj-factor-lbl">Needed to break even</div>' +
+          '<div class="proj-factor-val">' + (neededToBreakeven <= 0 ? 'Break-even cleared' : '$' + neededToBreakeven.toLocaleString() + ' remaining') + '</div>' +
+          '<div class="proj-factor-sub">' + (daysRemaining > 0 ? '$' + neededPerNight.toLocaleString() + ' avg per remaining night (' + daysRemaining + ' nights)' : 'Month complete') + '</div>' +
+        '</div>' +
+
+        '<div class="proj-factor">' +
+          '<div class="proj-factor-lbl">vs 12-month avg</div>' +
+          '<div class="proj-factor-val" style="color:' + momColor + '">' + runRatePct + '% — ' + momSignal + '</div>' +
+          '<div class="proj-factor-sub">Base projection vs $' + monthlyAvgSales.toLocaleString() + '/mo trailing avg</div>' +
+        '</div>' +
+
+        '<div class="proj-factor">' +
+          '<div class="proj-factor-lbl">Best remaining nights</div>' +
+          '<div class="proj-factor-val">' + (function(){
+            var topDays = remainingDayNames.slice().sort(function(a,b){
+              return (BE_DAY_WEIGHTS[b]||0)-(BE_DAY_WEIGHTS[a]||0);
+            }).slice(0,3);
+            return topDays.length ? topDays.join(", ") : "None remaining";
+          })() + '</div>' +
+          '<div class="proj-factor-sub">Highest avg sales days left in month</div>' +
+        '</div>' +
+
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
 function renderBreakeven(){
-  renderBeSummary();renderBeTable();renderBeLive(null);
+  renderBeSummary();renderBeTable();renderBeLive(null);renderProjection();
   if(!beLiveSales&&!beLiveLoading) loadLiveSales();
   if(!beMonthlyLive&&!beMonthlyLoading) loadMonthlySales();
 }
@@ -2331,7 +2521,7 @@ function loadMonthlySales(){
       var net=squareNetFromOrders(orders);
       beMonthlyLive=Math.round(net*100)/100;
       beMonthlyLoading=false;
-      renderBeSummary();
+      renderBeSummary();renderProjection();
     },
     function(){beMonthlyLoading=false;}
   );
