@@ -10,5 +10,6 @@
 [[headers]]
   for = "/*"
   [headers.values]
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' data: https:; connect-src 'self' https:;"
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
