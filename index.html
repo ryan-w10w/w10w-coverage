@@ -63,7 +63,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .brief-text strong{font-weight:600;color:#fff}
 .brief-loading{font-size:13px;color:rgba(255,255,255,.5);font-family:'Geist Mono',monospace;font-style:italic}
 .brief-stamp{font-size:10px;color:rgba(255,255,255,.3);font-family:'Geist Mono',monospace;margin-top:12px}
-.brief-refresh{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:var(--r-sm);padding:4px 10px;font-size:11px;font-family:'Geist Mono',monospace;color:rgba(255,255,255,.6);cursor:pointer;transition:all .15s}
+.brief-refresh{display:none}
 .brief-refresh:hover{background:rgba(255,255,255,.18);color:#fff}
 
 /* HEALTH */
@@ -383,7 +383,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
     <div id="ai-brief-result" style="display:none;margin-bottom:10px;padding:14px;background:rgba(0,0,0,.25);border-radius:8px;border:1px solid rgba(255,255,255,.1);font-size:13px;line-height:1.8;color:rgba(255,255,255,.9)"></div>
     <div class="brief-text brief-loading" id="brief-text">Analysing roster and schedule…</div>
     <div class="brief-stamp" id="brief-stamp"></div>
-    <button class="brief-refresh" onclick="generateBrief(true)">↻ Refresh</button>
+    
   </div>
 
   <div class="tab-intro">
