@@ -67,16 +67,24 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .brief-refresh:hover{background:rgba(255,255,255,.18);color:#fff}
 
 /* HEALTH */
-.health-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-.hcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 80px 16px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
-.hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
-.hcard.bar::before{background:linear-gradient(90deg,var(--green),var(--green-accent))}
-.hcard.floor::before{background:linear-gradient(90deg,var(--teal),#1aaa7a)}
-.hcard-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px;font-family:'Geist Mono',monospace}
-.hcard-stat{font-size:20px;font-weight:600;margin-bottom:2px;transition:color .3s}
-.hcard-det{font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;margin-bottom:10px}
-.hcard-pills{display:flex;gap:5px;flex-wrap:wrap}
-.hcard-ring{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:52px;height:52px}
+.health-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.hcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 20px 18px;position:relative;overflow:hidden}
+.hcard-accent{position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0}
+.hcard-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:16px;font-family:'Geist Mono',monospace}
+.hcard-main{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+.hcard-score-wrap{display:flex;flex-direction:column;gap:3px}
+.hcard-score{font-size:42px;font-weight:300;line-height:1;letter-spacing:-2px;transition:color .4s}
+.hcard-label{font-size:12px;font-weight:500;color:var(--ink-3)}
+.hcard-ring{width:56px;height:56px;flex-shrink:0}
+.hcard-divider{height:1px;background:var(--line);margin-bottom:14px}
+.hcard-stats{display:flex;flex-direction:column;gap:7px}
+.hcard-stat-row{display:flex;align-items:center;justify-content:space-between}
+.hcard-stat-label{font-size:11px;color:var(--ink-3)}
+.hcard-stat-value{font-size:11px;font-weight:500;font-family:'Geist Mono',monospace}
+.hcard-stat-value.ok{color:var(--teal)}
+.hcard-stat-value.warn{color:var(--amber)}
+.hcard-stat-value.bad{color:var(--red)}
+.hcard-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
 
 .pill{font-size:10px;font-weight:600;font-family:'Geist Mono',monospace;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;white-space:nowrap}
 .p-green{background:var(--teal-bg);color:var(--teal-text)}
@@ -212,7 +220,77 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .tl-date{font-size:13px;font-weight:600;margin-bottom:2px}
 .tl-desc{font-size:12px;color:var(--ink-3);line-height:1.6}
 
-@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.nav{overflow-x:auto}.srow{grid-template-columns:1fr auto auto auto}}
+@media(max-width:900px){.health-row{grid-template-columns:1fr 1fr}}@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.nav{overflow-x:auto}.srow{grid-template-columns:1fr auto auto auto}}
+
+/* SHIFT REPORTS */
+.shift-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden}
+.shift-card-hdr{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.shift-card-hdr:hover{background:var(--surface-2)}
+.shift-date{font-size:12px;font-weight:600}
+.shift-by{font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace}
+.shift-tags{display:flex;gap:4px;flex-wrap:wrap}
+.shift-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:3px}
+.shift-tag.red{background:var(--red-bg);color:var(--red-text)}
+.shift-tag.amber{background:var(--amber-bg);color:var(--amber-text)}
+.shift-tag.green{background:var(--teal-bg);color:var(--teal-text)}
+.shift-body{padding:14px 16px;display:none;font-size:12px;line-height:1.7;color:var(--ink-2)}
+.shift-body.open{display:block}
+.shift-section{margin-bottom:12px}
+.shift-section-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace;margin-bottom:4px}
+.shift-text{color:var(--ink-2);font-size:12px;line-height:1.7}
+.flag-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.flag-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.flag-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.flag-body{font-size:12px;color:var(--ink-3);line-height:1.6}
+.flag-count{font-size:10px;font-family:'Geist Mono',monospace;font-weight:600;padding:2px 7px;border-radius:10px;flex-shrink:0;margin-top:2px}
+
+/* TIP POOL */
+.tip-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.tip-rank{font-size:18px;font-weight:300;font-family:'Geist Mono',monospace;color:var(--ink-4);width:28px;text-align:center;flex-shrink:0}
+.tip-info{flex:1}
+.tip-name{font-size:13px;font-weight:500;margin-bottom:2px}
+.tip-role{font-size:11px;color:var(--ink-3)}
+.tip-stats{display:flex;gap:16px;flex-shrink:0;text-align:right}
+.tip-stat{display:flex;flex-direction:column;align-items:flex-end}
+.tip-stat-val{font-size:16px;font-weight:600;font-family:'Geist Mono',monospace}
+.tip-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-4);font-family:'Geist Mono',monospace}
+.tip-bar-wrap{width:100px;height:4px;background:var(--line-2);border-radius:2px;margin-top:6px}
+.tip-bar{height:100%;border-radius:2px;background:var(--teal);transition:width .5s ease}
+
+/* RATINGS */
+.rating-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden}
+.rating-hdr{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.rating-name{font-size:13px;font-weight:500}
+.rating-role{font-size:11px;color:var(--ink-3);margin-top:1px}
+.rating-avg{font-size:14px;font-weight:600;font-family:'Geist Mono',monospace}
+.rating-avg.good{color:var(--teal)}
+.rating-avg.warn{color:var(--amber)}
+.rating-avg.bad{color:var(--red)}
+.rating-avg.none{color:var(--ink-4)}
+.rating-body{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.rating-row{display:flex;align-items:center;gap:12px}
+.rating-label{font-size:11px;color:var(--ink-3);width:90px;flex-shrink:0}
+.rating-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--line-2);outline:none;cursor:pointer}
+.rating-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--green);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.rating-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--green);cursor:pointer;border:2px solid #fff}
+.rating-val{font-size:12px;font-weight:600;font-family:'Geist Mono',monospace;width:24px;text-align:right;color:var(--ink)}
+.rating-note{padding:0 18px 12px;font-size:11px;color:var(--ink-4);font-style:italic}
+
+/* CALLOUT CHIPS */
+.co-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid var(--line-2);background:var(--surface);font-size:11px;font-family:'Geist Mono',monospace;cursor:pointer;transition:all .15s;user-select:none}
+.co-chip:hover{border-color:var(--ink-3)}
+.co-chip.selected{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* HIRING MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-lg);width:100%;max-width:620px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-title{font-size:14px;font-weight:600}
+.modal-body{padding:20px}
+.modal-section{margin-bottom:18px}
+.modal-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace;margin-bottom:8px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:var(--surface)}
 </style>
 </head>
 <body>
@@ -251,6 +329,8 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
   <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
   <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
   <button class="nav-tab" onclick="showTab('infra')">Infrastructure</button>
+  <button class="nav-tab" id="nav-team" onclick="showTab('team')">🔒 Operations</button>
+  <button class="nav-tab" onclick="showTab('shifts')">Shift Reports</button>
 </div>
 
 <div class="page">
@@ -275,7 +355,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
     </div>
   </div>
 
-  <div class="health-row" id="health-row"></div>
+  <div class="health-row" id="health-row" style="grid-template-columns:1fr 1fr 1fr"></div>
 
   <div class="card">
     <div class="card-hdr">
@@ -299,6 +379,9 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
       <select id="add-tier" style="font-family:'Geist Mono',monospace;font-size:11px">
         <option>T1</option><option>T2</option><option>T3</option><option>Training</option><option>Consultant</option><option>Flex</option><option>None</option>
       </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-family:'Geist Mono',monospace;color:var(--ink-3);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="add-weekend-only" style="accent-color:var(--blue-text);width:13px;height:13px"/> Wknd only
+      </label>
       <button class="btn btn-primary" onclick="addStaff()">+ Add member</button>
     </div>
     <div class="update-stamp" id="update-stamp"><div class="update-dot"></div><span id="stamp-text">Not yet saved</span></div>
@@ -344,15 +427,21 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
     <div class="ti-icon">🚨</div>
     <div>
       <div class="ti-title">Callout Simulator</div>
-      <div class="ti-desc">Run any callout before it becomes a problem. Shows the exact cascade — who to call first, fallbacks, Camille as last resort. Tonight's situation was preventable with this.</div>
-      <div class="ti-how">Select who called out. Work through the numbered cascade in order. Use this at the start of each week to pre-identify your highest callout risks.</div>
+      <div class="ti-desc">Run any callout scenario — single or multiple people out at once. Shows the exact cascade, revenue impact, and who to call first.</div>
+      <div class="ti-how">Tap any staff members who called out, then hit Simulate. Run this at the start of each week to pre-identify your highest risk days.</div>
     </div>
   </div>
   <div class="card">
-    <div style="padding:16px 18px;border-bottom:1px solid var(--line)">
-      <select class="co-sel" id="callout-sel" onchange="runCallout()"><option value="">Select who called out…</option></select>
+    <div style="padding:14px 18px;border-bottom:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:10px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Who called out?</div>
+      <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="runCallout()">Simulate callout</button>
+        <button class="btn btn-sm" onclick="clearCallout()">Clear</button>
+        <span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+      </div>
     </div>
-    <div style="padding:16px 18px" id="callout-result"><div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:'Geist Mono',monospace">Select a staff member above</div></div>
+    <div style="padding:16px 18px" id="callout-result"><div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:'Geist Mono',monospace">Select staff above then hit Simulate</div></div>
   </div>
 </div>
 
@@ -382,15 +471,6 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
   <div class="card"><div class="card-hdr"><div class="card-title">Camille's consulting scope</div></div><div id="infra-camille"></div></div>
   <div class="card"><div class="card-hdr"><div class="card-title">Ordering + financial infrastructure</div></div><div id="infra-ordering"></div></div>
   <div class="card">
-    <div class="card-hdr"><div class="card-title">Camille fee structure</div></div>
-    <div class="rate-grid">
-      <div class="rate-cell"><div class="rate-lbl">Menu dev session</div><div class="rate-val">$500–750</div><div class="rate-note">~3–4 hrs incl. prep</div></div>
-      <div class="rate-cell"><div class="rate-lbl">Staff training</div><div class="rate-val">$300–400</div><div class="rate-note">Per on-shift session</div></div>
-      <div class="rate-cell"><div class="rate-lbl">Emergency shift</div><div class="rate-val">Guest rate + tips</div><div class="rate-note">Bartender rate only</div></div>
-    </div>
-    <div style="padding:11px 18px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--line)">Deliverable-based, not retainer. Q1 target: 2 menu sessions + 1 training before new T1 starts.</div>
-  </div>
-  <div class="card">
     <div class="card-hdr"><div class="card-title">Transition timeline</div></div>
     <div class="tl-row"><div class="tl-num">1</div><div><div class="tl-date">Now — Apr 4</div><div class="tl-desc">Kaveka transition. Tanner covers bar ops. Grace + Laura primary coverage. Begin Camille engagement + post T1 JD to Indeed.</div></div></div>
     <div class="tl-row"><div class="tl-num">2</div><div><div class="tl-date">Apr 5 — Apr 18</div><div class="tl-desc">New T1 hire. Camille builds Cocktail Guide + trains T2s. Ordering forms + Apps Script live. Camille + Ryan establish COGS baseline.</div></div></div>
@@ -398,6 +478,106 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
   </div>
 </div>
 
+
+<!-- TEAM RATINGS TAB -->
+<div id="tab-team" class="tab-pane">
+  <!-- PIN lock screen -->
+  <div id="team-locked" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center">
+    <div style="width:48px;height:48px;background:var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+      <span style="font-size:20px">🔒</span>
+    </div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:6px">Operations</div>
+    <div style="font-size:13px;color:var(--ink-3);margin-bottom:24px;max-width:280px">This section is for management only. Enter your PIN to continue.</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="password" id="pin-input" maxlength="4" placeholder="••••"
+        style="font-size:24px;font-family:'Geist Mono',monospace;text-align:center;letter-spacing:8px;width:120px;border:1px solid var(--line-2);border-radius:var(--r);padding:10px;background:var(--surface)"
+        onkeydown="if(event.key==='Enter')submitPin()"/>
+      <button class="btn btn-primary" onclick="submitPin()">Enter</button>
+    </div>
+    <div id="pin-error" style="font-size:12px;color:var(--red);display:none">Incorrect PIN</div>
+  </div>
+
+  <!-- Ratings panel (shown after PIN) -->
+  <div id="team-unlocked" style="display:none">
+    <div class="tab-intro">
+      <div class="ti-icon">⭐</div>
+      <div>
+        <div class="ti-title">Team Performance Ratings</div>
+        <div class="ti-desc">Rate each staff member monthly. Scores below 6 apply a penalty to their team's health score. This section is not visible to the wider team.</div>
+        <div class="ti-how">Rate Reliability (shows up, consistent), Performance (quality of work), and Team (impact on people around them). Ratings save automatically. Review monthly.</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--ink-3);font-family:'Geist Mono',monospace" id="ratings-last-updated"></div>
+      <button class="btn btn-sm" onclick="lockTeamTab()">🔒 Lock</button>
+    </div>
+    <div id="ratings-cards"></div>
+
+    <!-- Tip Pool Intelligence -->
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line)">
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Tip pool intelligence</div>
+      <div style="font-size:12px;color:var(--ink-3);margin-bottom:14px">Who is generating the most tips per interaction. Pulled from Square transactions — updated weekly.</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-sm btn-primary" onclick="loadTipData()">↻ Refresh from Square</button>
+      </div>
+      <div id="tip-content"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- SHIFT REPORTS TAB -->
+<div id="tab-shifts" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">📋</div>
+    <div>
+      <div class="ti-title">Shift Reports</div>
+      <div class="ti-desc">Last 14 days of closing shift reports. Flags recurring issues, staff mentions, and operational patterns automatically.</div>
+      <div class="ti-how">Reports are pulled live from the Google Sheet. Refresh to get the latest. Recurring flags appear when something is mentioned 2+ times in the window.</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+    <button class="btn btn-primary btn-sm" onclick="loadShiftReports()">↻ Refresh reports</button>
+    <select id="shift-range-sel" class="tier-sel" onchange="loadShiftReports()" style="width:auto">
+      <option value="7">Last 7 days</option>
+      <option value="14" selected>Last 14 days</option>
+      <option value="30">Last 30 days</option>
+    </select>
+    <span id="shift-load-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+  </div>
+  <!-- Flags -->
+  <div id="shift-flags" style="margin-bottom:16px"></div>
+  <!-- Individual reports -->
+  <div id="shift-cards"></div>
+</div>
+
+<!-- HIRING MODAL -->
+<div class="modal-overlay" id="hiring-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">Post Job to Indeed</div>
+      <button class="btn btn-sm" onclick="closeHiringModal()">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Hiring recommendation</div>
+        <div id="modal-recommendation" style="font-size:13px;line-height:1.7;color:var(--ink-2);background:var(--surface-2);border-radius:var(--r);padding:12px;border:1px solid var(--line)"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Job description preview</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--ink-2);white-space:pre-wrap;background:var(--surface-2);border-radius:var(--r);padding:14px;border:1px solid var(--line);max-height:280px;overflow-y:auto;font-family:inherit" id="modal-jd"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Schedule options</div>
+        <div id="modal-schedule-options" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeHiringModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="openIndeed()">→ Open on Indeed</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -435,21 +615,21 @@ var DEFAULT_STAFF=[
   {id:11,name:"Sayer Williams",role:"Host / Server",tier:"T1",shifts:18},
   {id:12,name:"Eamon Ida",role:"Host",tier:"None",shifts:6},
   {id:13,name:"George Witnauer",role:"Bartender",tier:"Training",shifts:1},
-  {id:14,name:"Adrian Policarpio Angel",role:"Cook",tier:"None",shifts:56},
-  {id:15,name:"Dave Arauz",role:"Line Cook",tier:"None",shifts:55},
-  {id:16,name:"Yatta Diop",role:"Cook",tier:"None",shifts:46},
-  {id:17,name:"Candido Flores",role:"Cook",tier:"None",shifts:13},
-  {id:18,name:"Arturo Peres Jr",role:"Cook",tier:"None",shifts:20}
+  {id:14,name:"Adrian Policarpio Angel",role:"Lead Line Cook",tier:"None",shifts:56},
+  {id:15,name:"Dave Arauz",role:"Lead Line Cook",tier:"None",shifts:55},
+  {id:16,name:"Yatta Diop",role:"Porter",tier:"None",shifts:46},
+  {id:17,name:"Candido Flores",role:"Line Cook",tier:"None",shifts:13},
+  {id:18,name:"Arturo Peres Jr",role:"Line Cook",tier:"None",shifts:20,weekendOnly:true}
 ];
 
 var DEFAULT_WEEK={
-  Sun:[{pos:"Bar AM",time:"11am-5pm",pid:3},{pos:"Bar PM",time:"4-11:30pm",pid:4},{pos:"Server AM",time:"11am-5pm",pid:10},{pos:"Floor PM",time:"4-11:30pm",pid:8}],
-  Mon:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:8}],
-  Tue:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:8}],
-  Wed:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
-  Thu:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
-  Fri:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:9}],
-  Sat:[{pos:"Bar AM",time:"11am-5pm",pid:4},{pos:"Bar PM",time:"4-11:30pm",pid:3},{pos:"Server AM",time:"11am-5pm",pid:11},{pos:"Floor PM",time:"4-11:30pm",pid:8}]
+  Sun:[{pos:"Bar AM",time:"11am-5pm",pid:4},{pos:"Bar PM",time:"4-11:30pm",pid:3},{pos:"Server AM",time:"11am-5pm",pid:11},{pos:"Floor PM",time:"4-11:30pm",pid:9},{pos:"Lead Cook",time:"12pm-11:30pm",pid:15},{pos:"Line Cook",time:"4-11:30pm",pid:18},{pos:"Porter",time:"11am-6pm",pid:16},{pos:"Porter",time:"5pm-12am",pid:0}],
+  Mon:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:8},{pos:"Lead Cook",time:"4-11:30pm",pid:14},{pos:"Line Cook",time:"4-11:30pm",pid:17},{pos:"Porter",time:"4-11:30pm",pid:16}],
+  Tue:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:8},{pos:"Lead Cook",time:"4-11:30pm",pid:15},{pos:"Line Cook",time:"4-11:30pm",pid:18},{pos:"Porter",time:"4-11:30pm",pid:16}],
+  Wed:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:9},{pos:"Lead Cook",time:"4-11:30pm",pid:14},{pos:"Line Cook",time:"4-11:30pm",pid:17},{pos:"Porter",time:"4-11:30pm",pid:16}],
+  Thu:[{pos:"Bar",time:"4-11:30pm",pid:4},{pos:"Server",time:"4-11:30pm",pid:11},{pos:"Floor Lead",time:"4-11:30pm",pid:9},{pos:"Lead Cook",time:"4-11:30pm",pid:15},{pos:"Line Cook",time:"4-11:30pm",pid:18},{pos:"Porter",time:"4-11:30pm",pid:16}],
+  Fri:[{pos:"Bar",time:"4-11:30pm",pid:3},{pos:"Server",time:"4-11:30pm",pid:10},{pos:"Floor Lead",time:"4-11:30pm",pid:8},{pos:"Lead Cook",time:"4-11:30pm",pid:14},{pos:"Line Cook",time:"4-11:30pm",pid:17},{pos:"Porter",time:"4-11:30pm",pid:16}],
+  Sat:[{pos:"Bar AM",time:"11am-5pm",pid:4},{pos:"Bar PM",time:"4-11:30pm",pid:3},{pos:"Server AM",time:"11am-5pm",pid:11},{pos:"Floor PM",time:"4-11:30pm",pid:9},{pos:"Lead Cook",time:"12pm-11:30pm",pid:14},{pos:"Line Cook",time:"4-11:30pm",pid:17},{pos:"Porter",time:"11am-6pm",pid:16},{pos:"Porter",time:"5pm-12am",pid:0}]
 };
 
 var DEFAULT_EVENTS=[{id:1,name:"Kaveka",type:"exit",date:"Apr 4",dateMs:new Date("2026-04-04").getTime()}];
@@ -495,7 +675,36 @@ async function loadState(){
   }catch(e){}
   try{
     var saved=localStorage.getItem("w10w-state");
-    if(saved){var s=JSON.parse(saved);staff=s.staff||JSON.parse(JSON.stringify(DEFAULT_STAFF));WEEK=s.week||JSON.parse(JSON.stringify(DEFAULT_WEEK));teamEvents=s.events||JSON.parse(JSON.stringify(DEFAULT_EVENTS));checks=s.checks||{};lastUpdated=s.updatedAt||null;return;}
+    if(saved){
+      var s=JSON.parse(saved);
+      // Migration: check if saved week has kitchen shifts — if not, reset to new defaults
+      var hasKitchenShifts=false;
+      if(s.week){Object.values(s.week).forEach(function(shifts){shifts.forEach(function(sh){if(sh.pos&&(sh.pos.toLowerCase().includes("cook")||sh.pos.toLowerCase().includes("porter")))hasKitchenShifts=true;});});}
+      if(!hasKitchenShifts){
+        // Old saved data — reset week to new defaults with kitchen shifts
+        // Keep staff roster and events, reset week
+        staff=s.staff||JSON.parse(JSON.stringify(DEFAULT_STAFF));
+        WEEK=JSON.parse(JSON.stringify(DEFAULT_WEEK));
+        teamEvents=s.events||JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+        checks=s.checks||{};lastUpdated=null; // clear stamp since week was reset
+        return;
+      }
+      // Fix any "Shift" position names that should have been auto-named
+      if(s.week){
+        Object.keys(s.week).forEach(function(d){
+          (s.week[d]||[]).forEach(function(sh){
+            if(sh.pos==="Shift"&&sh.pid){
+              var staffMember=s.staff&&s.staff.find(function(sm){return sm.id===sh.pid;});
+              if(staffMember) sh.pos=inferShiftPosFromRole(staffMember.role);
+            }
+          });
+        });
+      }
+      staff=s.staff||JSON.parse(JSON.stringify(DEFAULT_STAFF));
+      WEEK=s.week||JSON.parse(JSON.stringify(DEFAULT_WEEK));
+      teamEvents=s.events||JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+      checks=s.checks||{};lastUpdated=s.updatedAt||null;return;
+    }
   }catch(e){}
   staff=JSON.parse(JSON.stringify(DEFAULT_STAFF));
   WEEK=JSON.parse(JSON.stringify(DEFAULT_WEEK));
@@ -513,7 +722,7 @@ function renderStamp(){
 // ══ TEAM INFERENCE ══
 var BAR_KW=["bartender","bar lead","bar manager","mixologist"];
 var FLOOR_KW=["server","floor lead","host","hostess","floor manager","waiter","waitress"];
-var KITCHEN_KW=["cook","chef","kitchen","line","prep","sous","pastry","dishwasher"];
+var KITCHEN_KW=["cook","chef","kitchen","line","prep","sous","pastry","dishwasher","porter","lead line cook","line cook"];
 function inferTeams(role){
   var r=role.toLowerCase();
   if(["consultant","contractor","freelance"].some(function(k){return r.includes(k);})) return["bar"];
@@ -530,6 +739,61 @@ function byId(id){return staff.find(function(s){return s.id===id;})||null;}
 function getBackups(excludeId){return staff.filter(function(s){return s.id!==excludeId&&(s.tier==="T1"||s.tier==="T2")&&s.tier!=="Training";});}
 function getFlexStaff(excludeId){return staff.filter(function(s){return s.id!==excludeId&&s.tier==="Flex";});}
 
+// ══ KITCHEN HEALTH — roster-based, operationally honest ══
+function calcKitchenHealth(){
+  var leadCooks=staff.filter(function(s){return s.role.toLowerCase().includes("lead line cook");});
+  var lineCooks=staff.filter(function(s){return s.role.toLowerCase().includes("line cook")&&!s.role.toLowerCase().includes("lead");});
+  var porters=staff.filter(function(s){return s.role.toLowerCase().includes("porter");});
+  var allCooks=leadCooks.concat(lineCooks);
+
+  // Operational reality:
+  // Cannot open: no lead cook OR < 2 cooks total OR no porter
+  var canOpen=leadCooks.length>=1&&allCooks.length>=2&&porters.length>=1;
+
+  // Scoring built around whether the restaurant can actually run:
+  // 0-24: cannot open (service-stopping)
+  // 50: minimum viable — 1 lead + 1 line + 1 porter, zero resilience
+  // 65-75: good — has some backup depth
+  // 100: fully resilient — 2 leads, 2 line cooks, 2 porters
+
+  var score=0;
+  if(!canOpen){
+    if(leadCooks.length===0) score=0;       // No lead = 0, full closure risk
+    else if(allCooks.length<2) score=10;    // Only 1 cook total
+    else if(porters.length===0) score=15;   // No porter
+    score=Math.min(score,24);
+  } else {
+    // 1 porter = hard cap at 50 (manageable, never healthy)
+    // Must have 2 porters to break past 50
+    score=50;
+    if(leadCooks.length>=2) score+=15;
+    score+=Math.min(lineCooks.length,2)*5;
+    // Porter resilience: 1 porter = 0 bonus (already at cap), 2 porters = +20
+    if(porters.length>=2) score+=20;
+    if(leadCooks.length>=2&&lineCooks.length>=2&&porters.length>=2) score+=5;
+    // Hard cap: 1 porter = max 50% regardless of cook depth
+    if(porters.length<2) score=Math.min(score,50);
+    score=Math.min(score,100);
+  }
+
+  var gaps=[];
+  if(leadCooks.length===0) gaps.push("No lead cook — cannot open");
+  else if(leadCooks.length===1) gaps.push("Only 1 lead cook — one callout closes kitchen");
+  if(allCooks.length<2) gaps.push("Need at least 2 cooks per service");
+  if(porters.length===0) gaps.push("No porter — cannot run service");
+  else if(porters.length<2) gaps.push("Only 1 porter — Sat/Sun needs 2");
+
+  var weekendOnlyCount=staff.filter(function(s){return s.weekendOnly&&getTeams(s).includes("kitchen");}).length;
+
+  return{
+    score:score,canOpen:canOpen,
+    leadCooks:leadCooks.length,leadCookNames:leadCooks.map(function(s){return s.name.split(" ")[0];}),
+    lineCooks:lineCooks.length,
+    porters:porters.length,porterNames:porters.map(function(s){return s.name.split(" ")[0];}),
+    totalCooks:allCooks.length,weekendOnlyCount:weekendOnlyCount,gaps:gaps
+  };
+}
+
 // ══ HEALTH ══
 function calcHealth(){
   var ba=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";});
@@ -545,16 +809,24 @@ function calcHealth(){
   var fT3=fa.filter(function(s){return s.tier==="T3";}).length;
   var fTrn=fa.filter(function(s){return s.tier==="Training";}).length;
   var fs=Math.max(0,Math.min(100,leads*22+fT1*16+fT2*10+fT3*3-fTrn*8));
+  // Apply ratings modifier if ratings exist
+  if(hasAnyRatings&&hasAnyRatings()){
+    bs=applyRatingsModifier(bs,getBarRatingModifier());
+    fs=applyRatingsModifier(fs,getFloorRatingModifier());
+  }
   return{bs:bs,bT1:bT1,bT2:bT2,bTrn:bTrn,fs:fs,leads:leads,fT1:fT1,fT2:fT2,fT3:fT3,fTrn:fTrn};
 }
 function healthLabel(s){if(s>=75)return{label:"Healthy",color:"var(--teal)"};if(s>=45)return{label:"Manageable",color:"var(--amber)"};return{label:"At risk",color:"var(--red)"};}
+function kitchenHealthLabel(k){
+  if(!k.canOpen) return{label:"Cannot open",color:"var(--red)"};
+  return healthLabel(k.score);
+}
 
 function ring(score,stroke){
-  var C=131.9,off=(C-C*(score/100)).toFixed(1);
-  return '<svg class="hcard-ring" viewBox="0 0 54 54">'+
-    '<circle cx="27" cy="27" r="21" fill="none" stroke="var(--line)" stroke-width="3.5"/>'+
-    '<circle cx="27" cy="27" r="21" fill="none" stroke="'+stroke+'" stroke-width="3.5" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'" stroke-linecap="round" transform="rotate(-90 27 27)" style="transition:stroke-dashoffset .5s"/>'+
-    '<text x="27" y="32" text-anchor="middle" font-size="11" font-family="Geist Mono,monospace" font-weight="600" fill="'+stroke+'">'+score+'%</text>'+
+  var C=138.2,off=(C-C*(score/100)).toFixed(1);
+  return '<svg class="hcard-ring" viewBox="0 0 56 56">'+
+    '<circle cx="28" cy="28" r="22" fill="none" stroke="var(--line)" stroke-width="2.5"/>'+
+    '<circle cx="28" cy="28" r="22" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'" stroke-linecap="round" transform="rotate(-90 28 28)" style="transition:stroke-dashoffset .5s ease"/>'+
     '</svg>';
 }
 
@@ -574,19 +846,64 @@ function renderHealth(){
     }
     return o;
   }
+  function statRow(label,val,status){
+    return'<div class="hcard-stat-row"><span class="hcard-stat-label">'+label+'</span><span class="hcard-stat-value '+status+'">'+val+'</span></div>';
+  }
+  function hcardHtml(accentColor,label,score,hl,stats){
+    return'<div class="hcard">'+
+      '<div class="hcard-accent" style="background:'+accentColor+'"></div>'+
+      '<div class="hcard-lbl">'+label+'</div>'+
+      '<div class="hcard-main">'+
+        '<div class="hcard-score-wrap">'+
+          '<div class="hcard-score" style="color:'+hl.color+'">'+score+'<span style="font-size:20px;font-weight:400;letter-spacing:0">%</span></div>'+
+          '<div class="hcard-label" style="color:'+hl.color+'">'+hl.label+'</div>'+
+        '</div>'+
+        ring(score,hl.color)+
+      '</div>'+
+      '<div class="hcard-divider"></div>'+
+      '<div class="hcard-stats">'+stats+'</div>'+
+    '</div>';
+  }
+  var barStats=
+    statRow("T1 bartenders",h.bT1,h.bT1>=2?"ok":h.bT1===1?"warn":"bad")+
+    statRow("T2 backups",h.bT2,h.bT2>=2?"ok":h.bT2>=1?"warn":"bad")+
+    (h.bTrn>0?statRow("In training",h.bTrn,"warn"):"");
+  var floorStats=
+    statRow("Floor leads",h.leads,h.leads>=2?"ok":"warn")+
+    statRow("T1 support",h.fT1,h.fT1>=2?"ok":h.fT1>=1?"warn":"bad")+
+    statRow("T2 support",h.fT2,h.fT2>=1?"ok":"warn")+
+    (h.fTrn>0?statRow("In training",h.fTrn,"warn"):"");
   document.getElementById("health-row").innerHTML=
-    '<div class="hcard bar"><div class="hcard-lbl">Bar team health</div>'+
-    '<div class="hcard-stat" style="color:'+bh.color+'">'+bh.label+'</div>'+
-    '<div class="hcard-det">'+h.bT1+' T1 · '+h.bT2+' T2'+(h.bTrn?' · '+h.bTrn+' training':'')+'</div>'+
-    '<div class="hcard-pills">'+pp(h,"bar")+'</div>'+ring(h.bs,bh.color)+'</div>'+
-    '<div class="hcard floor"><div class="hcard-lbl">Floor team health</div>'+
-    '<div class="hcard-stat" style="color:'+fh.color+'">'+fh.label+'</div>'+
-    '<div class="hcard-det">'+h.leads+' leads · '+(h.fT1+h.fT2)+' support'+(h.fTrn?' · '+h.fTrn+' training':'')+'</div>'+
-    '<div class="hcard-pills">'+pp(h,"floor")+'</div>'+ring(h.fs,fh.color)+'</div>';
-  var issues=(h.bT1===0?1:0)+(h.bT2<1?1:0)+(h.leads<2?1:0);
+    hcardHtml("linear-gradient(90deg,var(--green),var(--green-accent))","Bar",h.bs,bh,barStats)+
+    hcardHtml("linear-gradient(90deg,var(--teal),#1aaa7a)","Floor",h.fs,fh,floorStats);
+  // Kitchen health card — roster based
+  var k=calcKitchenHealth();
+  var kh=kitchenHealthLabel(k);
+  var kpills="";
+  kpills+=k.leadCooks===0?'<span class="pill p-red">No lead cook</span>':k.leadCooks===1?'<span class="pill p-amber">1 lead cook</span>':'<span class="pill p-green">'+k.leadCooks+' lead cooks</span>';
+  kpills+='<span class="pill '+(k.totalCooks>=2?"p-green":"p-amber")+'">'+k.totalCooks+' cook'+(k.totalCooks!==1?'s':'')+'</span>';
+  kpills+='<span class="pill '+(k.porters>=2?"p-green":k.porters===1?"p-amber":"p-red")+'">'+k.porters+' porter'+(k.porters!==1?'s':'')+'</span>';
+  var kdet="";
+  if(!k.canOpen){kdet="CANNOT OPEN — "+(k.leadCooks===0?"no lead cook":(k.totalCooks<2?"only "+k.totalCooks+" cook":"no porter"));}
+  else{
+    kdet=k.leadCookNames.join(", ")+" lead";
+    kdet+=" · "+k.totalCooks+(k.totalCooks>=2?" cooks":" cook")+(k.totalCooks<2?" (need 2)":"");
+    kdet+=" · "+k.porters+(k.porters>=2?" porters":" porter")+(k.porters<2?" (need 2 wknds)":"");
+    if(k.weekendOnlyCount>0) kdet+=" · "+k.weekendOnlyCount+" wknd only";
+  }
+  var kitchenStats=
+    statRow("Lead line cooks",k.leadCooks,k.leadCooks>=2?"ok":k.leadCooks===1?"warn":"bad")+
+    statRow("Line cooks",k.lineCooks,k.lineCooks>=2?"ok":k.lineCooks>=1?"warn":"bad")+
+    statRow("Porters",k.porters,k.porters>=2?"ok":k.porters===1?"warn":"bad")+
+    (k.weekendOnlyCount>0?statRow("Weekend only",k.weekendOnlyCount,""):"");
+  var kitchenCard=hcardHtml("linear-gradient(90deg,#4a3570,#6b4fa8)","Kitchen",k.score,kh,kitchenStats);
+  document.getElementById("health-row").innerHTML=document.getElementById("health-row").innerHTML+kitchenCard;
+
+  var issues=(h.bT1===0?1:0)+(h.bT2<1?1:0)+(h.leads<2?1:0)+(k.gaps.length>0?1:0);
   var nb=document.getElementById("nb-roster");
   if(nb){nb.textContent=issues===0?"OK":issues+" alert"+(issues>1?"s":"");nb.className="nav-badge "+(issues===0?"ok":"");}
 }
+
 
 // ══ TIER PILL ══
 function tierPill(t){
@@ -597,22 +914,24 @@ function tierPill(t){
 // ══ SCHEDULE INTELLIGENCE ══
 function analyzeScheduleConflicts(){
   var conflicts=[],warnings=[];
-  // Clopening detection: close (11:30pm) followed by open (11am) next day on Sat/Sun
+  // Clopening: someone closes 11:30pm then opens at 11am next day (any day)
+  // "4pm-11:30pm" -> "4pm-11:30pm" is NOT a clopening (same or later start = fine)
+  // Only flag: close 11:30pm -> next day starts at 11am specifically
   DAYS.forEach(function(day,dayIdx){
     var todayShifts=WEEK[day]||[];
     var nextDay=DAYS[(dayIdx+1)%7];
     var nextShifts=WEEK[nextDay]||[];
+    // Closers: ended at 11:30pm (shift time contains "11:30")
     var closers=todayShifts.filter(function(sh){return sh.time&&sh.time.includes("11:30");}).map(function(sh){return sh.pid;});
-    if(nextDay==="Sat"||nextDay==="Sun"){
-      var openers=nextShifts.filter(function(sh){return sh.time&&(sh.time.includes("11am")||sh.time.includes("11:00"));}).map(function(sh){return sh.pid;});
-      closers.forEach(function(pid){
-        if(openers.indexOf(pid)>-1){
-          var p=byId(pid);
-          if(p) conflicts.push({type:"clopening",staff:p.name,day1:day,day2:nextDay,
-            msg:p.name.split(" ")[0]+" closes "+day+" (11:30pm) then opens "+nextDay+" (11am) - only ~11hrs off."});
-        }
-      });
-    }
+    // Openers: starts at 11am specifically (early morning open, not 4pm evening)
+    var openers=nextShifts.filter(function(sh){return sh.time&&(sh.time.startsWith("11am")||sh.time.startsWith("11:00"));}).map(function(sh){return sh.pid;});
+    closers.forEach(function(pid){
+      if(openers.indexOf(pid)>-1){
+        var p=byId(pid);
+        if(p) conflicts.push({type:"clopening",staff:p.name,day1:day,day2:nextDay,
+          msg:p.name.split(" ")[0]+" closes "+day+" at 11:30pm then opens "+nextDay+" at 11am — only ~11hrs off."});
+      }
+    });
   });
   // Back-to-back days off check
   var staffWorkDays={};
@@ -665,7 +984,19 @@ function generateBrief(force){
   if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
   if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
   if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff -- cocktail guide, ordering forms, COGS baseline -- must be done before then.");
+  // Kitchen check for brief
+  var savedDay2=activeDay;
+  var kitchenIssues=[];
+  DAYS.forEach(function(d){activeDay=d;var k=calcKitchenHealth();if(!k.leadPresent)kitchenIssues.push(d+" (no lead cook)");});
+  activeDay=savedDay2;
+  if(kitchenIssues.length>0){sentences.push("Kitchen gap: no lead line cook scheduled on "+kitchenIssues.slice(0,2).join(", ")+(kitchenIssues.length>2?" and "+(kitchenIssues.length-2)+" more":"")+". Fix before publishing.");actions++;}
   if(!hasEvents){sentences.push("Events Lead still open -- private dining is untapped revenue and the JD is ready to post.");actions++;}
+  // Stale ratings warning
+  if(hasAnyRatings&&hasAnyRatings()&&ratingsAreStale&&ratingsAreStale()){
+    sentences.push("Team ratings haven't been updated in over 30 days -- review scores before they stop being meaningful.");
+  } else if(!hasAnyRatings||!hasAnyRatings()){
+    // Don't mention ratings if they've never been set
+  }
   sentences.push(actions===0?"Coverage looks good -- nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
   document.getElementById("brief-text").className="brief-text";
   document.getElementById("brief-text").innerHTML=sentences.join(" ");
@@ -677,6 +1008,10 @@ function generateBrief(force){
 // ══ ROSTER RENDER ══
 function sRow(s){
   var cross=isCross(s)?'<span class="cross-tag">cross-trained</span>':"";
+  var isKitchen=getTeams(s).includes("kitchen");
+  var wkndOnlyTag=s.weekendOnly?'<span class="trn-tag" style="color:var(--blue-text);background:var(--blue-bg);padding:1px 5px;border-radius:3px;font-size:9px">wknd only</span>':"";
+  // Weekend-only toggle button — shown only for kitchen staff
+  var wkndToggle=isKitchen?'<button class="icon-btn" onclick="toggleWeekendOnly('+s.id+')" title="'+(s.weekendOnly?"Remove weekend-only":"Mark as weekend-only")+'" style="font-size:9px;'+(s.weekendOnly?"background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)":"")+'">'+(s.weekendOnly?"W":"W?")+'</button>':"";
   var trn=s.tier==="Training"?'<span class="trn-tag">· onboarding</span>':"";
   var sh=s.shifts>0?'<span class="srow-shifts">'+s.shifts+'sh</span>':"";
   var opts=["T1","T2","T3","Training","Consultant","Flex","None"].map(function(t){return'<option'+(s.tier===t?" selected":"")+'>'+t+'</option>';}).join("");
@@ -685,7 +1020,8 @@ function sRow(s){
     '<div class="srow-meta">'+
     '<span class="role-lbl" id="rl-'+s.id+'" onclick="startEdit('+s.id+')" title="Click to edit">'+s.role+'</span>'+
     '<input class="role-inp" id="ri-'+s.id+'" value="'+s.role+'" onblur="saveEdit('+s.id+')" onkeydown="if(event.key===\'Enter\')saveEdit('+s.id+');if(event.key===\'Escape\')cancelEdit('+s.id+')"/>'+
-    cross+trn+sh+'</div></div>'+
+    cross+wkndOnlyTag+trn+sh+'</div></div>'+
+    wkndToggle+
     tierPill(s.tier)+
     '<select class="tier-sel" onchange="setTier('+s.id+',this.value)">'+opts+'</select>'+
     '<button class="icon-btn" onclick="ovTeams('+s.id+')" title="Override teams">⇄</button>'+
@@ -700,6 +1036,7 @@ function renderRoster(){
   var bar=staff.filter(function(s){return getTeams(s).includes("bar");});
   var floor=staff.filter(function(s){return getTeams(s).includes("floor");});
   var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen");});
+  // Refresh kitchen keyword inference with updated roles
   ["roster-bar","roster-floor","roster-kitchen"].forEach(function(id,i){
     var el=document.getElementById(id);var t=[bar,floor,kitchen],l=["Bar team","Floor team","Kitchen"];
     if(el) el.outerHTML=sec(l[i],t[i],id);
@@ -731,6 +1068,11 @@ function ovTeams(id){
   var t=v.split(",").map(function(x){return x.trim().toLowerCase();}).filter(function(x){return valid.includes(x);});
   s._teams=t.length?t:null;s._mt=true;renderRoster();saveState();
 }
+function toggleWeekendOnly(id){
+  var s=byId(id);if(!s)return;
+  s.weekendOnly=!s.weekendOnly;
+  renderRoster();saveState();
+}
 function delStaff(id){
   var s=byId(id);if(!s)return;if(!confirm("Remove "+s.name+"?"))return;
   staff=staff.filter(function(x){return x.id!==id;});renderRoster();if(activeTab==="week")renderWeek();saveState();
@@ -739,8 +1081,14 @@ function addStaff(){
   var n=document.getElementById("add-name").value.trim();if(!n)return;
   var r=document.getElementById("add-role").value.trim()||"Staff";
   var t=document.getElementById("add-tier").value;
-  staff.push({id:Date.now(),name:n,role:r,tier:t,shifts:0});
-  document.getElementById("add-name").value="";document.getElementById("add-role").value="";
+  var wknd=document.getElementById("add-weekend-only");
+  var isWkndOnly=wknd&&wknd.checked;
+  var newStaff={id:Date.now(),name:n,role:r,tier:t,shifts:0};
+  if(isWkndOnly) newStaff.weekendOnly=true;
+  staff.push(newStaff);
+  document.getElementById("add-name").value="";
+  document.getElementById("add-role").value="";
+  if(wknd) wknd.checked=false;
   renderRoster();saveState();
 }
 
@@ -818,6 +1166,11 @@ function renderWeek(){
     :'<div class="alert al-amber"><strong>'+probs+' shift'+(probs>1?"s":"")+' need attention</strong> on '+activeDay+' before publishing.</div>';
   if(conflicts.conflicts.length>0) sumHtml+='<div class="alert al-red" style="margin-top:8px"><strong>Clopening risk:</strong> '+conflicts.conflicts.map(function(c){return c.msg;}).join(" | ")+'</div>';
   if(conflicts.warnings.length>0) sumHtml+='<div class="alert al-amber" style="margin-top:8px"><strong>Days off:</strong> '+conflicts.warnings.map(function(w){return w.msg;}).join(" | ")+'</div>';
+  // Kitchen gaps
+  var k=calcKitchenHealth();
+  if(k.gaps.length>0){
+    sumHtml+='<div class="alert al-amber" style="margin-top:8px"><strong>Kitchen:</strong> '+k.gaps.join(" · ")+'</div>';
+  }
   document.getElementById("week-summary").innerHTML=sumHtml;
 }
 function toggleWeekEditor(){
@@ -828,13 +1181,38 @@ function toggleWeekEditor(){
   document.getElementById("editor-day-lbl").textContent=activeDay;
   if(weekEditing){editorData=(WEEK[activeDay]||[]).map(function(sh){return{pos:sh.pos,time:sh.time,pid:sh.pid};});renderEditorRows();}
 }
+function inferShiftPosFromRole(role){
+  var r=(role||"").toLowerCase();
+  if(r.includes("lead line cook")) return"Lead Cook";
+  if(r.includes("line cook")) return"Line Cook";
+  if(r.includes("porter")) return"Porter";
+  if(r.includes("bartender")) return"Bar";
+  if(r.includes("floor lead")) return"Floor Lead";
+  if(r.includes("server")) return"Server";
+  if(r.includes("host")) return"Host";
+  if(r.includes("managing partner")) return"Floor Lead";
+  return"Shift";
+}
+function inferShiftPos(role){
+  return inferShiftPosFromRole(role);
+}
+
+function autoFillPos(i,pid){
+  var s=byId(pid);
+  editorData[i].pid=pid;
+  if(s&&(editorData[i].pos==="Shift"||editorData[i].pos==="")){
+    editorData[i].pos=inferShiftPos(s.role);
+    renderEditorRows();
+  }
+}
 function renderEditorRows(){
   document.getElementById("editor-rows").innerHTML=editorData.map(function(sh,i){
     return'<div class="wer">'+
-      '<input type="text" value="'+sh.pos+'" onchange="editorData['+i+'].pos=this.value" placeholder="Position"/>'+
+      '<input type="text" value="'+sh.pos+'" onchange="editorData['+i+'].pos=this.value" placeholder="Position" id="wer-pos-'+i+'"/>'+
       '<input type="text" value="'+sh.time+'" onchange="editorData['+i+'].time=this.value" placeholder="Time"/>'+
-      '<select onchange="editorData['+i+'].pid=parseInt(this.value)">'+
-        staff.map(function(s){return'<option value="'+s.id+'"'+(s.id===sh.pid?" selected":"")+'>'+s.name+'</option>';}).join("")+
+      '<select onchange="autoFillPos('+i+',parseInt(this.value))">'+
+        '<option value="0">-- Unassigned --</option>'+
+        staff.map(function(s){return'<option value="'+s.id+'"'+(s.id===sh.pid?" selected":"")+'>'+s.name+' ('+s.role+')</option>';}).join("")+
       '</select>'+
       '<button class="icon-btn del" onclick="editorData.splice('+i+',1);renderEditorRows()" title="Remove">✕</button>'+
     '</div>';
@@ -885,12 +1263,42 @@ function runCallout(){
   if(barOut.length===0&&leadOut.length===0) html+=" No critical coverage impact on bar or floor.";
   html+="</div>";
   if(barOut.length>0){
-    var risk=BIZ.barSeats*BIZ.avgSpend;
-    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'+
-      '<div style="background:var(--red-bg);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--red)">$'+risk+'</div><div style="font-size:10px;color:var(--red-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">At risk/service</div></div>'+
-      '<div style="background:var(--amber-bg);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--amber)">'+availBar.length+'</div><div style="font-size:10px;color:var(--amber-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Bar backups left</div></div>'+
-      '<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;text-align:center"><div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace">'+calledOut.length+'</div><div style="font-size:10px;color:var(--ink-3);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">People out</div></div>'+
+    // Smart revenue: scales with how many are out and what roles
+    var serverOut=calledOut.filter(function(s){return getTeams(s).includes("floor")&&!s.role.toLowerCase().includes("floor lead")&&!getTeams(s).includes("bar");});
+    var barCoverable=availBar.length>0;
+    var barRisk=barCoverable?Math.round(BIZ.barSeats*BIZ.avgSpend*0.3):BIZ.barSeats*BIZ.avgSpend;
+    var floorRisk=serverOut.length>0?serverOut.length*Math.round(BIZ.seats*BIZ.avgSpend*0.15):0;
+    var totalRisk=barRisk+floorRisk;
+    var weeklyRisk=totalRisk*BIZ.barShiftsPerWeek;
+    var coverageScore=barCoverable?Math.min(100,Math.round((availBar.length/Math.max(barOut.length,1))*70)):0;
+    html+='<div style="margin-bottom:16px">';
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'+
+      '<div style="background:var(--red-bg);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--red)">$'+totalRisk.toLocaleString()+'</div>'+
+        '<div style="font-size:10px;color:var(--red-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Revenue risk/service</div>'+
+      '</div>'+
+      '<div style="background:var(--amber-bg);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--amber)">'+availBar.length+'</div>'+
+        '<div style="font-size:10px;color:var(--amber-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Bar backups left</div>'+
+      '</div>'+
+      '<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace">'+calledOut.length+'</div>'+
+        '<div style="font-size:10px;color:var(--ink-3);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">People out</div>'+
+      '</div>'+
     '</div>';
+    if(serverOut.length>0||barOut.length>1){
+      html+='<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;font-size:11px;border:1px solid var(--line);margin-bottom:10px">';
+      html+='<div style="font-weight:600;margin-bottom:6px;font-family:\'Geist Mono\',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)">Impact breakdown</div>';
+      if(barOut.length>0) html+='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span>Bar ('+BIZ.barSeats+' seats @ $'+BIZ.avgSpend+')' +(barCoverable?' — partial cover':'— no cover')+'</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+barRisk.toLocaleString()+'</span></div>';
+      if(serverOut.length>0) html+='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span>Floor ('+serverOut.length+' server'+(serverOut.length>1?'s':'')+' out)</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+floorRisk.toLocaleString()+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:6px;padding-top:6px"><span style="font-weight:600">Weekly exposure ('+BIZ.barShiftsPerWeek+' services)</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+weeklyRisk.toLocaleString()+'</span></div>';
+      html+='</div>';
+    }
+    html+='<div style="margin-bottom:14px">';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;font-family:\'Geist Mono\',monospace;color:var(--ink-3)"><span>COVERAGE CONFIDENCE</span><span>'+coverageScore+'%</span></div>';
+    html+='<div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+coverageScore+'%;background:'+(coverageScore>60?'var(--teal)':coverageScore>30?'#f59e0b':'var(--red)')+';border-radius:3px"></div></div>';
+    html+='<div style="font-size:10px;color:var(--ink-3);margin-top:4px">'+(coverageScore===0?'No qualified bar coverage — service at serious risk.':(coverageScore<50?'Thin coverage — T2 with limited menu. Have Camille on standby.':'Adequate backup in place.'))+' Weekly exposure: $'+weeklyRisk.toLocaleString()+'.</div>';
+    html+='</div>';
     html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Bar coverage cascade</div>';
     if(availBar.length>0){
       availBar.forEach(function(b,i){
@@ -967,8 +1375,46 @@ function renderFeedback(){
   if(fLeads.length<2) cards.push({type:"warning",icon:"⚠️",title:"Floor lead coverage at minimum",ctx:fLeads.length+" active floor lead"+(fLeads.length===1?"":"s"),body:"Elena and Nathalie are your two leads. Both need a named delegate who can run the floor independently if either calls out.",action:"Confirm Floor Lead SOP with Elena + Nathalie",hire:null});
   if(trainees.length>0) cards.push({type:"warning",icon:"⚠️",title:"Active onboarding -- supervision load",ctx:trainees.map(function(s){return s.name.split(" ")[0];}).join(", ")+" in training",body:"Training staff add supervision load without full capacity. Set milestones: 4 weeks to T3, 8 weeks to T2 evaluation.",action:"Set graduation timeline per trainee",hire:null});
   if(!hasEvents) cards.push({type:"opportunity",icon:"💡",title:"Events Lead -- open revenue position",ctx:"Private dining target: $"+BIZ.eventsTarget.toLocaleString()+" in 2026",body:"W10W's 23-seat format is highly bookable for private dining. Commission-forward structure means near-zero cost unless generating. At $"+monthlyEvents.toLocaleString()+"/month target, two bookings cover the role. JD is ready to post.",action:"Post Events Lead to Indeed",hire:"events"});
-  if(h.bs>=75&&h.fs>=75&&t1Gap===0&&h.bT2>=2&&conflicts.conflicts.length===0){
-    cards.push({type:"healthy",icon:"✅",title:"Coverage in strong shape",ctx:"Bar "+h.bs+"% · Floor "+h.fs+"%",body:"Both teams above threshold, backup bench adequate, no schedule conflicts. Goal: any single callout handled without a manager stepping in.",action:"Review quarterly",hire:null});
+  // Kitchen insights — roster-based
+  var k2=calcKitchenHealth();
+  var kitchenGapDays=k2.gaps.length>0?["roster"]:[]; // just use roster gaps
+  var missingLeadDays=k2.leadCooks===0?["roster"]:[];
+
+  if(k2.leadCooks===0){
+    cards.push({type:"critical",icon:"🍳",title:"No lead line cook — restaurant cannot open",ctx:"Service-stopping gap",
+      body:"You cannot run a service without a lead line cook. Dave and Adrian are your leads — both are showing as None tier or removed. This is a closure-level gap. Resolve immediately.",
+      action:"Confirm Dave and Adrian on roster immediately",hire:null});
+  } else if(k2.totalCooks<2){
+    cards.push({type:"critical",icon:"🍳",title:"Not enough cooks to open",ctx:"Need at least 2 cooks per service",
+      body:"Every service needs a minimum of 2 cooks. Currently "+k2.totalCooks+" on roster. One callout = closed kitchen. This is a hiring priority.",
+      action:"Review kitchen roster headcount",hire:null});
+  } else if(k2.leadCooks===1){
+    cards.push({type:"warning",icon:"🍳",title:"Single lead line cook — high callout risk",ctx:"One callout = no lead on the pass",
+      body:"With only "+k2.leadCookNames[0]+" as lead cook, one callout means the kitchen runs without a senior. Both Dave and Adrian should be active. If one has left, replacing them is priority.",
+      action:"Confirm both Dave and Adrian are active",hire:null});
+  }
+  if(k2.porters===0){
+    cards.push({type:"critical",icon:"🧹",title:"No porter on roster",ctx:"Required every service",
+      body:"A porter is required every service. Yatta is your porter — if they are no longer on roster, this needs to be filled immediately. Weekends require two porters for full 11am–12am coverage.",
+      action:"Confirm Yatta's status or hire replacement",hire:null});
+  } else if(k2.porters===1){
+    cards.push({type:"warning",icon:"🧹",title:"Second porter needed for weekends",ctx:"Sat/Sun require 2 porters (11am–12am)",
+      body:"You have "+k2.porterNames[0]+" as your only porter. Saturday and Sunday need two porter positions to cover the full 11am–12am window without overloading one person. A second porter hire is needed.",
+      action:"Hire second porter for weekend coverage",hire:null});
+  }
+  if(k2.totalCooks<2){
+    cards.push({type:"warning",icon:"🍳",title:"Cook headcount below minimum",ctx:"Need at least 2 cooks per service",
+      body:"Every service needs at least 2 cooks. Currently "+k2.totalCooks+" cook"+(k2.totalCooks!==1?"s":"")+" on roster. A minimum of 2 ensures one can call out without collapsing kitchen coverage.",
+      action:"Review kitchen roster headcount",hire:null});
+  }
+  if(k2.gaps.length===0){
+    cards.push({type:"healthy",icon:"✅",title:"Kitchen roster in good shape",ctx:k2.leadCooks+" lead cooks · "+k2.totalCooks+" total cooks · "+k2.porters+" porters",body:"Lead line cook coverage is solid with "+k2.leadCookNames.join(" and ")+". Cook headcount meets minimum. Porter coverage adequate for weekdays — flag for weekend split scheduling.",action:"Review quarterly",hire:null});
+  }
+
+  if(h.bs>=75&&h.fs>=75&&t1Gap===0&&h.bT2>=2&&conflicts.conflicts.length===0&&kitchenGapDays.length===0){
+    cards.push({type:"healthy",icon:"✅",title:"Full house — all teams in strong shape",ctx:"Bar "+h.bs+"% · Floor "+h.fs+"% · Kitchen covered",body:"Bar, floor, and kitchen all above threshold with no gaps. Goal: any single callout handled without a manager stepping in.",action:"Review quarterly",hire:null});
+  } else if(h.bs>=75&&h.fs>=75&&t1Gap===0&&h.bT2>=2&&conflicts.conflicts.length===0){
+    cards.push({type:"healthy",icon:"✅",title:"Bar + floor in strong shape",ctx:"Bar "+h.bs+"% · Floor "+h.fs+"%",body:"Both front-of-house teams above threshold. Address any kitchen gaps before publishing.",action:"Review quarterly",hire:null});
   }
 
   var critCount=cards.filter(function(c){return c.type==="critical"||c.type==="warning";}).length;
@@ -1041,12 +1487,14 @@ function toggleCheck(k){checks[k]=!checks[k];var el=document.getElementById("ck-
 function showTab(t){
   activeTab=t;
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra"][i]===t?" active":"");});
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts"][i]===t?" active":"");});
   document.getElementById("tab-"+t).classList.add("active");
   if(t==="week"){renderDayBtns();renderWeek();}
   if(t==="callout")populateCallout();
   if(t==="infra")renderInfra();
   if(t==="roster")generateBrief(false);
+  if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
+  if(t==="shifts")loadShiftReports();
 }
 
 // ══ DATE ══
@@ -1055,10 +1503,669 @@ function updateDate(){
   document.getElementById("live-date").textContent=D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate();
 }
 
+// ══ TEAM RATINGS ══
+var TEAM_PIN = "1987"; // Change this to your preferred PIN
+var ratings = {}; // {staffId: {reliability: N, performance: N, team: N, updatedAt: ISO}}
+var teamUnlocked = false;
+var ratingsLastSaved = null;
+
+async function saveRatings(){
+  try{
+    var data={ratings:ratings,savedAt:new Date().toISOString()};
+    if(window.storage&&typeof window.storage.set==="function") await window.storage.set("w10w-ratings",JSON.stringify(data));
+    localStorage.setItem("w10w-ratings",JSON.stringify(data));
+    ratingsLastSaved=data.savedAt;
+    renderRatingsStamp();
+  }catch(e){}
+}
+async function loadRatings(){
+  try{
+    if(window.storage&&typeof window.storage.get==="function"){
+      var r=await window.storage.get("w10w-ratings");
+      if(r&&r.value){var d=JSON.parse(r.value);ratings=d.ratings||{};ratingsLastSaved=d.savedAt||null;return;}
+    }
+  }catch(e){}
+  try{
+    var s=localStorage.getItem("w10w-ratings");
+    if(s){var d=JSON.parse(s);ratings=d.ratings||{};ratingsLastSaved=d.savedAt||null;}
+  }catch(e){}
+}
+
+function getStaffRating(id){
+  return ratings[id]||{reliability:0,performance:0,team:0};
+}
+function avgRating(id){
+  var r=getStaffRating(id);
+  if(!r.reliability&&!r.performance&&!r.team) return null;
+  var vals=[r.reliability,r.performance,r.team].filter(function(v){return v>0;});
+  return vals.length?Math.round((vals.reduce(function(a,b){return a+b;},0)/vals.length)*10)/10:null;
+}
+function ratingClass(avg){
+  if(avg===null) return"none";
+  if(avg>=7) return"good";
+  if(avg>=5) return"warn";
+  return"bad";
+}
+
+// ── Health modifier: avg rating < 6 reduces team health ──
+function applyRatingsModifier(score, teamIds){
+  // Get rated staff for this team
+  var ratedStaff=teamIds.filter(function(id){return avgRating(id)!==null;});
+  if(ratedStaff.length===0) return score; // No ratings yet, no modifier
+  var avgTeamRating=ratedStaff.reduce(function(sum,id){return sum+(avgRating(id)||0);},0)/ratedStaff.length;
+  // Modifier: 10 = +5%, 7-9 = 0%, 5-6 = -10%, 3-4 = -20%, 1-2 = -30%
+  var modifier=0;
+  if(avgTeamRating>=10) modifier=5;
+  else if(avgTeamRating>=7) modifier=0;
+  else if(avgTeamRating>=5) modifier=-10;
+  else if(avgTeamRating>=3) modifier=-20;
+  else modifier=-30;
+  return Math.max(0,Math.min(100,score+modifier));
+}
+
+// Expose modifier to calcHealth
+function getBarRatingModifier(){
+  var barStaff=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="None"&&s.tier!=="Consultant";});
+  return barStaff.map(function(s){return s.id;});
+}
+function getFloorRatingModifier(){
+  var floorStaff=staff.filter(function(s){return getTeams(s).includes("floor")&&s.tier!=="None";});
+  return floorStaff.map(function(s){return s.id;});
+}
+
+// ── PIN ──
+function submitPin(){
+  var input=document.getElementById("pin-input");
+  var err=document.getElementById("pin-error");
+  if(input.value===TEAM_PIN){
+    teamUnlocked=true;
+    document.getElementById("team-locked").style.display="none";
+    document.getElementById("team-unlocked").style.display="block";
+    input.value="";err.style.display="none";
+    renderRatingsCards();
+    renderRatingsStamp();
+  }else{
+    err.style.display="block";
+    input.value="";
+    setTimeout(function(){err.style.display="none";},2000);
+  }
+}
+function lockTeamTab(){
+  teamUnlocked=false;
+  document.getElementById("team-locked").style.display="flex";
+  document.getElementById("team-unlocked").style.display="none";
+  showTab("roster");
+}
+
+// ── Show Team tab (only accessible if unlocked) ──
+function showTeamTab(){
+  if(!teamUnlocked){
+    document.getElementById("team-locked").style.display="flex";
+    document.getElementById("team-unlocked").style.display="none";
+  }
+}
+
+function renderRatingsStamp(){
+  var el=document.getElementById("ratings-last-updated");if(!el)return;
+  if(!ratingsLastSaved){el.textContent="Not yet rated";return;}
+  var d=new Date(ratingsLastSaved);
+  var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var daysSince=Math.floor((Date.now()-d.getTime())/(1000*60*60*24));
+  el.textContent="Last rated "+D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate()+(daysSince>30?" · ⚠ "+daysSince+" days ago":"");
+}
+
+function renderRatingsCards(){
+  var eligible=staff.filter(function(s){return s.tier!=="None"&&!getTeams(s).includes("kitchen")||getTeams(s).includes("kitchen");});
+  eligible=staff.filter(function(s){return s.tier!=="None";});
+
+  // Group by team
+  var sections=[
+    {label:"Bar team",members:staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="None";})},
+    {label:"Floor team",members:staff.filter(function(s){return getTeams(s).includes("floor")&&!getTeams(s).includes("bar")&&s.tier!=="None";})},
+    {label:"Kitchen",members:staff.filter(function(s){return getTeams(s).includes("kitchen");})},
+  ];
+
+  var html="";
+  sections.forEach(function(sec){
+    if(!sec.members.length) return;
+    html+='<div class="sdiv" style="margin-bottom:8px">'+sec.label+'</div>';
+    sec.members.forEach(function(s){
+      var r=getStaffRating(s.id);
+      var avg=avgRating(s.id);
+      var avgDisp=avg!==null?avg.toFixed(1)+"avg":"No rating";
+      var rClass=ratingClass(avg);
+      html+='<div class="rating-card">'+
+        '<div class="rating-hdr">'+
+          '<div><div class="rating-name">'+s.name+'</div><div class="rating-role">'+s.role+'</div></div>'+
+          '<div class="rating-avg '+rClass+'">'+avgDisp+'</div>'+
+        '</div>'+
+        '<div class="rating-body">'+
+          ratingRowHtml(s.id,"reliability","Reliability",r.reliability)+
+          ratingRowHtml(s.id,"performance","Performance",r.performance)+
+          ratingRowHtml(s.id,"team","Team impact",r.team)+
+        '</div>';
+      if(avg!==null&&avg<6){
+        html+='<div class="rating-note">Avg below 6 — applying -10% or more to '+sec.label+' health score</div>';
+      }
+      html+='</div>';
+    });
+  });
+
+  document.getElementById("ratings-cards").innerHTML=html;
+}
+
+function ratingRowHtml(staffId,dim,label,val){
+  var dispVal=val===0?"&mdash;":val;
+  var sliderHtml='<input type="range" min="0" max="10" value="'+val+'" step="1" class="rating-slider"'+
+    ' oninput="updateRating('+staffId+',\''+dim+'\',this.value)"'+
+    ' id="slider-'+staffId+'-'+dim+'"/>';
+  return'<div class="rating-row">'+
+    '<span class="rating-label">'+label+'</span>'+
+    sliderHtml+
+    '<span class="rating-val" id="rval-'+staffId+'-'+dim+'">'+(val===0?"—":val)+'</span>'+
+  '</div>';
+}
+
+var saveRatingsTimer=null;
+function updateRating(staffId,dim,val){
+  val=parseInt(val);
+  if(!ratings[staffId]) ratings[staffId]={reliability:0,performance:0,team:0};
+  ratings[staffId][dim]=val;
+  ratings[staffId].updatedAt=new Date().toISOString();
+  // Update display value
+  var valEl=document.getElementById("rval-"+staffId+"-"+dim);
+  if(valEl) valEl.textContent=val===0?"—":val;
+  // Update avg in card header
+  var avg=avgRating(staffId);
+  var avgEl=document.querySelector("#slider-"+staffId+"-reliability")&&document.querySelector("#slider-"+staffId+"-reliability").closest(".rating-card").querySelector(".rating-avg");
+  if(avgEl){avgEl.textContent=avg!==null?avg.toFixed(1)+"avg":"No rating";avgEl.className="rating-avg "+(avg!==null?ratingClass(avg):"none");}
+  // Debounce save + re-render health
+  clearTimeout(saveRatingsTimer);
+  saveRatingsTimer=setTimeout(function(){saveRatings();renderHealth();renderFeedback();},800);
+}
+
+// ── Check if ratings are stale (for brief) ──
+function ratingsAreStale(){
+  if(!ratingsLastSaved) return true;
+  var daysSince=Math.floor((Date.now()-new Date(ratingsLastSaved).getTime())/(1000*60*60*24));
+  return daysSince>30;
+}
+function hasAnyRatings(){
+  return Object.keys(ratings).length>0;
+}
+
+// ══ SHIFT REPORT CONFIG ══
+var SHEET_ID = "1XDxDpEQxxEVP0XL3qhqot-KIGecEVRM6LEfxzJtcPg4";
+var shiftReportsCache = null;
+var shiftReportsLoadedAt = null;
+
+// Column indices (0-based) from the confirmed sheet structure
+var SHIFT_COLS = {
+  timestamp: 0,
+  date: 1,
+  submittedBy: 2,
+  shiftSummary: 5,
+  guestNotes: 7,
+  fohNotes: 8,
+  equipment: 9,
+  items86: 10,
+  refundsVoids: 11,
+  waste: 12,
+  kitchenNotes: 13
+};
+
+// Keywords that trigger automatic flags
+var FLAG_KEYWORDS = {
+  incident:    { words: ["incident","fight","argument","altercation","confrontation","police"], label: "Incident", color: "red" },
+  complaint:   { words: ["complaint","complain","upset","unhappy","frustrated","disappointed","apology","apologize"], label: "Guest complaint", color: "red" },
+  refund:      { words: ["refund","void","comped","comp","waived","credit"], label: "Refund / void", color: "amber" },
+  equipment:   { words: ["broken","malfunction","repair","broke","crack","chip","leak","not working"], label: "Equipment issue", color: "amber" },
+  items86:     { words: ["86","out of","ran out","sold out","unavailable"], label: "86'd item", color: "amber" },
+  waste:       { words: ["waste","breakage","broke","spill","dropped","smashed"], label: "Waste / breakage", color: "amber" },
+  staffing:    { words: ["short-handed","short staffed","understaffed","called out","called in","no show","no-show"], label: "Staffing issue", color: "amber" },
+  positive:    { words: ["great night","amazing","excellent","knocked it","nailed it","strong night","best night","full house","sold out"], label: "Strong service", color: "green" }
+};
+
+function fetchShiftReports(days, callback) {
+  var daysBack = days || 14;
+  var status = document.getElementById("shift-load-status");
+  if (status) status.textContent = "Loading...";
+
+  // Calculate cutoff date
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - daysBack);
+  var cutoffStr = (cutoff.getMonth()+1) + "/" + cutoff.getDate() + "/" + cutoff.getFullYear();
+
+  // Query: all columns, ordered by date desc, filtered to date range
+  var query = encodeURIComponent("select * where A >= date '" + cutoff.toISOString().split('T')[0] + "' order by A desc limit 50");
+  var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&tq=" + query + "&headers=1";
+
+  // Route through Netlify proxy to avoid CORS
+  var onNetlify2 = window.location.hostname !== "localhost" && !window.location.protocol.startsWith("file") && !window.location.hostname.includes("github.io");
+  var sheetFetch = onNetlify2
+    ? fetch("/api/proxy", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ url: url, method: "GET" }) })
+    : fetch(url);
+
+  sheetFetch
+    .then(function(r) { return r.text(); })
+    .then(function(t) {
+      var json = t.replace(/^[^{]+/, '').replace(/\)[;\s]*$/, '');
+      try {
+        var data = JSON.parse(json);
+        var rows = (data.table.rows || []).map(function(row) {
+          return row.c.map(function(c) { return c ? (c.f || c.v || '') : ''; });
+        });
+        shiftReportsCache = rows;
+        shiftReportsLoadedAt = new Date();
+        if (status) status.textContent = rows.length + " reports loaded";
+        callback(null, rows);
+      } catch(e) {
+        if (status) status.textContent = "Load failed";
+        callback(e, null);
+      }
+    })
+    .catch(function(e) {
+      if (status) status.textContent = "Load failed — check connection";
+      callback(e, null);
+    });
+}
+
+function analyzeShiftReports(rows) {
+  // Count keyword hits across all reports
+  var flagCounts = {};
+  Object.keys(FLAG_KEYWORDS).forEach(function(k) { flagCounts[k] = []; });
+
+  // Staff mention tracking
+  var staffMentions = {};
+
+  rows.forEach(function(row, rowIdx) {
+    var allText = [
+      row[SHIFT_COLS.shiftSummary],
+      row[SHIFT_COLS.guestNotes],
+      row[SHIFT_COLS.fohNotes],
+      row[SHIFT_COLS.equipment],
+      row[SHIFT_COLS.items86],
+      row[SHIFT_COLS.refundsVoids],
+      row[SHIFT_COLS.waste],
+      row[SHIFT_COLS.kitchenNotes]
+    ].join(' ').toLowerCase();
+
+    // Check each flag category
+    Object.keys(FLAG_KEYWORDS).forEach(function(k) {
+      var hit = FLAG_KEYWORDS[k].words.some(function(w) { return allText.includes(w); });
+      if (hit) {
+        flagCounts[k].push({
+          date: row[SHIFT_COLS.date],
+          by: row[SHIFT_COLS.submittedBy],
+          snippet: extractSnippet(allText, FLAG_KEYWORDS[k].words)
+        });
+      }
+    });
+
+    // Track staff name mentions in notes
+    staff.forEach(function(s) {
+      var firstName = s.name.split(' ')[0].toLowerCase();
+      if (firstName.length < 3) return; // skip short names
+      var submitter = (row[SHIFT_COLS.submittedBy] || '').toLowerCase();
+      // Only count mentions by OTHER people
+      if (submitter !== firstName && allText.includes(firstName)) {
+        if (!staffMentions[s.id]) staffMentions[s.id] = { name: s.name, count: 0, dates: [] };
+        staffMentions[s.id].count++;
+        staffMentions[s.id].dates.push(row[SHIFT_COLS.date]);
+      }
+    });
+  });
+
+  return { flagCounts: flagCounts, staffMentions: staffMentions };
+}
+
+function extractSnippet(text, keywords) {
+  for (var i = 0; i < keywords.length; i++) {
+    var idx = text.indexOf(keywords[i]);
+    if (idx > -1) {
+      var start = Math.max(0, idx - 30);
+      var end = Math.min(text.length, idx + 80);
+      return '...' + text.substring(start, end) + '...';
+    }
+  }
+  return '';
+}
+
+function tagReport(row) {
+  var allText = [
+    row[SHIFT_COLS.shiftSummary],
+    row[SHIFT_COLS.guestNotes],
+    row[SHIFT_COLS.fohNotes],
+    row[SHIFT_COLS.equipment],
+    row[SHIFT_COLS.waste],
+    row[SHIFT_COLS.refundsVoids]
+  ].join(' ').toLowerCase();
+
+  var tags = [];
+  if (FLAG_KEYWORDS.incident.words.some(function(w){return allText.includes(w);})) tags.push({label:'Incident',cls:'red'});
+  if (FLAG_KEYWORDS.complaint.words.some(function(w){return allText.includes(w);})) tags.push({label:'Complaint',cls:'red'});
+  if (FLAG_KEYWORDS.refund.words.some(function(w){return allText.includes(w);})) tags.push({label:'Refund/void',cls:'amber'});
+  if (FLAG_KEYWORDS.equipment.words.some(function(w){return allText.includes(w);})) tags.push({label:'Equipment',cls:'amber'});
+  if (FLAG_KEYWORDS.staffing.words.some(function(w){return allText.includes(w);})) tags.push({label:'Staffing',cls:'amber'});
+  if (FLAG_KEYWORDS.positive.words.some(function(w){return allText.includes(w);})) tags.push({label:'Strong',cls:'green'});
+  return tags;
+}
+
+function renderShiftFlags(analysis, totalReports, days) {
+  var el = document.getElementById("shift-flags");
+  if (!el) return;
+  var html = "";
+
+  // Summary strip
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">';
+  var totalReports2 = totalReports || 0;
+  var incidentCount = analysis.flagCounts.incident.length;
+  var complaintCount = analysis.flagCounts.complaint.length;
+  var refundCount = analysis.flagCounts.refund.length;
+  var strongCount = analysis.flagCounts.positive.length;
+  html += metricTile(totalReports2 + "", "Reports (" + days + "d)", "var(--ink)");
+  html += metricTile(incidentCount + complaintCount + "", "Red flags", incidentCount+complaintCount > 0 ? "var(--red)" : "var(--teal)");
+  html += metricTile(refundCount + "", "Refunds / voids", refundCount > 2 ? "var(--amber)" : "var(--ink)");
+  html += metricTile(strongCount + "", "Strong services", strongCount > 0 ? "var(--teal)" : "var(--ink-3)");
+  html += '</div>';
+
+  // Recurring flags (2+ occurrences)
+  var recurring = [];
+  Object.keys(FLAG_KEYWORDS).forEach(function(k) {
+    var hits = analysis.flagCounts[k];
+    if (hits.length >= 2) {
+      recurring.push({ key: k, hits: hits, cfg: FLAG_KEYWORDS[k] });
+    }
+  });
+
+  if (recurring.length > 0) {
+    html += '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Recurring patterns</div>';
+    recurring.forEach(function(r) {
+      var borderCol = r.cfg.color === "red" ? "var(--red)" : r.cfg.color === "green" ? "var(--teal)" : "var(--amber)";
+      var bgCol = r.cfg.color === "red" ? "var(--red-bg)" : r.cfg.color === "green" ? "var(--teal-bg)" : "var(--amber-bg)";
+      html += '<div class="flag-card" style="border-left:3px solid ' + borderCol + '">';
+      html += '<div class="flag-icon">' + (r.cfg.color==="red"?"🚨":r.cfg.color==="green"?"✅":"⚠️") + '</div>';
+      html += '<div style="flex:1"><div class="flag-title">' + r.cfg.label + '</div>';
+      html += '<div class="flag-body">Mentioned in ' + r.hits.length + ' reports over the past ' + days + ' days — ' +
+        r.hits.map(function(h){return (h.by||'').split(' ')[0] + ' (' + formatShiftDate(h.date) + ')';}).join(', ') + '</div></div>';
+      html += '<div class="flag-count" style="background:' + bgCol + ';color:' + borderCol + '">' + r.hits.length + 'x</div>';
+      html += '</div>';
+    });
+  }
+
+  // Staff signals (mentioned 2+ times by others)
+  var notableStaff = Object.values(analysis.staffMentions).filter(function(s){ return s.count >= 2; });
+  if (notableStaff.length > 0) {
+    html += '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Staff signals</div>';
+    notableStaff.forEach(function(s) {
+      html += '<div class="flag-card" style="border-left:3px solid var(--blue-text)">';
+      html += '<div class="flag-icon">👤</div>';
+      html += '<div style="flex:1"><div class="flag-title">' + s.name.split(' ')[0] + ' mentioned by team</div>';
+      html += '<div class="flag-body">' + s.count + ' times in the past ' + days + ' days. Worth reviewing context in the reports below.</div></div>';
+      html += '<div class="flag-count" style="background:var(--blue-bg);color:var(--blue-text)">' + s.count + 'x</div>';
+      html += '</div>';
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function metricTile(val, label, color) {
+  return '<div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;text-align:center">' +
+    '<div style="font-size:28px;font-weight:300;font-family:\'Geist Mono\',monospace;color:' + color + ';line-height:1">' + val + '</div>' +
+    '<div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace;margin-top:4px">' + label + '</div>' +
+    '</div>';
+}
+
+function formatShiftDate(d) {
+  if (!d) return '';
+  var parts = d.toString().replace('Date(','').replace(')','').split(',');
+  if (parts.length >= 3) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[parseInt(parts[1])] + ' ' + parts[2];
+  }
+  // Try as string date
+  var dt = new Date(d);
+  if (!isNaN(dt)) {
+    var M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return M[dt.getMonth()] + ' ' + dt.getDate();
+  }
+  return d.toString().split(' ')[0];
+}
+
+var openShiftCards = {};
+function toggleShiftCard(idx) {
+  openShiftCards[idx] = !openShiftCards[idx];
+  var body = document.getElementById("shift-body-" + idx);
+  if (body) body.className = "shift-body" + (openShiftCards[idx] ? " open" : "");
+}
+
+function renderShiftCards(rows) {
+  var el = document.getElementById("shift-cards");
+  if (!el) return;
+
+  var html = '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Individual reports</div>';
+
+  rows.forEach(function(row, i) {
+    var date = formatShiftDate(row[SHIFT_COLS.date] || row[SHIFT_COLS.timestamp]);
+    var by = row[SHIFT_COLS.submittedBy] || 'Unknown';
+    var tags = tagReport(row);
+    var hasContent = [SHIFT_COLS.shiftSummary, SHIFT_COLS.guestNotes, SHIFT_COLS.fohNotes,
+      SHIFT_COLS.equipment, SHIFT_COLS.items86, SHIFT_COLS.refundsVoids, SHIFT_COLS.waste, SHIFT_COLS.kitchenNotes
+    ].some(function(c){ return row[c] && row[c].toString().trim().length > 2 && row[c].toLowerCase() !== 'none' && row[c].toLowerCase() !== 'n/a' && row[c].toLowerCase() !== 'na'; });
+
+    html += '<div class="shift-card">';
+    html += '<div class="shift-card-hdr" onclick="toggleShiftCard(' + i + ')">';
+    html += '<div style="display:flex;flex-direction:column;gap:3px"><div class="shift-date">' + date + '</div>';
+    html += '<div class="shift-by">Submitted by ' + by + '</div></div>';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    html += '<div class="shift-tags">' + tags.map(function(t){
+      return '<span class="shift-tag ' + t.cls + '">' + t.label + '</span>';
+    }).join('') + '</div>';
+    html += '<span style="color:var(--ink-4);font-size:12px">' + (openShiftCards[i] ? '▲' : '▼') + '</span>';
+    html += '</div></div>';
+
+    if (hasContent) {
+      html += '<div class="shift-body" id="shift-body-' + i + '">';
+      var sections = [
+        { label: "Shift summary", col: SHIFT_COLS.shiftSummary },
+        { label: "Guest notes", col: SHIFT_COLS.guestNotes },
+        { label: "FOH notes", col: SHIFT_COLS.fohNotes },
+        { label: "Equipment issues", col: SHIFT_COLS.equipment },
+        { label: "86'd items", col: SHIFT_COLS.items86 },
+        { label: "Refunds & voids", col: SHIFT_COLS.refundsVoids },
+        { label: "Waste & breakage", col: SHIFT_COLS.waste },
+        { label: "Kitchen notes", col: SHIFT_COLS.kitchenNotes }
+      ];
+      sections.forEach(function(s) {
+        var val = row[s.col];
+        if (!val || val.toString().trim().length < 3) return;
+        if (['none','n/a','na','no','nothing'].includes(val.toString().toLowerCase().trim())) return;
+        html += '<div class="shift-section">';
+        html += '<div class="shift-section-lbl">' + s.label + '</div>';
+        html += '<div class="shift-text">' + val.toString().replace(/\n/g, '<br>') + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function loadShiftReports() {
+  var days = parseInt(document.getElementById("shift-range-sel") ? document.getElementById("shift-range-sel").value : 14);
+  fetchShiftReports(days, function(err, rows) {
+    if (err || !rows) {
+      document.getElementById("shift-cards").innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Could not load reports. Make sure the spreadsheet is accessible and try again.</div>';
+      return;
+    }
+    var analysis = analyzeShiftReports(rows);
+    renderShiftFlags(analysis, rows.length, days);
+    renderShiftCards(rows);
+  });
+}
+
+// ══ TIP POOL INTELLIGENCE (Square API) ══
+var tipData = null;
+var tipDataLoadedAt = null;
+
+function loadTipData() {
+  var el = document.getElementById("tip-content");
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Loading tip data from Square...</div>';
+
+  // Square API: payments for last 7 days
+  var endDate = new Date().toISOString();
+  var startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  var squareToken = typeof SQUARE_TOKEN !== 'undefined' ? SQUARE_TOKEN : null;
+
+  var squareApiUrl = "https://connect.squareup.com/v2/payments?location_id=LHSVRCNXBB7E8&begin_time=" + startDate + "&end_time=" + endDate + "&limit=200";
+  var onNetlify = window.location.hostname !== "localhost" && !window.location.protocol.startsWith("file") && !window.location.hostname.includes("github.io");
+
+  if (onNetlify) {
+    // Token is injected server-side by the Netlify proxy — no token needed in browser
+    fetch("/api/proxy", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ url: squareApiUrl, method: "GET" })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data.payments) { renderTipPlaceholder(); return; }
+      processTipData(data.payments);
+    })
+    .catch(function(){ renderTipPlaceholder(); });
+  } else if (squareToken) {
+    // Local dev fallback with manual token
+    fetch(squareApiUrl, { headers: { "Authorization": "Bearer " + squareToken, "Square-Version": "2024-01-18" } })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data.payments) { renderTipPlaceholder(); return; }
+      processTipData(data.payments);
+    })
+    .catch(function(){ renderTipPlaceholder(); });
+  } else {
+    renderTipPlaceholder();
+  }
+}
+
+function processTipData(payments) {
+  // Group tips by team member name
+  var byStaff = {};
+  payments.forEach(function(p) {
+    var tipAmt = (p.tip_money && p.tip_money.amount) ? p.tip_money.amount : 0;
+    if (tipAmt === 0) return;
+    var name = (p.team_member_id || 'Unknown');
+    // Try to match to staff roster name via note/receipt_url or team_member_id
+    if (!byStaff[name]) byStaff[name] = { transactions: 0, totalTips: 0, tipAmounts: [] };
+    byStaff[name].transactions++;
+    byStaff[name].totalTips += tipAmt;
+    byStaff[name].tipAmounts.push(tipAmt);
+  });
+
+  tipData = byStaff;
+  tipDataLoadedAt = new Date();
+  renderTipCards(byStaff);
+}
+
+function renderTipPlaceholder() {
+  var el = document.getElementById("tip-content");
+  if (!el) return;
+
+  // Show the UI with mock data pattern so Tanner can see what it will look like
+  // and the Square token input
+  el.innerHTML =
+    '<div class="alert al-amber" style="margin-bottom:16px">Square API token required to pull live tip data. Enter your Square access token below — it is stored locally and never leaves your device.</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:20px">' +
+    '<input type="password" id="square-token-input" placeholder="Square access token (sq0atp-...)" style="flex:1;font-family:\'Geist Mono\',monospace;font-size:11px;border:1px solid var(--line-2);border-radius:var(--r);padding:8px 10px"/>' +
+    '<button class="btn btn-primary btn-sm" onclick="saveSquareToken()">Save + load</button>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--ink-3);margin-bottom:20px">Get your token: Square Dashboard → Developers → Access tokens → Production. This is read-only access to payment data.</div>' +
+    '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Preview — sample data</div>' +
+    renderTipCardsHtml([
+      { name: "Grace Lyons", role: "Bartender / Server", tipPerTx: 42.50, transactions: 18, total: 765, pct: 100 },
+      { name: "Elena Mucilli", role: "Floor Lead", tipPerTx: 38.20, transactions: 22, total: 840, pct: 93 },
+      { name: "Chelsea Udoye", role: "Server", tipPerTx: 35.80, transactions: 19, total: 680, pct: 84 },
+      { name: "Laura Paganello", role: "Bartender / Server", tipPerTx: 33.10, transactions: 15, total: 497, pct: 78 },
+      { name: "Nathalie Fernandes", role: "Floor Lead", tipPerTx: 29.40, transactions: 20, total: 588, pct: 69 }
+    ], true);
+}
+
+function renderTipCardsHtml(staffList, isPreview) {
+  var maxTipPerTx = Math.max.apply(null, staffList.map(function(s){ return s.tipPerTx; }));
+  var html = '';
+  if (isPreview) html += '<div style="font-size:11px;font-style:italic;color:var(--ink-4);margin-bottom:12px">Sample data shown — connect Square to see live figures</div>';
+
+  staffList.forEach(function(s, i) {
+    var pct = Math.round((s.tipPerTx / maxTipPerTx) * 100);
+    var color = pct >= 80 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+    html += '<div class="tip-card">';
+    html += '<div class="tip-rank">' + (i+1) + '</div>';
+    html += '<div class="tip-info">';
+    html += '<div class="tip-name">' + s.name + '</div>';
+    html += '<div class="tip-role">' + s.role + '</div>';
+    html += '<div class="tip-bar-wrap" style="margin-top:6px"><div class="tip-bar" style="width:' + pct + '%;background:' + color + '"></div></div>';
+    html += '</div>';
+    html += '<div class="tip-stats">';
+    html += '<div class="tip-stat"><div class="tip-stat-val" style="color:' + color + '">$' + s.tipPerTx.toFixed(0) + '</div><div class="tip-stat-lbl">Tip/tx</div></div>';
+    html += '<div class="tip-stat"><div class="tip-stat-val">' + s.transactions + '</div><div class="tip-stat-lbl">Transactions</div></div>';
+    html += '<div class="tip-stat"><div class="tip-stat-val">$' + (s.total||0).toFixed(0) + '</div><div class="tip-stat-lbl">Total tips</div></div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function renderTipCards(byStaff) {
+  var el = document.getElementById("tip-content");
+  if (!el) return;
+
+  // Map team_member_ids to roster names where possible
+  var staffList = Object.keys(byStaff).map(function(key) {
+    var d = byStaff[key];
+    var avg = d.transactions > 0 ? (d.totalTips / d.transactions) / 100 : 0;
+    // Try to match to roster
+    var matched = staff.find(function(s){ return s.name.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(s.name.split(' ')[0].toLowerCase()); });
+    return {
+      name: matched ? matched.name : key,
+      role: matched ? matched.role : 'Staff',
+      tipPerTx: avg,
+      transactions: d.transactions,
+      total: d.totalTips / 100,
+      pct: 100
+    };
+  }).sort(function(a,b){ return b.tipPerTx - a.tipPerTx; });
+
+  var html = '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Tip per transaction — last 7 days</div>';
+  html += renderTipCardsHtml(staffList, false);
+  el.innerHTML = html;
+}
+
+function saveSquareToken() {
+  var input = document.getElementById("square-token-input");
+  if (!input || !input.value.trim()) return;
+  try { localStorage.setItem("w10w-square-token", input.value.trim()); } catch(e){}
+  window.SQUARE_TOKEN = input.value.trim();
+  loadTipData();
+}
+
+function loadSquareToken() {
+  try {
+    var t = localStorage.getItem("w10w-square-token");
+    if (t) window.SQUARE_TOKEN = t;
+  } catch(e){}
+}
+
+
 // ══ INIT ══
 async function init(){
   updateDate();
   await loadState();
+  await loadRatings();
+  loadSquareToken();
   renderRoster();
   renderDayBtns();
   renderWeek();
