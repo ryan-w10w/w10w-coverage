@@ -222,6 +222,21 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 
 @media(max-width:900px){.health-row{grid-template-columns:1fr 1fr}}@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.nav{overflow-x:auto}.srow{grid-template-columns:1fr auto auto auto}}
 
+/* WELCOME SCREEN */
+.welcome-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--green);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+.welcome-box{max-width:480px;width:100%;text-align:center}
+.welcome-logo{font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;letter-spacing:.15em;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:32px}
+.welcome-title{font-size:36px;font-weight:300;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:12px}
+.welcome-sub{font-size:14px;color:rgba(255,255,255,.55);line-height:1.6;margin-bottom:40px;max-width:360px;margin-left:auto;margin-right:auto}
+.welcome-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:36px;text-align:left}
+.welcome-tile{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px}
+.welcome-tile-icon{font-size:18px;margin-bottom:8px}
+.welcome-tile-title{font-size:12px;font-weight:600;color:#fff;margin-bottom:3px}
+.welcome-tile-desc{font-size:11px;color:rgba(255,255,255,.45);line-height:1.5}
+.welcome-btn{background:#fff;color:var(--green);border:none;border-radius:24px;padding:14px 40px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Geist',sans-serif;transition:opacity .15s}
+.welcome-btn:hover{opacity:.9}
+.welcome-pin-note{font-size:11px;color:rgba(255,255,255,.3);margin-top:16px;font-family:'Geist Mono',monospace}
+
 /* SHIFT REPORTS */
 .shift-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden}
 .shift-card-hdr{padding:11px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
@@ -295,6 +310,39 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 </head>
 <body>
 
+<!-- WELCOME SCREEN -->
+<div class="welcome-overlay" id="welcome-overlay">
+  <div class="welcome-box">
+    <div class="welcome-logo">West10West</div>
+    <div class="welcome-title">Team Coverage</div>
+    <div class="welcome-sub">Live roster intelligence, shift scheduling, and operational insights for WEST10WEST.</div>
+    <div class="welcome-tiles">
+      <div class="welcome-tile">
+        <div class="welcome-tile-icon">📊</div>
+        <div class="welcome-tile-title">Health scores</div>
+        <div class="welcome-tile-desc">Bar, floor, and kitchen coverage updated in real time</div>
+      </div>
+      <div class="welcome-tile">
+        <div class="welcome-tile-icon">🚨</div>
+        <div class="welcome-tile-title">Callout sim</div>
+        <div class="welcome-tile-desc">Run any callout scenario before it becomes a problem</div>
+      </div>
+      <div class="welcome-tile">
+        <div class="welcome-tile-icon">📋</div>
+        <div class="welcome-tile-title">Shift reports</div>
+        <div class="welcome-tile-desc">Last 14 days of closing reports with pattern flags</div>
+      </div>
+      <div class="welcome-tile">
+        <div class="welcome-tile-icon">✦</div>
+        <div class="welcome-tile-title">AI brief</div>
+        <div class="welcome-tile-desc">One-tap weekly brief written for Tanner every week</div>
+      </div>
+    </div>
+    <button class="welcome-btn" onclick="dismissWelcome()">Open tool</button>
+    <div class="welcome-pin-note">Operations tab requires PIN access</div>
+  </div>
+</div>
+
 <div class="header">
   <div class="logo">
     <div class="logo-mark">W10W</div>
@@ -340,7 +388,11 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 
   <!-- AI BRIEF -->
   <div class="brief-card" id="brief-card">
-    <div class="brief-label"><div class="brief-dot"></div>Weekly brief</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="brief-label" style="margin-bottom:0"><div class="brief-dot"></div>Weekly brief</div>
+      <button class="btn btn-sm btn-primary" onclick="generateAIBrief()" id="ai-brief-btn" style="font-size:10px;padding:4px 10px">✦ AI brief</button>
+    </div>
+    <div id="ai-brief-result" style="display:none;margin-bottom:10px;padding:12px;background:rgba(0,0,0,.03);border-radius:var(--r);border:1px solid var(--line);font-size:12px;line-height:1.8;color:var(--ink-2)"></div>
     <div class="brief-text brief-loading" id="brief-text">Analysing roster and schedule…</div>
     <div class="brief-stamp" id="brief-stamp"></div>
     <button class="brief-refresh" onclick="generateBrief(true)">↻ Refresh</button>
@@ -1048,6 +1100,7 @@ function renderRoster(){
   ["m-t1","m-t2","m-t3","m-trn"].forEach(function(id,i){document.getElementById(id).textContent=[t1,t2,t3,trn][i];});
   renderHealth();populateCallout();renderFeedback();renderHeaderChips();renderStamp();
   generateBrief(false);
+  checkWelcome();
 }
 
 // ══ ROLE EDIT ══
@@ -2160,6 +2213,63 @@ function loadSquareToken() {
 }
 
 
+// ══ AI BRIEF ══
+function generateAIBrief(){
+  var btn=document.getElementById("ai-brief-btn");
+  var result=document.getElementById("ai-brief-result");
+  if(!btn||!result) return;
+  btn.textContent="✦ Generating...";btn.disabled=true;
+  result.style.display="block";
+  result.innerHTML="<em style='color:var(--ink-4);font-size:11px'>Thinking...</em>";
+  var h=calcHealth();var k=calcKitchenHealth();
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var conflicts=analyzeScheduleConflicts();
+  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var shiftLines=[];
+  if(shiftReportsCache&&shiftReportsCache.length>0){
+    shiftReportsCache.slice(0,5).forEach(function(row){
+      var by=row[SHIFT_COLS.submittedBy]||"";
+      var text=[row[SHIFT_COLS.shiftSummary],row[SHIFT_COLS.guestNotes],row[SHIFT_COLS.fohNotes]].filter(function(t){return t&&t.toLowerCase()!=="none"&&t.toLowerCase()!=="na";}).join(" | ").substring(0,200);
+      if(text.length>10) shiftLines.push((row[SHIFT_COLS.date]||"")+" ("+by+"): "+text);
+    });
+  }
+  var systemMsg="You are writing a weekly ops brief for Ryan Reynolds, owner of WEST10WEST, a 23-seat West Village restaurant. Address Tanner Floyd (Managing Partner) directly. Style: Ryan's voice — short declarative sentences, specific names and numbers, no em dashes, no fluff, no corporate language. Max 5 sentences. End with exactly what needs resolving before the schedule goes out.";
+  var userMsg="Current state: Bar "+h.bs+"% ("+h.bT1+" T1 bartenders, "+h.bT2+" T2). Floor "+h.fs+"% ("+h.leads+" leads). Kitchen "+k.score+"% ("+k.leadCooks+" lead cooks, "+k.totalCooks+" total cooks, "+k.porters+" porters). T1 bar: "+(barT1s.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Events Lead: "+(!hasEvents?"open":"filled")+". Conflicts: "+(conflicts.conflicts.length>0?conflicts.conflicts.map(function(c){return c.msg;}).join("; "):"none")+". Kaveka exits April 4."+(shiftLines.length>0?" Recent shift notes: "+shiftLines.join(" // "):"")+" Write the brief.";
+  fetch("/api/claude",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:systemMsg,messages:[{role:"user",content:userMsg}]})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var text=data.content&&data.content[0]?data.content[0].text:"Could not generate brief.";
+    result.innerHTML=text.replace(/\n\n/g,"<br><br>").replace(/\n/g,"<br>");
+    btn.textContent="✦ AI brief";btn.disabled=false;
+  })
+  .catch(function(){
+    result.innerHTML="<span style='color:var(--red)'>Could not connect. Make sure you are on the Netlify URL.</span>";
+    btn.textContent="✦ AI brief";btn.disabled=false;
+  });
+}
+
+// ══ WELCOME SCREEN ══
+var welcomeDismissed = false;
+
+function checkWelcome(){
+  try {
+    welcomeDismissed = localStorage.getItem("w10w-welcome-dismissed") === "true";
+  } catch(e){}
+  if(!welcomeDismissed){
+    document.getElementById("welcome-overlay").style.display = "flex";
+  }
+}
+
+function dismissWelcome(){
+  try { localStorage.setItem("w10w-welcome-dismissed","true"); } catch(e){}
+  var el = document.getElementById("welcome-overlay");
+  if(el){ el.style.opacity = "0"; setTimeout(function(){ el.style.display = "none"; }, 300); }
+}
+
 // ══ INIT ══
 async function init(){
   updateDate();
@@ -2173,6 +2283,7 @@ async function init(){
   renderHeaderChips();
   renderStamp();
   generateBrief(false);
+  checkWelcome();
 }
 
 init();
