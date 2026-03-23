@@ -624,6 +624,28 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 // ══ BUSINESS CONSTANTS ══
 var BIZ={name:"WEST10WEST",seats:23,barSeats:7,avgSpend:80,barShiftsPerWeek:9,eventsTarget:150000};
 
+// Square team member ID -> name (fetched from Square API 2026-03-22)
+var SQUARE_TEAM_MAP={
+  "TMI6LDvnSOg7OWuG":"Elena Mucilli",
+  "TMcfrzXddyvAZT3_":"Nathalie Fernandes",
+  "TMvU-TQqCy3w_EJ6":"Grace Lyons",
+  "TMNQrmihnuUfVvU6":"Laura Paganello",
+  "TMGt78EY-LAHogpn":"Sayer Williams",
+  "TMFJ9ZpVmhlog7Sc":"Eamon Ida",
+  "TM_fgfkecIM04uP8":"Chelsea Udoye",
+  "TMUb1HUIiq_CMiD5":"Tanner Floyd",
+  "TMFTYWXRHm2BEnFK":"Rohith Ram",
+  "TMJsifAJg5nkeWgU":"Nikko Pineda",
+  "TM4NCMVlgHE9Tg2U":"Kaveka Aveau",
+  "TMDW3TMvVcGPajYJ":"Dave Arauz",
+  "TMvDxDcJuV1yp0Qq":"Adrian Policarpio Angel",
+  "TMstsL_kXxMll7fh":"Candido Flores",
+  "TMTvBUcVJZWZ99U0":"Arturo Peres Jr",
+  "TMq9r4ojIi0_9VxE":"Yatta Diop",
+  "TMqOjeV2rSnNOWLG":"George Witnauer",
+  "TMJ2aFVlPaLZAa6d":"Ryan Reynolds"
+};
+
 // ══ JD DATA (sourced from Google Drive) ══
 var JDS={
   bartender:{
@@ -1524,7 +1546,8 @@ function fetchShiftReports(days, callback) {
   var cutoffStr = (cutoff.getMonth()+1) + "/" + cutoff.getDate() + "/" + cutoff.getFullYear();
 
   // Query: all columns, ordered by date desc, filtered to date range
-  var query = encodeURIComponent("select * where A >= date '" + cutoff.toISOString().split('T')[0] + "' order by A desc limit 50");
+  var isoDate = cutoff.toISOString().split("T")[0];
+  var query = encodeURIComponent("select * where A >= date '" + isoDate + "' order by A desc limit 50");
   var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&tq=" + query + "&headers=1";
 
   fetch(url)
@@ -1832,22 +1855,31 @@ function loadTipData() {
 
 
 function processTipData(payments) {
-  // Group tips by team member name
   var byStaff = {};
+  var totalPoolTips = 0;
+
   payments.forEach(function(p) {
     var tipAmt = (p.tip_money && p.tip_money.amount) ? p.tip_money.amount : 0;
     if (tipAmt === 0) return;
-    var name = (p.team_member_id || 'Unknown');
-    // Try to match to staff roster name via note/receipt_url or team_member_id
-    if (!byStaff[name]) byStaff[name] = { transactions: 0, totalTips: 0, tipAmounts: [] };
+    var tmId = p.team_member_id || "Unknown";
+    // Map ID to name using Square team map, fall back to roster match
+    var name = SQUARE_TEAM_MAP[tmId] || null;
+    if (!name) {
+      // Try matching against roster by partial ID
+      var rosterMatch = staff.find(function(s){
+        return s.name.split(" ")[0].toLowerCase() === (tmId||"").toLowerCase();
+      });
+      name = rosterMatch ? rosterMatch.name : tmId;
+    }
+    if (!byStaff[name]) byStaff[name] = { id: tmId, transactions: 0, totalTips: 0 };
     byStaff[name].transactions++;
     byStaff[name].totalTips += tipAmt;
-    byStaff[name].tipAmounts.push(tipAmt);
+    totalPoolTips += tipAmt;
   });
 
   tipData = byStaff;
   tipDataLoadedAt = new Date();
-  renderTipCards(byStaff);
+  renderTipCards(byStaff, totalPoolTips);
 }
 
 function renderTipPlaceholder() {
@@ -1873,219 +1905,49 @@ function renderTipPlaceholder() {
     ], true);
 }
 
-function renderTipCardsHtml(staffList, isPreview) {
-  var maxTipPerTx = Math.max.apply(null, staffList.map(function(s){ return s.tipPerTx; }));
-  var html = '';
+function renderTipCardsHtml(staffList, isPreview, totalPool) {
+  var maxTipPerTx = Math.max.apply(null, staffList.map(function(s){ return s.tipPerTx; })) || 1;
+  var html = "";
   if (isPreview) html += '<div style="font-size:11px;font-style:italic;color:var(--ink-4);margin-bottom:12px">Sample data shown — connect Square to see live figures</div>';
 
   staffList.forEach(function(s, i) {
-    var pct = Math.round((s.tipPerTx / maxTipPerTx) * 100);
-    var color = pct >= 80 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
+    var barPct = Math.round((s.tipPerTx / maxTipPerTx) * 100);
+    var color = barPct >= 80 ? "var(--teal)" : barPct >= 50 ? "var(--amber)" : "var(--red)";
+    var poolPct = s.poolPct || 0;
     html += '<div class="tip-card">';
     html += '<div class="tip-rank">' + (i+1) + '</div>';
     html += '<div class="tip-info">';
     html += '<div class="tip-name">' + s.name + '</div>';
     html += '<div class="tip-role">' + s.role + '</div>';
-    html += '<div class="tip-bar-wrap" style="margin-top:6px"><div class="tip-bar" style="width:' + pct + '%;background:' + color + '"></div></div>';
+    html += '<div class="tip-bar-wrap" style="margin-top:6px"><div class="tip-bar" style="width:' + barPct + '%;background:' + color + '"></div></div>';
     html += '</div>';
     html += '<div class="tip-stats">';
     html += '<div class="tip-stat"><div class="tip-stat-val" style="color:' + color + '">$' + s.tipPerTx.toFixed(0) + '</div><div class="tip-stat-lbl">Tip/tx</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">' + s.transactions + '</div><div class="tip-stat-lbl">Transactions</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">$' + (s.total||0).toFixed(0) + '</div><div class="tip-stat-lbl">Total tips</div></div>';
+    html += '<div class="tip-stat"><div class="tip-stat-val" style="color:var(--ink-3)">' + poolPct + '%</div><div class="tip-stat-lbl">Of pool</div></div>';
     html += '</div>';
     html += '</div>';
   });
   return html;
 }
 
-function renderTipCards(byStaff) {
+function renderTipCards(byStaff, totalPoolTips) {
   var el = document.getElementById("tip-content");
   if (!el) return;
-
-  // Map team_member_ids to roster names where possible
+  var totalPool = (totalPoolTips || 0) / 100;
   var staffList = Object.keys(byStaff).map(function(key) {
     var d = byStaff[key];
     var avg = d.transactions > 0 ? (d.totalTips / d.transactions) / 100 : 0;
-    // Try to match to roster
-    var matched = staff.find(function(s){ return s.name.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(s.name.split(' ')[0].toLowerCase()); });
-    return {
-      name: matched ? matched.name : key,
-      role: matched ? matched.role : 'Staff',
-      tipPerTx: avg,
-      transactions: d.transactions,
-      total: d.totalTips / 100,
-      pct: 100
-    };
+    var poolPct = totalPoolTips > 0 ? Math.round((d.totalTips / totalPoolTips) * 100) : 0;
+    var matched = staff.find(function(s){ return s.name === key; });
+    return { name: key, role: matched ? matched.role : "Staff", tipPerTx: avg, transactions: d.transactions, total: d.totalTips / 100, poolPct: poolPct };
   }).sort(function(a,b){ return b.tipPerTx - a.tipPerTx; });
-
-  var html = '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Tip per transaction — last 7 days</div>';
+  var txCount = staffList.reduce(function(s,x){return s+x.transactions;},0);
+  var monoStyle = "font-family:Geist Mono,monospace";
+  var html = "<div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);"+monoStyle+";margin-bottom:6px'>Tip per transaction — last 7 days</div>";
+  html += "<div style='font-size:11px;color:var(--ink-3);margin-bottom:14px'>Total pool: <strong style='color:var(--ink);"+monoStyle+"'>$" + totalPool.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0}) + "</strong> · " + txCount + " transactions</div>";
   html += renderTipCardsHtml(staffList, false);
   el.innerHTML = html;
 }
 
-function saveSquareToken() {
-  var input = document.getElementById("square-token-input");
-  if (!input || !input.value.trim()) return;
-  try { localStorage.setItem("w10w-square-token", input.value.trim()); } catch(e){}
-  window.SQUARE_TOKEN = input.value.trim();
-  loadTipData();
-}
-
-function loadSquareToken() {
-  try {
-    var t = localStorage.getItem("w10w-square-token");
-    if (t) window.SQUARE_TOKEN = t;
-  } catch(e){}
-}
-
-
-// ══ BRIEF ══
-function generateBrief(force){
-  var h=calcHealth();var k=calcKitchenHealth();
-  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
-  var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
-  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var kaveka=staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
-  var barGapDays=[];
-  DAYS.forEach(function(d){
-    (WEEK[d]||[]).forEach(function(sh){
-      if(sh.pos.toLowerCase().includes("bar")){var st=shiftStatus(sh.pid);if(st.cls!=="st-ok")barGapDays.push(d);}
-    });
-  });
-  barGapDays=barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
-  var conflicts=analyzeScheduleConflicts();
-  var sentences=[];var actions=0;
-  if(barT1s.length===0){sentences.push("No dedicated T1 bartender on the roster -- every bar shift this week is at risk across all 7 seats.");actions++;}
-  else if(barT1s.length===1){
-    var n=barT1s[0].name.split(" ")[0];
-    if(barGapDays.length>0){sentences.push("<strong>"+n+"</strong> is your only reliable bar cover -- "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has":"have")+" a coverage gap before the schedule goes out.");actions++;}
-    else{sentences.push("<strong>"+n+"</strong> is carrying the bar solo this week. One callout and you're back in last Saturday's position.");actions++;}
-  }else{
-    var ns=barT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
-    if(barGapDays.length>0){sentences.push(ns+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap -- assign a backup before publishing.");actions++;}
-    else sentences.push("Bar coverage solid -- "+ns+" both scheduled with backups.");
-  }
-  if(barT2s.length<2){sentences.push("Bar backup bench is thin -- Camille cross-training session needs to happen before April 4.");actions++;}
-  if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
-  if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
-  if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff must be complete before then.");
-  if(!hasEvents){sentences.push("Events Lead still open -- private dining is untapped revenue and the JD is ready to post.");actions++;}
-  // Kitchen check
-  var savedDay2=activeDay;var kitchenIssues=[];
-  DAYS.forEach(function(d){activeDay=d;var ki=calcKitchenHealth();if(!ki.canOpen)kitchenIssues.push(d+" (no lead cook)");});
-  activeDay=savedDay2;
-  if(kitchenIssues.length>0){sentences.push("Kitchen gap: no lead line cook scheduled on "+kitchenIssues.slice(0,2).join(", ")+(kitchenIssues.length>2?" and "+(kitchenIssues.length-2)+" more":"")+". Fix before publishing.");actions++;}
-  if(hasAnyRatings&&hasAnyRatings()&&ratingsAreStale&&ratingsAreStale()){sentences.push("Team ratings haven't been updated in over 30 days -- review before they stop being meaningful.");}
-  sentences.push(actions===0?"Coverage looks good -- nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
-  var briefEl=document.getElementById("brief-text");
-  if(briefEl){briefEl.className="brief-text";briefEl.innerHTML=sentences.join(" ");}
-  var stampEl=document.getElementById("brief-stamp");
-  if(stampEl){
-    var now=new Date();
-    var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    stampEl.textContent="Generated "+D[now.getDay()]+" "+M[now.getMonth()]+" "+now.getDate()+" at "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-  }
-}
-
-// ══ AI BRIEF ══
-function generateAIBrief(){
-  var btn=document.getElementById("ai-brief-btn");
-  var result=document.getElementById("ai-brief-result");
-  if(!btn||!result) return;
-  btn.textContent="✦ Generating...";btn.disabled=true;
-  result.style.display="block";
-  result.innerHTML="<em style='color:rgba(255,255,255,.5);font-size:11px'>Thinking...</em>";
-  var h=calcHealth();var k=calcKitchenHealth();
-  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
-  var conflicts=analyzeScheduleConflicts();
-  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var shiftLines=[];
-  if(shiftReportsCache&&shiftReportsCache.length>0){
-    shiftReportsCache.slice(0,5).forEach(function(row){
-      var by=row[SHIFT_COLS.submittedBy]||"";
-      var text=[row[SHIFT_COLS.shiftSummary],row[SHIFT_COLS.guestNotes],row[SHIFT_COLS.fohNotes]].filter(function(t){return t&&t.toLowerCase()!=="none"&&t.toLowerCase()!=="na";}).join(" | ").substring(0,200);
-      if(text.length>10) shiftLines.push((row[SHIFT_COLS.date]||"")+" ("+by+"): "+text);
-    });
-  }
-  var systemMsg="You are writing a weekly ops brief for Ryan Reynolds, owner of WEST10WEST, a 23-seat West Village restaurant. Address Tanner Floyd (Managing Partner) directly. Style: Ryan's voice -- short declarative sentences, specific names and numbers, no em dashes, no fluff, no corporate language. Max 5 sentences. End with exactly what needs resolving before the schedule goes out.";
-  var userMsg="Current state: Bar "+h.bs+"% ("+h.bT1+" T1 bartenders, "+h.bT2+" T2). Floor "+h.fs+"% ("+h.leads+" leads). Kitchen "+k.score+"% ("+k.leadCooks+" lead cooks, "+k.totalCooks+" total cooks, "+k.porters+" porters). T1 bar: "+(barT1s.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Events Lead: "+(!hasEvents?"open":"filled")+". Conflicts: "+(conflicts.conflicts.length>0?conflicts.conflicts.map(function(c){return c.msg;}).join("; "):"none")+". Kaveka exits April 4."+(shiftLines.length>0?" Recent shift notes: "+shiftLines.join(" // "):"")+" Write the brief.";
-  fetch("/api/claude",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:systemMsg,messages:[{role:"user",content:userMsg}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var text=data.content&&data.content[0]?data.content[0].text:"Could not generate brief.";
-    result.innerHTML=text.replace(/\n\n/g,"<br><br>").replace(/\n/g,"<br>");
-    btn.textContent="✦ AI brief";btn.disabled=false;
-  })
-  .catch(function(){
-    result.innerHTML="<span style='color:rgba(255,100,100,.9)'>Could not connect. Make sure you are on the Netlify URL.</span>";
-    btn.textContent="✦ AI brief";btn.disabled=false;
-  });
-}
-
-// ══ GREETING ══
-function renderGreeting(){
-  var banner=document.getElementById("greeting-banner");
-  var msgEl=document.getElementById("greeting-msg");
-  var dateEl=document.getElementById("greeting-date");
-  var timeEl=document.getElementById("greeting-time-label");
-  if(!banner||!msgEl) return;
-  var now=new Date();
-  var h2=now.getHours();
-  var day=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()];
-  var month=["January","February","March","April","May","June","July","August","September","October","November","December"][now.getMonth()];
-  var period,greeting;
-  if(h2<12){period="Morning";greeting="Good morning";}
-  else if(h2<17){period="Afternoon";greeting="Good afternoon";}
-  else{period="Evening";greeting="Good evening";}
-  if(timeEl) timeEl.textContent=period;
-  msgEl.textContent=greeting+", Tanner.";
-  if(dateEl) dateEl.textContent=day+", "+month+" "+now.getDate();
-  banner.style.display="block";
-}
-function checkWelcome(){renderGreeting();}
-function dismissWelcome(){}
-
-// ══ TAB NAV ══
-function showTab(t){
-  activeTab=t;
-  document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts"][i]===t?" active":"");});
-  document.getElementById("tab-"+t).classList.add("active");
-  if(t==="week"){renderDayBtns();renderWeek();}
-  if(t==="callout")populateCallout();
-  if(t==="infra")renderInfra();
-  if(t==="roster")generateBrief(false);
-  if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
-  if(t==="shifts")loadShiftReports();
-}
-
-// ══ DATE ══
-function updateDate(){
-  var d=new Date(),D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  document.getElementById("live-date").textContent=D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate();
-}
-
-// ══ INIT ══
-async function init(){
-  updateDate();
-  await loadState();
-  await loadRatings();
-  loadSquareToken();
-  renderRoster();
-  renderDayBtns();
-  renderWeek();
-  renderFeedback();
-  renderHeaderChips();
-  renderStamp();
-  generateBrief(false);
-  checkWelcome();
-}
-
-init();
-</script>
-</body>
-</html>
