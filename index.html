@@ -2181,22 +2181,39 @@ var BE_NIGHTS=[
   {day:"Sunday",    labor:888,  beTarget:2147,avgSales:2187}
 ];
 var beLiveSales=null,beLiveLoading=false;
+var beMonthlyLive=null,beMonthlyLoading=false;
 
 function renderBreakeven(){
   renderBeSummary();renderBeTable();renderBeLive(null);
-  if(!beLiveSales&&!beLiveLoading)loadLiveSales();
+  if(!beLiveSales&&!beLiveLoading) loadLiveSales();
+  if(!beMonthlyLive&&!beMonthlyLoading) loadMonthlySales();
 }
 
 function renderBeSummary(){
   var el=document.getElementById("be-summary");if(!el)return;
-  var monthlyBe=BE_NIGHTS.reduce(function(s,n){return s+n.beTarget;},0)*(52/12)/7;
-  var monthlyAvg=BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0)*(52/12)/7;
+  var weeklyBe=BE_NIGHTS.reduce(function(s,n){return s+n.beTarget;},0);
+  var monthlyBe=Math.round(weeklyBe*52/12);
+
+  // Use live 30-day sales if loaded, else fall back to 12-month static average
+  var weeklyAvgStatic=BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0);
+  var monthlyAvgStatic=Math.round(weeklyAvgStatic*52/12);
+  var isLive=beMonthlyLive!==null;
+  var monthlyAvg=isLive?beMonthlyLive:monthlyAvgStatic;
+  var salesLabel=isLive?"Last 30 days (live)":"12-month trailing";
+  var salesColor=isLive?"var(--teal)":"var(--ink-3)";
+
   var surplus=monthlyAvg-monthlyBe;
-  function tile(lbl,val,sub,color){return'<div class="be-tile"><div class="be-tile-lbl">'+lbl+'</div><div class="be-tile-val" style="color:'+color+'">'+val+'</div><div class="be-tile-sub">'+sub+'</div></div>';}
+  function tile(lbl,val,sub,color,badge){
+    return'<div class="be-tile">'+
+      '<div class="be-tile-lbl">'+lbl+(badge?'<span style="margin-left:6px;font-size:9px;background:var(--teal-bg);color:var(--teal-text);padding:1px 5px;border-radius:8px;font-weight:700;vertical-align:middle">'+badge+'</span>':'')+'</div>'+
+      '<div class="be-tile-val" style="color:'+color+'">'+val+'</div>'+
+      '<div class="be-tile-sub">'+sub+'</div>'+
+    '</div>';
+  }
   el.innerHTML=
     tile("Monthly fixed","$"+Math.round(BE_FIXED_MONTHLY).toLocaleString(),"All-in fixed costs","var(--ink)")+
-    tile("Monthly break-even","$"+Math.round(monthlyBe).toLocaleString(),"To cover costs + COGS","var(--ink)")+
-    tile("Monthly avg sales","$"+Math.round(monthlyAvg).toLocaleString(),"12-month trailing","var(--teal)")+
+    tile("Monthly break-even","$"+Math.round(monthlyBe).toLocaleString(),"Fixed costs + avg labor + COGS","var(--ink)")+
+    tile("Monthly net sales","$"+Math.round(monthlyAvg).toLocaleString(),salesLabel,isLive?"var(--teal)":"var(--ink)",isLive?"LIVE":null)+
     tile("Monthly surplus","$"+Math.round(surplus).toLocaleString(),surplus>=0?"Above break-even":"Below break-even",surplus>=0?"var(--teal)":"var(--red)");
 }
 
@@ -2278,6 +2295,43 @@ function loadLiveSales(){
   .then(function(r){return r.json();})
   .then(function(d){if(d.payments!==undefined)onData(d.payments);else if(token)fetch(url,{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json();}).then(function(d2){if(d2.payments)onData(d2.payments);else renderBeLive(0);}).catch(function(){renderBeLive(0);});else renderBeLive(0);})
   .catch(function(){if(token)fetch(url,{headers:{"Authorization":"Bearer "+token}}).then(function(r){return r.json();}).then(function(d2){if(d2.payments)onData(d2.payments);else renderBeLive(0);}).catch(function(){renderBeLive(0);});else renderBeLive(0);});
+}
+
+function loadMonthlySales(){
+  beMonthlyLoading=true;
+  var now=new Date();
+  var start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-30).toISOString();
+  var url="https://connect.squareup.com/v2/payments?location_id=LHSVRCNXBB7E8&begin_time="+start+"&end_time="+now.toISOString()+"&limit=200";
+  var token=typeof SQUARE_TOKEN!=="undefined"?SQUARE_TOKEN:null;
+
+  function onData(payments){
+    // Net sales = total - tax - tip, in dollars
+    var net=payments.reduce(function(s,p){
+      var total=(p.total_money&&p.total_money.amount)?p.total_money.amount:0;
+      var tax=(p.total_tax_money&&p.total_tax_money.amount)?p.total_tax_money.amount:0;
+      var tip=(p.tip_money&&p.tip_money.amount)?p.tip_money.amount:0;
+      return s+(total-tax-tip);
+    },0)/100;
+    beMonthlyLive=Math.round(net);
+    beMonthlyLoading=false;
+    renderBeSummary(); // re-render tiles with live figure
+  }
+
+  function tryDirect(){
+    if(!token){beMonthlyLoading=false;return;}
+    fetch(url,{headers:{"Authorization":"Bearer "+token,"Square-Version":"2024-01-18"}})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.payments)onData(d.payments);else{beMonthlyLoading=false;}})
+    .catch(function(){beMonthlyLoading=false;});
+  }
+
+  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:url,method:"GET"})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.payments!==undefined) onData(d.payments);
+    else tryDirect();
+  })
+  .catch(function(){tryDirect();});
 }
 
 async function init(){
