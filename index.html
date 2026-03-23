@@ -621,32 +621,10 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 </div>
 
 <script>
-// == BUSINESS CONSTANTS ==
+// ══ BUSINESS CONSTANTS ══
 var BIZ={name:"WEST10WEST",seats:23,barSeats:7,avgSpend:80,barShiftsPerWeek:9,eventsTarget:150000};
 
-// Square team member ID to name map
-var SQUARE_TEAM_MAP={
-  "TMI6LDvnSOg7OWuG":"Elena Mucilli",
-  "TMcfrzXddyvAZT3_":"Nathalie Fernandes",
-  "TMvU-TQqCy3w_EJ6":"Grace Lyons",
-  "TMNQrmihnuUfVvU6":"Laura Paganello",
-  "TMGt78EY-LAHogpn":"Sayer Williams",
-  "TMFJ9ZpVmhlog7Sc":"Eamon Ida",
-  "TM_fgfkecIM04uP8":"Chelsea Udoye",
-  "TMUb1HUIiq_CMiD5":"Tanner Floyd",
-  "TMFTYWXRHm2BEnFK":"Rohith Ram",
-  "TMJsifAJg5nkeWgU":"Nikko Pineda",
-  "TM4NCMVlgHE9Tg2U":"Kaveka Aveau",
-  "TMDW3TMvVcGPajYJ":"Dave Arauz",
-  "TMvDxDcJuV1yp0Qq":"Adrian Policarpio Angel",
-  "TMstsL_kXxMll7fh":"Candido Flores",
-  "TMTvBUcVJZWZ99U0":"Arturo Peres Jr",
-  "TMq9r4ojIi0_9VxE":"Yatta Diop",
-  "TMqOjeV2rSnNOWLG":"George Witnauer",
-  "TMJ2aFVlPaLZAa6d":"Ryan Reynolds"
-};
-
-// == JD DATA (sourced from Google Drive) ==
+// ══ JD DATA (sourced from Google Drive) ══
 var JDS={
   bartender:{
     title:"Bartender",
@@ -662,7 +640,7 @@ var JDS={
   }
 };
 
-// == DEFAULT STAFF ==
+// ══ DEFAULT STAFF ══
 var DEFAULT_STAFF=[
   {id:1,name:"New hire (open)",role:"Bartender",tier:"None",shifts:0,_teams:["bar"]},
   {id:2,name:"Camille",role:"Bartender / Consultant",tier:"Consultant",shifts:0},
@@ -696,13 +674,13 @@ var DEFAULT_WEEK={
 
 var DEFAULT_EVENTS=[{id:1,name:"Kaveka",type:"exit",date:"Apr 4",dateMs:new Date("2026-04-04").getTime()}];
 
-// == STATE ==
+// ══ STATE ══
 var staff=[],WEEK={},teamEvents=[],checks={};
 var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var activeDay="Mon",activeTab="roster",weekEditing=false,editorData=[];
 var lastUpdated=null,calloutSelected=[],currentJD=null;
 
-// == INFRA DATA ==
+// ══ INFRA DATA ══
 var INFRA_CAMILLE=[
   {text:"Seasonal cocktail menu refresh (new + rotating drinks)",owner:"Camille + Ryan"},
   {text:"W10W Cocktail Menu Guide - full rebuild with specs, ratios, garnish",owner:"Camille"},
@@ -720,7 +698,7 @@ var INFRA_ORDERING=[
   {text:"Bar P&L - quarterly review, Tanner inputs weekly",owner:"Camille + Ryan (own)"}
 ];
 
-// == STORAGE ==
+// ══ STORAGE ══
 async function saveState(){
   var state={staff:staff,week:WEEK,events:teamEvents,checks:checks,updatedAt:new Date().toISOString()};
   var json=JSON.stringify(state);
@@ -781,7 +759,7 @@ function renderStamp(){
   el.textContent="Last updated "+D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate()+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
 }
 
-// == TEAM INFERENCE ==
+// ══ TEAM INFERENCE ══
 var BAR_KW=["bartender","bar lead","bar manager","mixologist"];
 var FLOOR_KW=["server","floor lead","host","hostess","floor manager","waiter","waitress"];
 var KITCHEN_KW=["cook","chef","kitchen","line","prep","sous","pastry","dishwasher","porter","lead line cook","line cook"];
@@ -801,7 +779,7 @@ function byId(id){return staff.find(function(s){return s.id===id;})||null;}
 function getBackups(excludeId){return staff.filter(function(s){return s.id!==excludeId&&(s.tier==="T1"||s.tier==="T2")&&s.tier!=="Training";});}
 function getFlexStaff(excludeId){return staff.filter(function(s){return s.id!==excludeId&&s.tier==="Flex";});}
 
-// == KITCHEN HEALTH — roster-based, operationally honest ==
+// ══ KITCHEN HEALTH — roster-based, operationally honest ══
 function calcKitchenHealth(){
   var leadCooks=staff.filter(function(s){return s.role.toLowerCase().includes("lead line cook");});
   var lineCooks=staff.filter(function(s){return s.role.toLowerCase().includes("line cook")&&!s.role.toLowerCase().includes("lead");});
@@ -856,7 +834,7 @@ function calcKitchenHealth(){
   };
 }
 
-// == HEALTH ==
+// ══ HEALTH ══
 function calcHealth(){
   var ba=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";});
   var bT1=ba.filter(function(s){return s.tier==="T1";}).length;
@@ -967,13 +945,13 @@ function renderHealth(){
 }
 
 
-// == TIER PILL ==
+// ══ TIER PILL ══
 function tierPill(t){
   var m={T1:"p-green",T2:"p-blue",T3:"p-gray",Training:"p-training",Consultant:"p-purple",Flex:"p-amber"};
   return m[t]?'<span class="pill '+m[t]+'">'+t+'</span>':"";
 }
 
-// == SCHEDULE INTELLIGENCE ==
+// ══ SCHEDULE INTELLIGENCE ══
 function analyzeScheduleConflicts(){
   var conflicts=[],warnings=[];
   // Clopening: someone closes 11:30pm then opens at 11am next day (any day)
@@ -1016,7 +994,7 @@ function analyzeScheduleConflicts(){
   return{conflicts:conflicts,warnings:warnings};
 }
 
-// == ROSTER RENDER ==
+// ══ ROSTER RENDER ══
 function sRow(s){
   var cross=isCross(s)?'<span class="cross-tag">cross-trained</span>':"";
   var isKitchen=getTeams(s).includes("kitchen");
@@ -1059,7 +1037,7 @@ function renderRoster(){
   generateBrief(false);
 }
 
-// == ROLE EDIT ==
+// ══ ROLE EDIT ══
 function startEdit(id){var l=document.getElementById("rl-"+id),i=document.getElementById("ri-"+id);if(l&&i){l.style.display="none";i.style.display="inline-block";i.focus();i.select();}}
 function saveEdit(id){
   var i=document.getElementById("ri-"+id);if(!i)return;var v=i.value.trim();var s=byId(id);
@@ -1097,7 +1075,7 @@ function addStaff(){
   renderRoster();saveState();
 }
 
-// == HEADER EVENTS ==
+// ══ HEADER EVENTS ══
 var TC={exit:{dot:"amber",label:function(e){return e.name+" exits "+e.date;}},hiring:{dot:"blue",label:function(e){return"Hiring: "+e.name;}},onboarding:{dot:"green",label:function(e){return e.name+" onboarding"+(e.date?" · "+e.date:"");}},change:{dot:"blue",label:function(e){return e.name+" · "+e.date;}}};
 function renderHeaderChips(){
   var now=Date.now();
@@ -1134,7 +1112,7 @@ document.addEventListener("click",function(e){
   if(p&&p.classList.contains("open")&&!p.contains(e.target)&&(!c||!c.contains(e.target)))closeEP();
 });
 
-// == WEEK SCHEDULE ==
+// ══ WEEK SCHEDULE ══
 function shiftStatus(pid){
   var p=byId(pid);
   if(!p||["None","T3","Consultant","Training","Flex"].includes(p.tier))return{lbl:"No primary",cls:"st-fail"};
@@ -1220,7 +1198,7 @@ function renderEditorRows(){
 function addShiftRow(){editorData.push({pos:"Shift",time:"4-11:30pm",pid:0});renderEditorRows();}
 function saveWeek(){WEEK[activeDay]=editorData.slice();toggleWeekEditor();renderWeek();saveState();}
 
-// == CALLOUT ==
+// ══ CALLOUT ══
 function populateCallout(){
   var wrap=document.getElementById("callout-checkboxes");if(!wrap)return;
   var eligible=staff.filter(function(s){return s.tier!=="None"&&!getTeams(s).includes("kitchen");});
@@ -1333,7 +1311,7 @@ function runCallout(){
   el.innerHTML=html;
 }
 
-// == FEEDBACK ==
+// ══ FEEDBACK ══
 function renderFeedback(){
   var h=calcHealth();var cards=[];
   var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
@@ -1383,7 +1361,7 @@ function renderFeedback(){
   }).join("");
 }
 
-// == HIRING MODAL ==
+// ══ HIRING MODAL ══
 function openHiringModal(role){
   var jd=JDS[role];if(!jd)return;currentJD=jd;
   document.getElementById("modal-title").textContent="Post: "+jd.title;
@@ -1407,7 +1385,7 @@ function openIndeed(){
 }
 document.addEventListener("click",function(e){if(e.target===document.getElementById("hiring-modal"))closeHiringModal();});
 
-// == INFRA ==
+// ══ INFRA ══
 function renderInfra(){
   function rows(arr,pfx){
     return arr.map(function(item,i){var k=pfx+i;
@@ -1422,7 +1400,7 @@ function renderInfra(){
 }
 function toggleCheck(k){checks[k]=!checks[k];var el=document.getElementById("ck-"+k);if(el)el.className="infra-chk"+(checks[k]?" done":"");saveState();}
 
-// == TEAM RATINGS ==
+// ══ TEAM RATINGS ══
 var TEAM_PIN="1987";
 var ratings={};var teamUnlocked=false;var ratingsLastSaved=null;
 async function saveRatings(){
@@ -1503,7 +1481,7 @@ function updateRating(staffId,dim,val){
   saveRatingsTimer=setTimeout(function(){saveRatings();renderHealth();renderFeedback();},800);
 }
 
-// == SHIFT REPORT CONFIG ==
+// ══ SHIFT REPORT CONFIG ══
 var SHEET_ID = "1XDxDpEQxxEVP0XL3qhqot-KIGecEVRM6LEfxzJtcPg4";
 var shiftReportsCache = null;
 var shiftReportsLoadedAt = null;
@@ -1546,8 +1524,7 @@ function fetchShiftReports(days, callback) {
   var cutoffStr = (cutoff.getMonth()+1) + "/" + cutoff.getDate() + "/" + cutoff.getFullYear();
 
   // Query: all columns, ordered by date desc, filtered to date range
-  var isoDate = cutoff.toISOString().split("T")[0];
-  var query = encodeURIComponent("select * where A >= date '" + isoDate + "' order by A desc limit 50");
+  var query = encodeURIComponent("select * where A >= date '" + cutoff.toISOString().split('T')[0] + "' order by A desc limit 50");
   var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:json&tq=" + query + "&headers=1";
 
   fetch(url)
@@ -1811,7 +1788,7 @@ function loadShiftReports() {
   });
 }
 
-// == TIP POOL INTELLIGENCE (Square API) ==
+// ══ TIP POOL INTELLIGENCE (Square API) ══
 var tipData = null;
 var tipDataLoadedAt = null;
 
@@ -1856,30 +1833,29 @@ function loadTipData() {
 
 function processTipData(payments) {
   var byStaff = {};
-  var totalPoolTips = 0;
-
   payments.forEach(function(p) {
     var tipAmt = (p.tip_money && p.tip_money.amount) ? p.tip_money.amount : 0;
     if (tipAmt === 0) return;
-    var tmId = p.team_member_id || "Unknown";
-    // Map ID to name using Square team map, fall back to roster match
-    var name = SQUARE_TEAM_MAP[tmId] || null;
-    if (!name) {
-      // Try matching against roster by partial ID
-      var rosterMatch = staff.find(function(s){
-        return s.name.split(" ")[0].toLowerCase() === (tmId||"").toLowerCase();
-      });
-      name = rosterMatch ? rosterMatch.name : tmId;
-    }
-    if (!byStaff[name]) byStaff[name] = { id: tmId, transactions: 0, totalTips: 0 };
+    var totalAmt = (p.total_money && p.total_money.amount) ? p.total_money.amount : 0;
+    var billAmt = totalAmt > tipAmt ? totalAmt - tipAmt : totalAmt; // bill before tip
+    var name = (p.team_member_id || 'Unknown');
+    if (!byStaff[name]) byStaff[name] = { transactions: 0, totalTips: 0, totalBill: 0 };
     byStaff[name].transactions++;
     byStaff[name].totalTips += tipAmt;
-    totalPoolTips += tipAmt;
+    byStaff[name].totalBill += billAmt;
+  });
+
+  // Calculate avg tip % (tip / pre-tip bill) and pool %
+  var totalPool = Object.keys(byStaff).reduce(function(sum, k){ return sum + byStaff[k].totalTips; }, 0);
+  Object.keys(byStaff).forEach(function(k){
+    var d = byStaff[k];
+    d.poolPct = totalPool > 0 ? Math.round((d.totalTips / totalPool) * 100) : 0;
+    d.avgTipPct = d.totalBill > 0 ? Math.round((d.totalTips / d.totalBill) * 100) : 0;
   });
 
   tipData = byStaff;
   tipDataLoadedAt = new Date();
-  renderTipCards(byStaff, totalPoolTips);
+  renderTipCards(byStaff);
 }
 
 function renderTipPlaceholder() {
@@ -1897,57 +1873,230 @@ function renderTipPlaceholder() {
     '<div style="font-size:11px;color:var(--ink-3);margin-bottom:20px">Get your token: Square Dashboard → Developers → Access tokens → Production. This is read-only access to payment data.</div>' +
     '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Preview — sample data</div>' +
     renderTipCardsHtml([
-      { name: "Grace Lyons", role: "Bartender / Server", tipPerTx: 42.50, transactions: 18, total: 765, pct: 100 },
-      { name: "Elena Mucilli", role: "Floor Lead", tipPerTx: 38.20, transactions: 22, total: 840, pct: 93 },
-      { name: "Chelsea Udoye", role: "Server", tipPerTx: 35.80, transactions: 19, total: 680, pct: 84 },
-      { name: "Laura Paganello", role: "Bartender / Server", tipPerTx: 33.10, transactions: 15, total: 497, pct: 78 },
-      { name: "Nathalie Fernandes", role: "Floor Lead", tipPerTx: 29.40, transactions: 20, total: 588, pct: 69 }
+      { name: "Grace Lyons", role: "Bartender / Server", tipPerTx: 42.50, transactions: 18, total: 765, pct: 100, avgTipPct: 22 },
+      { name: "Elena Mucilli", role: "Floor Lead", tipPerTx: 38.20, transactions: 22, total: 840, pct: 93, avgTipPct: 20 },
+      { name: "Chelsea Udoye", role: "Server", tipPerTx: 35.80, transactions: 19, total: 680, pct: 84, avgTipPct: 19 },
+      { name: "Laura Paganello", role: "Bartender / Server", tipPerTx: 33.10, transactions: 15, total: 497, pct: 78, avgTipPct: 18 },
+      { name: "Nathalie Fernandes", role: "Floor Lead", tipPerTx: 29.40, transactions: 20, total: 588, pct: 69, avgTipPct: 16 }
     ], true);
 }
 
-function renderTipCardsHtml(staffList, isPreview, totalPool) {
-  var maxTipPerTx = Math.max.apply(null, staffList.map(function(s){ return s.tipPerTx; })) || 1;
-  var html = "";
+function renderTipCardsHtml(staffList, isPreview) {
+  var maxTipPerTx = Math.max.apply(null, staffList.map(function(s){ return s.tipPerTx; }));
+  var html = '';
   if (isPreview) html += '<div style="font-size:11px;font-style:italic;color:var(--ink-4);margin-bottom:12px">Sample data shown — connect Square to see live figures</div>';
 
   staffList.forEach(function(s, i) {
-    var barPct = Math.round((s.tipPerTx / maxTipPerTx) * 100);
-    var color = barPct >= 80 ? "var(--teal)" : barPct >= 50 ? "var(--amber)" : "var(--red)";
-    var poolPct = s.poolPct || 0;
+    var pct = Math.round((s.tipPerTx / maxTipPerTx) * 100);
+    var color = pct >= 80 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : 'var(--red)';
     html += '<div class="tip-card">';
     html += '<div class="tip-rank">' + (i+1) + '</div>';
     html += '<div class="tip-info">';
     html += '<div class="tip-name">' + s.name + '</div>';
     html += '<div class="tip-role">' + s.role + '</div>';
-    html += '<div class="tip-bar-wrap" style="margin-top:6px"><div class="tip-bar" style="width:' + barPct + '%;background:' + color + '"></div></div>';
+    html += '<div class="tip-bar-wrap" style="margin-top:6px"><div class="tip-bar" style="width:' + pct + '%;background:' + color + '"></div></div>';
     html += '</div>';
     html += '<div class="tip-stats">';
     html += '<div class="tip-stat"><div class="tip-stat-val" style="color:' + color + '">$' + s.tipPerTx.toFixed(0) + '</div><div class="tip-stat-lbl">Tip/tx</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">' + s.transactions + '</div><div class="tip-stat-lbl">Transactions</div></div>';
     html += '<div class="tip-stat"><div class="tip-stat-val">$' + (s.total||0).toFixed(0) + '</div><div class="tip-stat-lbl">Total tips</div></div>';
-    html += '<div class="tip-stat"><div class="tip-stat-val" style="color:var(--ink-3)">' + poolPct + '%</div><div class="tip-stat-lbl">Of pool</div></div>';
+    html += '<div class="tip-stat"><div class="tip-stat-val" style="color:var(--ink-3)">' + (s.avgTipPct||0) + '%</div><div class="tip-stat-lbl">Avg tip %</div></div>';
     html += '</div>';
     html += '</div>';
   });
   return html;
 }
 
-function renderTipCards(byStaff, totalPoolTips) {
+function renderTipCards(byStaff) {
   var el = document.getElementById("tip-content");
   if (!el) return;
-  var totalPool = (totalPoolTips || 0) / 100;
+
+  // Map team_member_ids to roster names where possible
   var staffList = Object.keys(byStaff).map(function(key) {
     var d = byStaff[key];
     var avg = d.transactions > 0 ? (d.totalTips / d.transactions) / 100 : 0;
-    var poolPct = totalPoolTips > 0 ? Math.round((d.totalTips / totalPoolTips) * 100) : 0;
-    var matched = staff.find(function(s){ return s.name === key; });
-    return { name: key, role: matched ? matched.role : "Staff", tipPerTx: avg, transactions: d.transactions, total: d.totalTips / 100, poolPct: poolPct };
+    // Try to match to roster
+    var matched = staff.find(function(s){ return s.name.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(s.name.split(' ')[0].toLowerCase()); });
+    return {
+      name: matched ? matched.name : key,
+      role: matched ? matched.role : 'Staff',
+      tipPerTx: avg,
+      transactions: d.transactions,
+      total: d.totalTips / 100,
+      pct: 100,
+      poolPct: d.poolPct || 0,
+      avgTipPct: d.avgTipPct || 0
+    };
   }).sort(function(a,b){ return b.tipPerTx - a.tipPerTx; });
-  var txCount = staffList.reduce(function(s,x){return s+x.transactions;},0);
-  var monoStyle = "font-family:Geist Mono,monospace";
-  var html = "<div style='font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);"+monoStyle+";margin-bottom:6px'>Tip per transaction — last 7 days</div>";
-  html += "<div style='font-size:11px;color:var(--ink-3);margin-bottom:14px'>Total pool: <strong style='color:var(--ink);"+monoStyle+"'>$" + totalPool.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0}) + "</strong> · " + txCount + " transactions</div>";
+
+  var html = '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Tip per transaction — last 7 days</div>';
   html += renderTipCardsHtml(staffList, false);
   el.innerHTML = html;
 }
 
+function saveSquareToken() {
+  var input = document.getElementById("square-token-input");
+  if (!input || !input.value.trim()) return;
+  try { localStorage.setItem("w10w-square-token", input.value.trim()); } catch(e){}
+  window.SQUARE_TOKEN = input.value.trim();
+  loadTipData();
+}
+
+function loadSquareToken() {
+  try {
+    var t = localStorage.getItem("w10w-square-token");
+    if (t) window.SQUARE_TOKEN = t;
+  } catch(e){}
+}
+
+
+// ══ BRIEF ══
+function generateBrief(force){
+  var h=calcHealth();var k=calcKitchenHealth();
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
+  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var kaveka=staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
+  var barGapDays=[];
+  DAYS.forEach(function(d){
+    (WEEK[d]||[]).forEach(function(sh){
+      if(sh.pos.toLowerCase().includes("bar")){var st=shiftStatus(sh.pid);if(st.cls!=="st-ok")barGapDays.push(d);}
+    });
+  });
+  barGapDays=barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
+  var conflicts=analyzeScheduleConflicts();
+  var sentences=[];var actions=0;
+  if(barT1s.length===0){sentences.push("No dedicated T1 bartender on the roster -- every bar shift this week is at risk across all 7 seats.");actions++;}
+  else if(barT1s.length===1){
+    var n=barT1s[0].name.split(" ")[0];
+    if(barGapDays.length>0){sentences.push("<strong>"+n+"</strong> is your only reliable bar cover -- "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has":"have")+" a coverage gap before the schedule goes out.");actions++;}
+    else{sentences.push("<strong>"+n+"</strong> is carrying the bar solo this week. One callout and you're back in last Saturday's position.");actions++;}
+  }else{
+    var ns=barT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
+    if(barGapDays.length>0){sentences.push(ns+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap -- assign a backup before publishing.");actions++;}
+    else sentences.push("Bar coverage solid -- "+ns+" both scheduled with backups.");
+  }
+  if(barT2s.length<2){sentences.push("Bar backup bench is thin -- Camille cross-training session needs to happen before April 4.");actions++;}
+  if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
+  if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
+  if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff must be complete before then.");
+  if(!hasEvents){sentences.push("Events Lead still open -- private dining is untapped revenue and the JD is ready to post.");actions++;}
+  // Kitchen check
+  var savedDay2=activeDay;var kitchenIssues=[];
+  DAYS.forEach(function(d){activeDay=d;var ki=calcKitchenHealth();if(!ki.canOpen)kitchenIssues.push(d+" (no lead cook)");});
+  activeDay=savedDay2;
+  if(kitchenIssues.length>0){sentences.push("Kitchen gap: no lead line cook scheduled on "+kitchenIssues.slice(0,2).join(", ")+(kitchenIssues.length>2?" and "+(kitchenIssues.length-2)+" more":"")+". Fix before publishing.");actions++;}
+  if(hasAnyRatings&&hasAnyRatings()&&ratingsAreStale&&ratingsAreStale()){sentences.push("Team ratings haven't been updated in over 30 days -- review before they stop being meaningful.");}
+  sentences.push(actions===0?"Coverage looks good -- nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
+  var briefEl=document.getElementById("brief-text");
+  if(briefEl){briefEl.className="brief-text";briefEl.innerHTML=sentences.join(" ");}
+  var stampEl=document.getElementById("brief-stamp");
+  if(stampEl){
+    var now=new Date();
+    var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    stampEl.textContent="Generated "+D[now.getDay()]+" "+M[now.getMonth()]+" "+now.getDate()+" at "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  }
+}
+
+// ══ AI BRIEF ══
+function generateAIBrief(){
+  var btn=document.getElementById("ai-brief-btn");
+  var result=document.getElementById("ai-brief-result");
+  if(!btn||!result) return;
+  btn.textContent="✦ Generating...";btn.disabled=true;
+  result.style.display="block";
+  result.innerHTML="<em style='color:rgba(255,255,255,.5);font-size:11px'>Thinking...</em>";
+  var h=calcHealth();var k=calcKitchenHealth();
+  var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
+  var conflicts=analyzeScheduleConflicts();
+  var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
+  var shiftLines=[];
+  if(shiftReportsCache&&shiftReportsCache.length>0){
+    shiftReportsCache.slice(0,5).forEach(function(row){
+      var by=row[SHIFT_COLS.submittedBy]||"";
+      var text=[row[SHIFT_COLS.shiftSummary],row[SHIFT_COLS.guestNotes],row[SHIFT_COLS.fohNotes]].filter(function(t){return t&&t.toLowerCase()!=="none"&&t.toLowerCase()!=="na";}).join(" | ").substring(0,200);
+      if(text.length>10) shiftLines.push((row[SHIFT_COLS.date]||"")+" ("+by+"): "+text);
+    });
+  }
+  var systemMsg="You are writing a weekly ops brief for Ryan Reynolds, owner of WEST10WEST, a 23-seat West Village restaurant. Address Tanner Floyd (Managing Partner) directly. Style: Ryan's voice -- short declarative sentences, specific names and numbers, no em dashes, no fluff, no corporate language. Max 5 sentences. End with exactly what needs resolving before the schedule goes out.";
+  var userMsg="Current state: Bar "+h.bs+"% ("+h.bT1+" T1 bartenders, "+h.bT2+" T2). Floor "+h.fs+"% ("+h.leads+" leads). Kitchen "+k.score+"% ("+k.leadCooks+" lead cooks, "+k.totalCooks+" total cooks, "+k.porters+" porters). T1 bar: "+(barT1s.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Events Lead: "+(!hasEvents?"open":"filled")+". Conflicts: "+(conflicts.conflicts.length>0?conflicts.conflicts.map(function(c){return c.msg;}).join("; "):"none")+". Kaveka exits April 4."+(shiftLines.length>0?" Recent shift notes: "+shiftLines.join(" // "):"")+" Write the brief.";
+  fetch("/api/claude",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:systemMsg,messages:[{role:"user",content:userMsg}]})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var text=data.content&&data.content[0]?data.content[0].text:"Could not generate brief.";
+    result.innerHTML=text.replace(/\n\n/g,"<br><br>").replace(/\n/g,"<br>");
+    btn.textContent="✦ AI brief";btn.disabled=false;
+  })
+  .catch(function(){
+    result.innerHTML="<span style='color:rgba(255,100,100,.9)'>Could not connect. Make sure you are on the Netlify URL.</span>";
+    btn.textContent="✦ AI brief";btn.disabled=false;
+  });
+}
+
+// ══ GREETING ══
+function renderGreeting(){
+  var banner=document.getElementById("greeting-banner");
+  var msgEl=document.getElementById("greeting-msg");
+  var dateEl=document.getElementById("greeting-date");
+  var timeEl=document.getElementById("greeting-time-label");
+  if(!banner||!msgEl) return;
+  var now=new Date();
+  var h2=now.getHours();
+  var day=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][now.getDay()];
+  var month=["January","February","March","April","May","June","July","August","September","October","November","December"][now.getMonth()];
+  var period,greeting;
+  if(h2<12){period="Morning";greeting="Good morning";}
+  else if(h2<17){period="Afternoon";greeting="Good afternoon";}
+  else{period="Evening";greeting="Good evening";}
+  if(timeEl) timeEl.textContent=period;
+  msgEl.textContent=greeting+", Tanner.";
+  if(dateEl) dateEl.textContent=day+", "+month+" "+now.getDate();
+  banner.style.display="block";
+}
+function checkWelcome(){renderGreeting();}
+function dismissWelcome(){}
+
+// ══ TAB NAV ══
+function showTab(t){
+  activeTab=t;
+  document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts"][i]===t?" active":"");});
+  document.getElementById("tab-"+t).classList.add("active");
+  if(t==="week"){renderDayBtns();renderWeek();}
+  if(t==="callout")populateCallout();
+  if(t==="infra")renderInfra();
+  if(t==="roster")generateBrief(false);
+  if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
+  if(t==="shifts")loadShiftReports();
+}
+
+// ══ DATE ══
+function updateDate(){
+  var d=new Date(),D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("live-date").textContent=D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate();
+}
+
+// ══ INIT ══
+async function init(){
+  updateDate();
+  await loadState();
+  await loadRatings();
+  loadSquareToken();
+  renderRoster();
+  renderDayBtns();
+  renderWeek();
+  renderFeedback();
+  renderHeaderChips();
+  renderStamp();
+  generateBrief(false);
+  checkWelcome();
+}
+
+init();
+</script>
+</body>
+</html>
