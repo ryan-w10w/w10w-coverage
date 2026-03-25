@@ -470,6 +470,11 @@ input::placeholder{color:var(--ink-4)}
 .sched-coverage{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .sched-cov-tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:11px;box-shadow:var(--shadow-sm)}
 .sched-cov-num{font-size:20px;font-weight:300;font-family:'Geist Mono',monospace;letter-spacing:-1px}
+
+/* SUB-TABS */
+.sub-tab{padding:6px 14px;border-radius:9px;border:none;background:transparent;font-size:12px;font-weight:500;color:var(--ink-3);cursor:pointer;transition:all .15s;font-family:'Geist',sans-serif}
+.sub-tab:hover{color:var(--ink-2)}
+.sub-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:600}
 </style>
 </head>
 <body>
@@ -507,14 +512,12 @@ input::placeholder{color:var(--ink-4)}
 
 <div class="nav">
   <button class="nav-tab active" onclick="showTab('roster')">Roster <span class="nav-badge ok" id="nb-roster">OK</span></button>
-  <button class="nav-tab" onclick="showTab('week')">Week Schedule</button>
-  <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
+  <button class="nav-tab" onclick="showTab('schedule')">Schedule</button>
   <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
   <button class="nav-tab" onclick="showTab('infra')">Infrastructure</button>
   <button class="nav-tab" id="nav-team" onclick="showTab('team')">🔒 Operations</button>
   <button class="nav-tab" onclick="showTab('shifts')">Shift Reports</button>
   <button class="nav-tab" onclick="showTab('breakeven')">Break-even</button>
-  <button class="nav-tab" onclick="showTab('schedule')">Schedule Builder</button>
 </div>
 
 <div class="page">
@@ -543,7 +546,6 @@ input::placeholder{color:var(--ink-4)}
     
   </div>
 
-  <!-- CALLOUT SIMS — inline 2-column -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
     <div class="card" style="margin-bottom:0">
       <div class="card-hdr">
@@ -552,10 +554,7 @@ input::placeholder{color:var(--ink-4)}
       </div>
       <div style="padding:12px 16px;border-bottom:1px solid var(--line)">
         <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="btn btn-sm" onclick="clearCallout()">Clear</button>
-          <span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
-        </div>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="clearCallout()">Clear</button><span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;align-self:center"></span></div>
       </div>
       <div id="callout-result" style="padding:14px 16px;font-size:12px;color:var(--ink-4);font-family:'Geist Mono',monospace">Select staff above then hit Simulate</div>
     </div>
@@ -566,10 +565,7 @@ input::placeholder{color:var(--ink-4)}
       </div>
       <div style="padding:12px 16px;border-bottom:1px solid var(--line)">
         <div id="kitchen-callout-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <button class="btn btn-sm" onclick="clearKitchenCallout()">Clear</button>
-          <span id="kitchen-callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
-        </div>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="clearKitchenCallout()">Clear</button><span id="kitchen-callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;align-self:center"></span></div>
       </div>
       <div id="kitchen-callout-result" style="padding:14px 16px;font-size:12px;color:var(--ink-4);font-family:'Geist Mono',monospace">Select kitchen staff above then hit Simulate</div>
     </div>
@@ -618,8 +614,13 @@ input::placeholder{color:var(--ink-4)}
 </div>
 
 <!-- WEEK -->
-<div id="tab-week" class="tab-pane">
-  <div class="tab-intro">
+<div id="tab-schedule" class="tab-pane">
+  <div style="display:flex;gap:2px;margin-bottom:20px;background:var(--surface-2);border-radius:12px;padding:3px;width:fit-content;border:1px solid var(--line)">
+    <button class="sub-tab active" id="subtab-week-btn" onclick="showSubTab('week')">Current week</button>
+    <button class="sub-tab" id="subtab-builder-btn" onclick="showSubTab('builder')">Schedule builder</button>
+  </div>
+  <div id="subtab-week">
+    <div class="tab-intro">
     <div class="ti-icon">📅</div>
     <div>
       <div class="ti-title">Weekly Schedule & Coverage Validation</div>
@@ -648,29 +649,24 @@ input::placeholder{color:var(--ink-4)}
     </div>
   </div>
   <div id="week-summary"></div>
-</div>
-
-<!-- CALLOUT -->
-<div id="tab-callout" class="tab-pane">
-  <div class="tab-intro">
-    <div class="ti-icon">🚨</div>
+  </div>
+  <div id="subtab-builder" style="display:none">
+    <div class="tab-intro">
+    <div class="ti-icon">🗓️</div>
     <div>
-      <div class="ti-title">Callout Simulator</div>
-      <div class="ti-desc">Run any callout scenario — single or multiple people out at once. Shows the exact cascade, revenue impact, and who to call first.</div>
-      <div class="ti-how">Tap any staff members who called out, then hit Simulate. Run this at the start of each week to pre-identify your highest risk days.</div>
+      <div class="ti-title">Optimised Schedule Builder</div>
+      <div class="ti-desc">Generates a weekly schedule from availability, roles, reliability ratings, and clopening rules. One click — review and publish.</div>
+      <div class="ti-how">Set each staff member's available days on the Roster tab, then hit Generate. The engine fills shifts by role priority, avoids clopening, and weights by reliability score.</div>
     </div>
   </div>
-  <div class="card">
-    <div style="padding:14px 18px;border-bottom:1px solid var(--line)">
-      <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:10px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Who called out?</div>
-      <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary btn-sm" onclick="runCallout()">Simulate callout</button>
-        <button class="btn btn-sm" onclick="clearCallout()">Clear</button>
-        <span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
-      </div>
-    </div>
-    <div style="padding:16px 18px" id="callout-result"><div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:'Geist Mono',monospace">Select staff above then hit Simulate</div></div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+    <button class="btn btn-primary" onclick="generateOptimisedSchedule()">⚡ Generate schedule</button>
+    <button class="btn btn-sm" onclick="applyOptimisedSchedule()" id="apply-sched-btn" style="display:none">✓ Apply to week schedule</button>
+    <span id="sched-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+  </div>
+
+  <div id="sched-output"></div>
   </div>
 </div>
 
@@ -810,24 +806,7 @@ input::placeholder{color:var(--ink-4)}
 
 
 <!-- SCHEDULE BUILDER TAB -->
-<div id="tab-schedule" class="tab-pane">
-  <div class="tab-intro">
-    <div class="ti-icon">🗓️</div>
-    <div>
-      <div class="ti-title">Optimised Schedule Builder</div>
-      <div class="ti-desc">Generates a weekly schedule from availability, roles, reliability ratings, and clopening rules. One click — review and publish.</div>
-      <div class="ti-how">Set each staff member's available days on the Roster tab, then hit Generate. The engine fills shifts by role priority, avoids clopening, and weights by reliability score.</div>
-    </div>
-  </div>
 
-  <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
-    <button class="btn btn-primary" onclick="generateOptimisedSchedule()">⚡ Generate schedule</button>
-    <button class="btn btn-sm" onclick="applyOptimisedSchedule()" id="apply-sched-btn" style="display:none">✓ Apply to week schedule</button>
-    <span id="sched-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
-  </div>
-
-  <div id="sched-output"></div>
-</div>
 
 </div><!-- end .page -->
 
@@ -1492,180 +1471,94 @@ function clearCallout(){
   calloutSelected=[];populateCallout();
   document.getElementById("callout-result").innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select staff above then hit Simulate</div>';
 }
-function populateCallout(){
-  var wrap=document.getElementById("callout-checkboxes");if(!wrap)return;
-  var eligible=staff.filter(function(s){return s.tier!=="None"&&!getTeams(s).includes("kitchen");});
-  wrap.innerHTML=eligible.map(function(s){
-    var sel=calloutSelected.indexOf(s.id)>-1;
-    var role=s.role.toLowerCase();
-    var roleTag=role.includes("bar")?"Bar":role.includes("floor lead")?"Lead":role.includes("host")?"Host":"Server";
-    return'<span class="co-chip'+(sel?" selected":"")+'" onclick="toggleCoChip('+s.id+')">'+
-      s.name.split(" ")[0]+
-      '<span style="font-size:9px;opacity:.6;margin-left:3px">'+roleTag+'</span>'+
-    '</span>';
-  }).join("");
-  var cnt=document.getElementById("callout-count");
-  if(cnt)cnt.textContent=calloutSelected.length>0?calloutSelected.length+" out":"";
-}
-function toggleCoChip(id){
-  var idx=calloutSelected.indexOf(id);
-  if(idx>-1)calloutSelected.splice(idx,1);else calloutSelected.push(id);
-  populateCallout();
-}
-function clearCallout(){
-  calloutSelected=[];populateCallout();
-  var el=document.getElementById("callout-result");
-  if(el)el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select staff above then hit Simulate</div>';
-}
 function runCallout(){
   var el=document.getElementById("callout-result");
-  if(!calloutSelected.length){el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select staff above then hit Simulate</div>';return;}
-  // Day-of-week context
-  var DAYNAMES=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  var todayName=DAYNAMES[new Date().getDay()];
-  var isWeekend=["Friday","Saturday","Sunday"].indexOf(todayName)>-1;
-  var barNeeded=isWeekend?2:1;
+  if(!calloutSelected.length){
+    el.innerHTML='<div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace">Select staff above then hit Simulate</div>';return;
+  }
   var calledOut=calloutSelected.map(function(id){return byId(id);}).filter(Boolean);
   var calledIds=calloutSelected;
-  var barOut=calledOut.filter(function(s){return getTeams(s).includes("bar");});
+  var barOut=calledOut.filter(function(s){return getTeams(s).includes("bar")&&(s.tier==="T1"||s.tier==="T2");});
   var leadOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("floor lead");});
-  var serverOut=calledOut.filter(function(s){return getTeams(s).includes("floor")&&!s.role.toLowerCase().includes("floor lead")&&!getTeams(s).includes("bar");});
   var availBar=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&(s.tier==="T1"||s.tier==="T2")&&getTeams(s).includes("bar");});
   var availFlex=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&s.tier==="Flex";});
-  var availFloor=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&getTeams(s).includes("floor");});
-  var barRemaining=staff.filter(function(s){return calledIds.indexOf(s.id)===-1&&getTeams(s).includes("bar")&&s.tier!=="None";}).length;
-  var barShortfall=Math.max(0,barNeeded-barRemaining);
+  var html="";
   var names=calledOut.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" + ");
-  var criticalGap=barShortfall>0||(leadOut.length>0&&availFloor.filter(function(s){return s.role.toLowerCase().includes("floor lead");}).length===0);
-  var sev=criticalGap?"al-red":barOut.length>0||leadOut.length>0?"al-amber":"al-green";
-  var html='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">'+todayName+' · '+(isWeekend?"Weekend — 2 bar required":"Weekday — 1 bar required")+'</div>';
-  html+='<div class="alert '+sev+'" style="margin-bottom:12px">'+names+' out.';
-  if(barShortfall>0)html+=" Bar "+barShortfall+" short for tonight.";
-  else if(barOut.length>0)html+=" Bar covered — "+barRemaining+" bartender"+(barRemaining>1?"s":"")+" remaining.";
-  if(leadOut.length>0)html+=" Floor lead out.";
-  if(barShortfall===0&&leadOut.length===0&&serverOut.length===0)html+=" No critical gaps.";
+  var sev=(barOut.length>0&&availBar.length===0)?"al-red":(barOut.length>0?"al-amber":"al-green");
+  html+='<div class="alert '+sev+'" style="margin-bottom:14px">'+names+' out.';
+  if(barOut.length>0) html+=" "+barOut.length+" bar staff missing.";
+  if(leadOut.length>0) html+=" "+leadOut.length+" floor lead"+(leadOut.length>1?"s":"")+" missing.";
+  if(barOut.length===0&&leadOut.length===0) html+=" No critical coverage impact on bar or floor.";
   html+="</div>";
   if(barOut.length>0){
-    var barRisk=barShortfall>0?Math.round(BIZ.barSeats*BIZ.avgSpend*(isWeekend?1:0.8)):Math.round(BIZ.barSeats*BIZ.avgSpend*0.25);
-    var floorRisk=serverOut.length*160;var totalRisk=barRisk+floorRisk;
-    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">'+
-      '<div style="background:var(--red-bg);border-radius:var(--r-lg);padding:12px;text-align:center"><div style="font-size:20px;font-weight:300;font-family:\'Geist Mono\',monospace;color:var(--red);letter-spacing:-1px">$'+totalRisk.toLocaleString()+'</div><div style="font-size:9px;color:var(--red-text);margin-top:2px;text-transform:uppercase;font-family:\'Geist Mono\',monospace;letter-spacing:.06em">Revenue risk</div></div>'+
-      '<div style="background:var(--amber-bg);border-radius:var(--r-lg);padding:12px;text-align:center"><div style="font-size:20px;font-weight:300;font-family:\'Geist Mono\',monospace;color:var(--amber);letter-spacing:-1px">'+barRemaining+'/'+barNeeded+'</div><div style="font-size:9px;color:var(--amber-text);margin-top:2px;text-transform:uppercase;font-family:\'Geist Mono\',monospace;letter-spacing:.06em">Bar staffed</div></div>'+
-      '<div style="background:var(--surface-2);border-radius:var(--r-lg);padding:12px;text-align:center"><div style="font-size:20px;font-weight:300;font-family:\'Geist Mono\',monospace;letter-spacing:-1px">'+calledOut.length+'</div><div style="font-size:9px;color:var(--ink-3);margin-top:2px;text-transform:uppercase;font-family:\'Geist Mono\',monospace;letter-spacing:.06em">Out tonight</div></div>'+
+    var serverOut=calledOut.filter(function(s){return getTeams(s).includes("floor")&&!s.role.toLowerCase().includes("floor lead")&&!getTeams(s).includes("bar");});
+    var barCoverable=availBar.length>0;
+    var barRisk=barCoverable?Math.round(BIZ.barSeats*BIZ.avgSpend*0.3):BIZ.barSeats*BIZ.avgSpend;
+    var floorRisk=serverOut.length>0?serverOut.length*160:0;
+    var totalRisk=barRisk+floorRisk;
+    var weeklyRisk=totalRisk*BIZ.barShiftsPerWeek;
+    var coverageScore=barCoverable?Math.min(100,Math.round((availBar.length/Math.max(barOut.length,1))*70)):0;
+    html+='<div style="margin-bottom:16px">';
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">'+
+      '<div style="background:var(--red-bg);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--red)">$'+totalRisk.toLocaleString()+'</div>'+
+        '<div style="font-size:10px;color:var(--red-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Revenue risk/service</div>'+
+      '</div>'+
+      '<div style="background:var(--amber-bg);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace;color:var(--amber)">'+availBar.length+'</div>'+
+        '<div style="font-size:10px;color:var(--amber-text);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">Bar backups left</div>'+
+      '</div>'+
+      '<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;text-align:center">'+
+        '<div style="font-size:18px;font-weight:600;font-family:\'Geist Mono\',monospace">'+calledOut.length+'</div>'+
+        '<div style="font-size:10px;color:var(--ink-3);margin-top:3px;text-transform:uppercase;font-family:\'Geist Mono\',monospace">People out</div>'+
+      '</div>'+
     '</div>';
-    if(availBar.length>0){
-      html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Bar cascade</div>';
-      availBar.forEach(function(b,i){
-        html+='<div class="cascade-row"><div class="cascade-num">'+(i+1)+'</div><div><div class="cascade-name">'+b.name+' '+tierPill(b.tier)+'</div><div class="cascade-sub">'+b.role+(b.tier==="T2"?" · confirm avail, limited menu if solo":"")+'</div></div></div>';
-      });
+    if(serverOut.length>0||barOut.length>1){
+      html+='<div style="background:var(--surface-2);border-radius:var(--r);padding:10px;font-size:11px;border:1px solid var(--line);margin-bottom:10px">';
+      html+='<div style="font-weight:600;margin-bottom:6px;font-family:\'Geist Mono\',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)">Impact breakdown</div>';
+      if(barOut.length>0) html+='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span>Bar ('+BIZ.barSeats+' seats @ $'+BIZ.avgSpend+')'+(barCoverable?' — partial cover':'— no cover')+'</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+barRisk.toLocaleString()+'</span></div>';
+      if(serverOut.length>0) html+='<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span>Floor ('+serverOut.length+' server'+(serverOut.length>1?'s':'')+' out)</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+floorRisk.toLocaleString()+'</span></div>';
+      html+='<div style="display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:6px;padding-top:6px"><span style="font-weight:600">Weekly exposure ('+BIZ.barShiftsPerWeek+' services)</span><span style="font-family:\'Geist Mono\',monospace;font-weight:600;color:var(--red)">$'+weeklyRisk.toLocaleString()+'</span></div>';
+      html+='</div>';
     }
-    if(availFlex.length){html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);color:var(--amber-text);border-color:#f5d28a">?</div><div><div class="cascade-name">'+availFlex.map(function(f){return f.name.split(" ")[0];}).join(", ")+' · Flex</div><div class="cascade-sub">Ex-staff — may be available, not guaranteed</div></div></div>';}
-    html+='<div class="cascade-row"><div class="cascade-num cam">C</div><div><div class="cascade-name">Camille · Consultant</div><div class="cascade-sub">Last resort · guest rate + tips · contact directly</div></div></div>';
+    html+='<div style="margin-bottom:14px">';
+    html+='<div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;font-family:\'Geist Mono\',monospace;color:var(--ink-3)"><span>COVERAGE CONFIDENCE</span><span>'+coverageScore+'%</span></div>';
+    html+='<div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+coverageScore+'%;background:'+(coverageScore>60?'var(--teal)':coverageScore>30?'#f59e0b':'var(--red)')+';border-radius:3px"></div></div>';
+    html+='<div style="font-size:10px;color:var(--ink-3);margin-top:4px">'+(coverageScore===0?'No qualified bar coverage — service at serious risk.':(coverageScore<50?'Thin coverage — T2 with limited menu. Have Camille on standby.':'Adequate backup in place.'))+' Weekly exposure: $'+weeklyRisk.toLocaleString()+'.</div>';
+    html+='</div></div>';
+    html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:10px">Bar coverage cascade</div>';
+    if(availBar.length>0){
+      availBar.forEach(function(b,i){
+        html+='<div class="cascade-row"><div class="cascade-num">'+(i+1)+'</div><div>'+
+          '<div class="cascade-name">'+b.name+' '+tierPill(b.tier)+'</div>'+
+          '<div class="cascade-sub">'+b.role+(b.tier==="T2"?" · limited menu, confirm availability":"")+'</div>'+
+        '</div></div>';
+      });
+      if(availFlex.length){
+        html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);border-color:#f5d28a;color:var(--amber-text)">?</div><div>'+
+          '<div class="cascade-name">'+availFlex.map(function(f){return f.name;}).join(", ")+' '+tierPill("Flex")+'</div>'+
+          '<div class="cascade-sub">Ex-employees -- may be available, not guaranteed.</div>'+
+        '</div></div>';
+      }
+      html+='<div class="cascade-row"><div class="cascade-num cam">C</div><div>'+
+        '<div class="cascade-name">Camille '+tierPill("Consultant")+'</div>'+
+        '<div class="cascade-sub">Last resort · guest rate + tips · contact directly</div>'+
+      '</div></div>';
+    }else{
+      html+='<div class="alert al-red"><strong>Zero bar backups available.</strong>';
+      if(availFlex.length) html+=' Flex: '+availFlex.map(function(f){return f.name;}).join(", ")+' (not guaranteed).';
+      html+=' Camille as absolute last resort.</div>';
+    }
   }
   if(leadOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Floor lead cascade</div>';
-    var seniorFloor=availFloor.filter(function(s){return s.tier==="T1"||s.tier==="T2";});
-    if(seniorFloor.length){html+='<div class="cascade-row"><div class="cascade-num">1</div><div><div class="cascade-name">'+seniorFloor[0].name+' '+tierPill(seniorFloor[0].tier)+'</div><div class="cascade-sub">Steps up to floor lead · Tanner to brief before service</div></div></div>';}
-    else{html+='<div class="alert al-red">No T1/T2 floor staff to step up. Tanner must lead floor personally.</div>';}
-  }
-  if(serverOut.length>0&&barOut.length===0){html+='<div class="alert al-amber" style="margin-top:10px">'+serverOut.length+' server'+(serverOut.length>1?"s":"")+" out — consolidate tables, reduce covers if needed.</div>";}
-  el.innerHTML=html;
-}
-
-
-
-// == KITCHEN CALLOUT ==
-var kitchenCalloutSelected=[];
-
-function populateKitchenCallout(){
-  var wrap=document.getElementById("kitchen-callout-chips");if(!wrap)return;
-  var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.tier!=="None";});
-  wrap.innerHTML=kitchen.map(function(s){
-    var sel=kitchenCalloutSelected.indexOf(s.id)>-1;
-    var role=s.role.toLowerCase();
-    var roleTag=role.includes("lead")?"Lead":role.includes("porter")?"Porter":"Cook";
-    return'<span class="co-chip'+(sel?" selected":"")+'" onclick="toggleKitchenChip('+s.id+')">'+
-      s.name.split(" ")[0]+
-      '<span style="font-size:9px;opacity:.6;margin-left:3px">'+roleTag+'</span>'+
-    '</span>';
-  }).join("");
-  var cnt=document.getElementById("kitchen-callout-count");
-  if(cnt)cnt.textContent=kitchenCalloutSelected.length>0?kitchenCalloutSelected.length+" out":"";
-}
-
-function toggleKitchenChip(id){
-  var idx=kitchenCalloutSelected.indexOf(id);
-  if(idx>-1)kitchenCalloutSelected.splice(idx,1);else kitchenCalloutSelected.push(id);
-  populateKitchenCallout();
-}
-
-function clearKitchenCallout(){
-  kitchenCalloutSelected=[];populateKitchenCallout();
-  var el=document.getElementById("kitchen-callout-result");
-  if(el)el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';
-}
-
-function runKitchenCallout(){
-  var el=document.getElementById("kitchen-callout-result");
-  if(!kitchenCalloutSelected.length){el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';return;}
-  var DAYNAMES=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  var todayName=DAYNAMES[new Date().getDay()];
-  var isWeekend=["Friday","Saturday","Sunday"].indexOf(todayName)>-1;
-  var portersNeeded=isWeekend?2:1;
-  var calledIds=kitchenCalloutSelected;
-  var calledOut=calledIds.map(function(id){return byId(id);}).filter(Boolean);
-  var leadsOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("lead");});
-  var cooksOut=calledOut.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead");});
-  var portersOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("porter");});
-  var allKitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.tier!=="None";});
-  var leadsLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("lead")&&calledIds.indexOf(s.id)===-1;});
-  var cooksLeft=allKitchen.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead")&&calledIds.indexOf(s.id)===-1;});
-  var portersLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("porter")&&calledIds.indexOf(s.id)===-1;});
-  var totalCooksAvail=leadsLeft.length+cooksLeft.length;
-  var names=calledOut.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" + ");
-  var canRun=totalCooksAvail>=1&&portersLeft.length>=1;
-  var sev=!canRun?"al-red":leadsLeft.length===0||totalCooksAvail<2?"al-amber":"al-green";
-  var html='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">'+todayName+' · '+(isWeekend?"Weekend — 2 porters required":"Weekday — 1 porter required")+'</div>';
-  html+='<div class="alert '+sev+'" style="margin-bottom:12px">'+names+' out. ';
-  if(!canRun)html+='<strong>Kitchen cannot run service.</strong>';
-  else if(leadsLeft.length===0)html+='No lead — most senior cook on the pass.';
-  else if(totalCooksAvail<2)html+='Thin kitchen — limited menu.';
-  else html+='Service can run.';
-  html+='</div>';
-  // Lead out cascade
-  if(leadsOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Lead cascade</div>';
-    if(leadsLeft.length>0){
-      html+='<div class="cascade-row"><div class="cascade-num">1</div><div><div class="cascade-name">'+leadsLeft[0].name.split(" ")[0]+' moves to the pass</div><div class="cascade-sub">Brief on specials before service opens</div></div></div>';
-      if(cooksLeft.length>0)html+='<div class="cascade-row"><div class="cascade-num">2</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' absorbs the station</div><div class="cascade-sub">Line cook covers vacated station — flag if load is too high</div></div></div>';
-    } else if(cooksLeft.length>0){
-      html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);color:var(--amber-text);border-color:#f5d28a">!</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' runs the pass</div><div class="cascade-sub">No lead available. Call Tanner. Run focused menu — drop specials requiring pass attention.</div></div></div>';
-    } else {
-      html+='<div class="alert al-red">No kitchen staff to cover the pass. <strong>Call Tanner immediately.</strong></div>';
+    var remLeads=staff.filter(function(s){return s.role.toLowerCase().includes("floor lead")&&calledIds.indexOf(s.id)===-1;});
+    html+='<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:14px 0 8px">Floor lead impact</div>';
+    if(remLeads.length>0){
+      html+='<div class="alert al-amber">'+leadOut.map(function(s){return s.name.split(" ")[0];}).join(" + ")+' out -- '+remLeads.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(", ")+' holds the floor. Confirm before service.</div>';
+    }else{
+      html+='<div class="alert al-red"><strong>No floor leads available.</strong> Tanner needs to step in or elevate a T1 for the shift.</div>';
     }
   }
-  // Cook count
-  if(cooksOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Cook coverage</div>';
-    if(totalCooksAvail>=2)html+='<div class="alert al-green">'+totalCooksAvail+' cook'+(totalCooksAvail>1?"s":"")+" remaining — stations consolidated. Service runs.</div>";
-    else if(totalCooksAvail===1){var rem=leadsLeft.length>0?leadsLeft[0]:cooksLeft[0];html+='<div class="alert al-amber"><strong>1 cook remaining'+(rem?" ("+rem.name.split(" ")[0]+")":'')+'.</strong> Limited menu — focus on 4-5 core dishes. Consider 10pm kitchen cut.</div>';}
-    else html+='<div class="alert al-red"><strong>No cooks remaining.</strong> Kitchen cannot operate.</div>';
-  }
-  // Porter
-  if(portersOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Porter coverage</div>';
-    if(portersLeft.length>=portersNeeded)html+='<div class="alert al-green">'+portersLeft.length+' porter'+(portersLeft.length>1?"s":"")+" remaining. Manageable.</div>";
-    else if(portersLeft.length===1&&isWeekend)html+='<div class="alert al-amber"><strong>1 porter on a weekend (need 2).</strong> Extended shift. Cooks assist dish support during peaks.</div>';
-    else html+='<div class="alert al-red"><strong>No porter.</strong> Cooks absorb dishwashing — pace will slow. Reduce table rotation by one.</div>';
-  }
-  // Health score
-  var score=0;
-  score+=totalCooksAvail>=3?40:totalCooksAvail===2?30:totalCooksAvail===1?15:0;
-  score+=leadsLeft.length>=1?30:0;
-  score+=portersLeft.length>=portersNeeded?20:portersLeft.length>=1?10:0;
-  score+=cooksLeft.length>=2?10:cooksLeft.length>=1?5:0;
-  var scoreColor=score>=70?"var(--teal)":score>=40?"var(--amber)":"var(--red)";
-  html+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--ink-4);font-family:\'Geist Mono\',monospace;text-transform:uppercase;letter-spacing:.06em">Post-callout kitchen health</span><span style="font-size:16px;font-weight:600;font-family:\'Geist Mono\',monospace;color:'+scoreColor+'">'+score+'%</span></div>';
   el.innerHTML=html;
 }
 
@@ -2408,19 +2301,40 @@ function checkWelcome(){renderGreeting();}
 function dismissWelcome(){}
 
 // ══ TAB NAV ══
+function showSubTab(name){
+  if(name==="week"||name==="builder"){
+    var wEl=document.getElementById("subtab-week");
+    var bEl=document.getElementById("subtab-builder");
+    var wBtn=document.getElementById("subtab-week-btn");
+    var bBtn=document.getElementById("subtab-builder-btn");
+    if(wEl)wEl.style.display=name==="week"?"":"none";
+    if(bEl)bEl.style.display=name==="builder"?"":"none";
+    if(wBtn)wBtn.className="sub-tab"+(name==="week"?" active":"");
+    if(bBtn)bBtn.className="sub-tab"+(name==="builder"?" active":"");
+    if(name==="week"){renderDayBtns();renderWeek();}
+    if(name==="builder"&&typeof generateOptimisedSchedule==="function"){
+      // Re-render if already generated
+      var out=document.getElementById("sched-output");
+      if(out&&out.innerHTML===""&&optimisedSchedule)renderScheduleOutput(optimisedSchedule,[],{});
+    }
+  }
+}
 function showTab(t){
   activeTab=t;
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts","breakeven","schedule"][i]===t?" active":"");});
-  document.getElementById("tab-"+t).classList.add("active");
-  if(t==="week"){renderDayBtns();renderWeek();}
-  if(t==="callout")populateCallout();
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){
+    el.className="nav-tab"+(["roster","schedule","feedback","infra","team","shifts","breakeven"][i]===t?" active":"");
+  });
+  var paneId=t==="week"?"tab-schedule":("tab-"+t);
+  var pane=document.getElementById(paneId);
+  if(pane)pane.classList.add("active");
+  if(t==="schedule"||t==="week"){renderDayBtns();renderWeek();}
+  if(t==="roster"){generateBrief(false);populateCallout();populateKitchenCallout();}
   if(t==="infra")renderInfra();
-  if(t==="roster")generateBrief(false);
   if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
   if(t==="shifts")loadShiftReports();
   if(t==="breakeven")renderBreakeven();
-  if(t==="schedule")renderScheduleBuilder();
+  if(t==="feedback")renderFeedback();
 }
 
 // ══ DATE ══
@@ -3062,6 +2976,127 @@ function renderScheduleBuilder() {
   if(out && out.innerHTML === "" && optimisedSchedule) {
     renderScheduleOutput(optimisedSchedule, []);
   }
+}
+
+
+// == KITCHEN CALLOUT ==
+var kitchenCalloutSelected=[];
+function populateKitchenCallout(){
+  var wrap=document.getElementById("kitchen-callout-chips");if(!wrap)return;
+  var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.name.toLowerCase()!=="new hire (open)";});
+  wrap.innerHTML=kitchen.map(function(s){
+    var sel=kitchenCalloutSelected.indexOf(s.id)>-1;
+    var role=s.role.toLowerCase();
+    var roleTag=role.includes("lead")?"Lead":role.includes("porter")?"Porter":"Cook";
+    return'<span class="co-chip'+(sel?" selected":"")+'" onclick="toggleKitchenChip('+s.id+')">'+
+      s.name.split(" ")[0]+
+      '<span style="font-size:9px;opacity:.6;margin-left:3px">'+roleTag+'</span>'+
+    '</span>';
+  }).join("");
+  var cnt=document.getElementById("kitchen-callout-count");
+  if(cnt)cnt.textContent=kitchenCalloutSelected.length>0?kitchenCalloutSelected.length+" out":"";
+}
+function toggleKitchenChip(id){
+  var idx=kitchenCalloutSelected.indexOf(id);
+  if(idx>-1)kitchenCalloutSelected.splice(idx,1);else kitchenCalloutSelected.push(id);
+  populateKitchenCallout();
+}
+function clearKitchenCallout(){
+  kitchenCalloutSelected=[];populateKitchenCallout();
+  var el=document.getElementById("kitchen-callout-result");
+  if(el)el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';
+}
+function runKitchenCallout(){
+  var el=document.getElementById("kitchen-callout-result");
+  if(!kitchenCalloutSelected.length){el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';return;}
+  var DAYNAMES=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var todayName=DAYNAMES[new Date().getDay()];
+  var isWeekend=["Friday","Saturday","Sunday"].indexOf(todayName)>-1;
+  var portersNeeded=isWeekend?2:1;
+  var calledIds=kitchenCalloutSelected;
+  var calledOut=calledIds.map(function(id){return byId(id);}).filter(Boolean);
+  var leadsOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("lead");});
+  var cooksOut=calledOut.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead");});
+  var portersOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("porter");});
+  var allKitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.tier!=="None";});
+  var leadsLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("lead")&&calledIds.indexOf(s.id)===-1;});
+  var cooksLeft=allKitchen.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead")&&calledIds.indexOf(s.id)===-1;});
+  var portersLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("porter")&&calledIds.indexOf(s.id)===-1;});
+  var totalCooksAvail=leadsLeft.length+cooksLeft.length;
+  var names=calledOut.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" + ");
+  var canRun=totalCooksAvail>=1&&portersLeft.length>=1;
+  var sev=!canRun?"al-red":leadsLeft.length===0||totalCooksAvail<2?"al-amber":"al-green";
+  var html='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">'+todayName+' · '+(isWeekend?"Weekend — 2 porters required":"Weekday — 1 porter required")+'</div>';
+  html+='<div class="alert '+sev+'" style="margin-bottom:12px">'+names+' out. ';
+  if(!canRun)html+='<strong>Kitchen cannot run service.</strong>';
+  else if(leadsLeft.length===0)html+='No lead — most senior cook on the pass.';
+  else if(totalCooksAvail<2)html+='Thin kitchen — limited menu.';
+  else html+='Service can run.';
+  html+='</div>';
+  if(leadsOut.length>0){
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Lead cascade</div>';
+    if(leadsLeft.length>0){
+      html+='<div class="cascade-row"><div class="cascade-num">1</div><div><div class="cascade-name">'+leadsLeft[0].name.split(" ")[0]+' moves to the pass</div><div class="cascade-sub">Brief on specials before service opens</div></div></div>';
+      if(cooksLeft.length>0)html+='<div class="cascade-row"><div class="cascade-num">2</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' absorbs the station</div><div class="cascade-sub">Line cook covers vacated station</div></div></div>';
+    }else if(cooksLeft.length>0){
+      html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);color:var(--amber-text);border-color:#f5d28a">!</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' runs the pass</div><div class="cascade-sub">No lead. Call Tanner. Run focused menu — drop specials requiring pass attention.</div></div></div>';
+    }else{html+='<div class="alert al-red">No kitchen staff to cover the pass. Call Tanner immediately.</div>';}
+  }
+  if(cooksOut.length>0){
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Cook coverage</div>';
+    if(totalCooksAvail>=2)html+='<div class="alert al-green">'+totalCooksAvail+" cooks remaining — service runs.</div>";
+    else if(totalCooksAvail===1){var rem=leadsLeft[0]||cooksLeft[0];html+='<div class="alert al-amber"><strong>1 cook remaining'+(rem?" ("+rem.name.split(" ")[0]+")":'')+'.</strong> Limited menu, consider 10pm cut.</div>';}
+    else html+='<div class="alert al-red"><strong>No cooks remaining. Kitchen cannot operate.</strong></div>';
+  }
+  if(portersOut.length>0){
+    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Porter coverage</div>';
+    if(portersLeft.length>=portersNeeded)html+='<div class="alert al-green">'+portersLeft.length+" porters remaining.</div>";
+    else if(portersLeft.length===1&&isWeekend)html+='<div class="alert al-amber"><strong>1 porter on a weekend (need 2).</strong> Extended shift. Cooks assist during peaks.</div>';
+    else html+='<div class="alert al-red"><strong>No porter.</strong> Cooks absorb dish support. Reduce table rotation.</div>';
+  }
+  var sc=0;sc+=totalCooksAvail>=3?40:totalCooksAvail===2?30:totalCooksAvail===1?15:0;sc+=leadsLeft.length>=1?30:0;sc+=portersLeft.length>=portersNeeded?20:portersLeft.length>=1?10:0;sc+=cooksLeft.length>=2?10:cooksLeft.length>=1?5:0;
+  var scColor=sc>=70?"var(--teal)":sc>=40?"var(--amber)":"var(--red)";
+  html+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--ink-4);font-family:\'Geist Mono\',monospace;text-transform:uppercase;letter-spacing:.06em">Post-callout kitchen health</span><span style="font-size:16px;font-weight:600;font-family:\'Geist Mono\',monospace;color:'+scColor+'">'+sc+'%</span></div>';
+  el.innerHTML=html;
+}
+
+// == SCHEDULE OUTPUT ==
+function renderScheduleOutput(schedule, issues, staffDayCounts) {
+  var el=document.getElementById("sched-output");if(!el)return;
+  staffDayCounts=staffDayCounts||{};
+  var DAYS_O=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  var filledCount=0,totalCount=0,criticalMissing=0;
+  DAYS_O.forEach(function(day){(schedule[day]||[]).forEach(function(s){totalCount++;if(s.staffId)filledCount++;else if(s.critical)criticalMissing++;});});
+  var html='<div class="sched-coverage">'+
+    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:var(--teal)">'+filledCount+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Filled</div></div>'+
+    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:'+(criticalMissing>0?"var(--red)":"var(--ink-4)")+'">'+criticalMissing+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Critical gaps</div></div>'+
+    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:'+(issues.length>0?"var(--amber)":"var(--ink-4)")+'">'+issues.length+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Clopening flags</div></div>'+
+  '</div>';
+  if(issues.length>0)html+='<div class="alert al-amber" style="margin-bottom:14px"><strong>Clopening:</strong> '+issues.join(" · ")+'</div>';
+  html+='<div class="sched-grid">';
+  html+='<div class="sched-hdr">Position</div>';
+  DAYS_O.forEach(function(d){html+='<div class="sched-hdr">'+d+'</div>';});
+  var posOrder=["Bar","Bar 1","Bar 2","Bar Backup","Floor Lead","Server 1","Server 2","Server 3","Host","Lead Cook","Line Cook","Porter","Porter 1","Porter 2"];
+  posOrder.forEach(function(posName){
+    var hasAny=DAYS_O.some(function(day){return(schedule[day]||[]).some(function(s){return s.pos===posName;});});
+    if(!hasAny)return;
+    html+='<div class="sched-role">'+posName+'</div>';
+    DAYS_O.forEach(function(day){
+      var slot=(schedule[day]||[]).find(function(s){return s.pos===posName;});
+      if(!slot){html+='<div class="sched-cell"></div>';return;}
+      var nameClass=slot.staffId?(slot.clopening?"warn":""):"empty";
+      var name=slot.staffName?slot.staffName.split(" ")[0]:"OPEN";
+      html+='<div class="sched-cell"><div class="sched-assign '+nameClass+'">'+name+'</div><div class="sched-time">'+slot.time+'</div>'+(slot.clopening?'<div class="sched-issue clopen">clopen</div>':'')+'</div>';
+    });
+  });
+  html+='</div>';
+  if(Object.keys(staffDayCounts).length>0){
+    html+='<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Staff workload</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    Object.keys(staffDayCounts).forEach(function(id){var s=byId(parseInt(id));if(!s)return;var days=staffDayCounts[id];var color=days>=5?"var(--amber)":days<=2?"var(--ink-4)":"var(--teal)";html+='<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:11px;box-shadow:var(--shadow-sm)"><span style="font-weight:600">'+s.name.split(" ")[0]+'</span> <span style="font-family:\'Geist Mono\',monospace;color:'+color+';font-weight:600">'+days+'d</span></div>';});
+    html+='</div></div>';
+  }
+  html+='<div style="font-size:11px;color:var(--ink-4);margin-top:8px">Review and click "Apply to week schedule" to push to the Schedule tab.</div>';
+  el.innerHTML=html;
 }
 
 async function init(){
