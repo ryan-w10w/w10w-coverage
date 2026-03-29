@@ -3013,7 +3013,8 @@ function renderScheduleBuilder() {
 var kitchenCalloutSelected=[];
 function populateKitchenCallout(){
   var wrap=document.getElementById("kitchen-callout-chips");if(!wrap)return;
-  var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.tier!=="None";});
+  // Kitchen staff use tier "None" — filter by team only, exclude unnamed placeholders
+  var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.name.toLowerCase()!=="new hire (open)";});
   wrap.innerHTML=kitchen.map(function(s){
     var sel=kitchenCalloutSelected.indexOf(s.id)>-1;
     var role=s.role.toLowerCase();
@@ -3048,7 +3049,7 @@ function runKitchenCallout(){
   var leadsOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("lead");});
   var cooksOut=calledOut.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead");});
   var portersOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("porter");});
-  var allKitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.tier!=="None";});
+  var allKitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.name.toLowerCase()!=="new hire (open)";});
   var leadsLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("lead")&&calledIds.indexOf(s.id)===-1;});
   var cooksLeft=allKitchen.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead")&&calledIds.indexOf(s.id)===-1;});
   var portersLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("porter")&&calledIds.indexOf(s.id)===-1;});
