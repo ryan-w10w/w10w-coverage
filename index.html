@@ -2429,8 +2429,9 @@ function renderProjection(){
   // Conservative: -12% (one bad stretch, weather, slow season)
   // Base: weighted day projection
   // Optimistic: +12% (strong weekend, events, seasonal pop)
-  var projConservative = Math.round(projBase * 0.88);
-  var projOptimistic   = Math.round(projBase * 1.12);
+  // Floor all scenarios at MTD actual — you can't un-earn money already collected
+  var projConservative = Math.max(Math.round(mtdActual), Math.round(projBase * 0.88));
+  var projOptimistic   = Math.max(Math.round(projBase * 1.12), Math.round(mtdActual));
 
   // What's needed per remaining night to hit break-even?
   var neededToBreakeven = Math.max(0, monthlyBe - mtdActual);
