@@ -2840,7 +2840,11 @@ function staffForPosition(pos, day, assigned, prevDayAssigned, weekAssigned) {
   var prevDay = dayIdx > 0 ? DAYS_ORDER[dayIdx-1] : null;
 
   var eligible = staff.filter(function(s) {
-    if(!s || s.tier === "None" || s.tier === "Consultant") return false;
+    if(!s) return false;
+    // Kitchen staff are all tier "None" — only apply tier filter to bar/floor
+    if(pos.team !== "kitchen" && (s.tier === "None" || s.tier === "Consultant")) return false;
+    // For kitchen, only exclude unnamed placeholder slots
+    if(pos.team === "kitchen" && s.name.toLowerCase() === "new hire (open)") return false;
     if(!canWorkDay(s, day)) return false;
     if(assigned[day] && assigned[day].indexOf(s.id) > -1) return false;
 
