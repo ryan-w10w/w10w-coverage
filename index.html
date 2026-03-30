@@ -2652,22 +2652,36 @@ function squareNetFromOrders(orders){
 
 function squareOrdersFetch(startIso, endIso, onSuccess, onFail){
   var ordersUrl="https://connect.squareup.com/v2/orders/search";
-  var body=JSON.stringify({
-    location_ids:["LHSVRCNXBB7E8"],
-    query:{filter:{
-      date_time_filter:{created_at:{start_at:startIso,end_at:endIso}},
-      state_filter:{states:["COMPLETED"]}
-    }},
-    limit:500
-  });
-  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({url:ordersUrl,method:"POST",body:body})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.orders!==undefined) onSuccess(d.orders);
-    else onFail();
-  })
-  .catch(function(){onFail();});
+  var allOrders=[];
+
+  function fetchPage(cursor){
+    var bodyObj={
+      location_ids:["LHSVRCNXBB7E8"],
+      query:{filter:{
+        date_time_filter:{created_at:{start_at:startIso,end_at:endIso}},
+        state_filter:{states:["COMPLETED"]}
+      }},
+      limit:500
+    };
+    if(cursor) bodyObj.cursor=cursor;
+
+    fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({url:ordersUrl,method:"POST",body:JSON.stringify(bodyObj)})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.orders===undefined){onFail();return;}
+      allOrders=allOrders.concat(d.orders);
+      // If exactly 500 returned and cursor present, fetch next page
+      if(d.cursor&&d.orders.length===500){
+        fetchPage(d.cursor);
+      } else {
+        onSuccess(allOrders);
+      }
+    })
+    .catch(function(){onFail();});
+  }
+
+  fetchPage(null);
 }
 
 function loadLiveSales(){
