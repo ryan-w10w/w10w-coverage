@@ -1056,12 +1056,31 @@ function calcKitchenHealth(){
 }
 
 // ══ HEALTH ══
+function tenureWeight(s){
+  // Returns 0.0-1.0 multiplier based on shift count
+  // Under 5 shifts: 0.4 (new, unknown reliability)
+  // 5-15 shifts: 0.7 (developing)
+  // 15-30 shifts: 0.9 (established)
+  // 30+ shifts: 1.0 (proven)
+  var sh = s.shifts || 0;
+  if(sh >= 30) return 1.0;
+  if(sh >= 15) return 0.9;
+  if(sh >= 5)  return 0.7;
+  return 0.4;
+}
+function effectiveT1Count(staffList){
+  // Count T1s weighted by tenure — a T1 with 0 shifts counts as 0.4 of a T1
+  return staffList.filter(function(s){return s.tier==='T1';})
+    .reduce(function(sum,s){ return sum + tenureWeight(s); }, 0);
+}
 function calcHealth(){
   var ba=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";});
   var bT1=ba.filter(function(s){return s.tier==="T1";}).length;
+  var bT1eff=Math.round(effectiveT1Count(ba)*10)/10; // tenure-weighted T1 count
   var bT2=ba.filter(function(s){return s.tier==="T2";}).length;
   var bTrn=ba.filter(function(s){return s.tier==="Training";}).length;
-  var bs=Math.max(0,Math.min(100,bT1*32+bT2*16-bTrn*10));
+  // Use effective T1 count for scoring — accounts for untested new hires
+  var bs=Math.max(0,Math.min(100,bT1eff*32+bT2*16-bTrn*10));
   if(bT1===0) bs=Math.min(bs,12);
   var fa=staff.filter(function(s){return getTeams(s).includes("floor");});
   var leads=fa.filter(function(s){return s.role.toLowerCase().includes("floor lead");}).length;
@@ -1075,7 +1094,7 @@ function calcHealth(){
     bs=applyRatingsModifier(bs,getBarRatingModifier());
     fs=applyRatingsModifier(fs,getFloorRatingModifier());
   }
-  return{bs:bs,bT1:bT1,bT2:bT2,bTrn:bTrn,fs:fs,leads:leads,fT1:fT1,fT2:fT2,fT3:fT3,fTrn:fTrn};
+  return{bs:bs,bT1:bT1,bT1eff:bT1eff,bT2:bT2,bTrn:bTrn,fs:fs,leads:leads,fT1:fT1,fT2:fT2,fT3:fT3,fTrn:fTrn};
 }
 function healthLabel(s){if(s>=75)return{label:"Healthy",color:"var(--teal)"};if(s>=45)return{label:"Manageable",color:"var(--amber)"};return{label:"At risk",color:"var(--red)"};}
 function kitchenHealthLabel(k){
@@ -1126,8 +1145,8 @@ function renderHealth(){
     '</div>';
   }
   var barStats=
-    statRow("T1 bartenders",h.bT1,h.bT1>=2?"ok":h.bT1===1?"warn":"bad")+
-    statRow("T2 backups",h.bT2,h.bT2>=2?"ok":h.bT2>=1?"warn":"bad")+
+    statRow("T1 bartenders",h.bT1+(h.bT1eff<h.bT1?" ("+h.bT1eff+" proven)":""),h.bT1>=2?"ok":h.bT1===1?"warn":"bad")+
+    statRow("T2 backups",h.bT2,h.bT2>=2?"ok":h.bT2>=1?"warn":(h.bT1>=3?"ok":"warn"))+
     (h.bTrn>0?statRow("In training",h.bTrn,"warn"):"");
   var floorStats=
     statRow("Floor leads",h.leads,h.leads>=2?"ok":"warn")+
@@ -1583,7 +1602,15 @@ function renderFeedback(){
   if(conflicts.warnings.length>0){cards.push({type:"warning",icon:"📅",title:"Split days off",ctx:conflicts.warnings.length+" staff affected",body:conflicts.warnings.map(function(w){return w.msg;}).join("; ")+". Single rest days increase callout risk.",action:"Review week schedule",hire:null});}
   if(h.bT1===0){cards.push({type:"critical",icon:"🚨",title:"No T1 bartender -- hire immediately",ctx:"All "+BIZ.barShiftsPerWeek+" bar shifts/week at risk",body:"Zero T1 bar coverage. Need "+t1Needed+" T1s for resilience. Option A: 1 full-time (4-5 shifts). Option B: 2 part-time (2-3 shifts each).",action:"Post bartender JD",hire:"bartender"});}
   else if(t1Gap>0){cards.push({type:"warning",icon:"⚠️",title:"Bar T1 headcount below target (need "+t1Needed+")",ctx:"Current: "+t1Current+", target: "+t1Needed,body:"With "+t1Current+" T1 bartender"+(t1Current===1?"":"s")+" and "+BIZ.barShiftsPerWeek+" shifts/week, each averages "+(BIZ.barShiftsPerWeek/Math.max(t1Current,1)).toFixed(1)+" shifts. "+t1Gap+" additional hire"+(t1Gap>1?"s":"")+" needed.",action:"Post bartender JD",hire:"bartender"});}
-  if(barT2s.length<2) cards.push({type:"warning",icon:"⚠️",title:"Bar backup bench too thin (need 2+ T2s)",ctx:"Current: "+h.bT2+" T2",body:"Need at least 2 T2s. Camille cross-training for Elena and Eamon is the fastest fix.",action:"Schedule Camille T2 training",hire:null});
+  // T2 flag: only warn if T1 bench is also thin (effective T1 < 3)
+  // 4 proven T1s = no real backup gap; 4 untested T1s = flag it
+  var bT1eff=typeof effectiveT1Count==="function"?effectiveT1Count(staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";})):barT1s.length;
+  var newT1s=barT1s.filter(function(s){return (s.shifts||0)<10;});
+  if(barT2s.length<2&&bT1eff<3){
+    cards.push({type:"warning",icon:"⚠️",title:"Bar backup bench thin — T2s or proven T1s needed",ctx:"Effective T1 coverage: "+Math.round(bT1eff*10)/10+" of "+barT1s.length+" T1s",body:"You have "+barT1s.length+" T1s but "+(newT1s.length>0?newT1s.map(function(s){return s.name.split(" ")[0];}).join(", ")+" "+(newT1s.length===1?"has":"have")+" under 10 shifts — reliability is unproven. ":"")+"Camille cross-training for T2 backup adds resilience.",action:"Schedule Camille T2 training",hire:null});
+  } else if(newT1s.length>0){
+    cards.push({type:"opportunity",icon:"📋",title:"New T1s building tenure — monitor closely",ctx:newT1s.map(function(s){return s.name.split(" ")[0]+" ("+( s.shifts||0)+" shifts)";}).join(", "),body:"Grace and Laura carry the bar. "+newT1s.map(function(s){return s.name.split(" ")[0];}).join(" and ")+" are T1 rated but still building track record. Run ratings after their first 10 shifts.",action:"Review ratings after 10 shifts",hire:null});
+  }
   if(crossN<3) cards.push({type:"opportunity",icon:"💡",title:"Expand cross-training",ctx:crossN+" cross-trained currently",body:"Grace and Laura set the template. Next: Eamon (bar T2), Sayer (server).",action:"Cross-training targets: Eamon + Sayer",hire:null});
   if(fLeads.length<2) cards.push({type:"warning",icon:"⚠️",title:"Floor lead coverage at minimum",ctx:fLeads.length+" active floor lead"+(fLeads.length===1?"":"s"),body:"Both Elena and Nathalie need a named callout delegate.",action:"Confirm Floor Lead SOP",hire:null});
   if(trainees.length>0) cards.push({type:"warning",icon:"⚠️",title:"Active onboarding -- supervision load",ctx:trainees.map(function(s){return s.name.split(" ")[0];}).join(", ")+" in training",body:"Set milestones: 4 weeks to T3, 8 weeks to T2 evaluation.",action:"Set graduation timeline",hire:null});
@@ -2216,7 +2243,14 @@ function generateBrief(force){
     if(barGapDays.length>0){sentences.push(ns+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap -- assign a backup before publishing.");actions++;}
     else sentences.push("Bar coverage solid -- "+ns+" both scheduled with backups.");
   }
-  if(barT2s.length<2){sentences.push("Bar backup bench is thin -- Camille cross-training session needs to happen before April 4.");actions++;}
+  // Only flag thin bench if effective T1 count is genuinely low
+  var bT1effBrief=typeof effectiveT1Count==="function"?effectiveT1Count(staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";})):barT1s.length;
+  var newT1sBrief=barT1s.filter(function(s){return (s.shifts||0)<10;});
+  if(barT2s.length<2&&bT1effBrief<3){
+    sentences.push("Bar backup bench is thin -- Camille cross-training session needs to happen before April 4.");actions++;
+  } else if(newT1sBrief.length>0){
+    sentences.push(newT1sBrief.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ")+" "+( newT1sBrief.length===1?"is":"are")+" T1 rated with under 10 shifts -- run ratings after their first full month.");
+  }
   if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
   if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
   if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff must be complete before then.");
