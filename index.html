@@ -125,52 +125,26 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .mstrip-cell{padding:12px 16px;border-right:1px solid var(--line);text-align:center}
 .mstrip-cell:last-child{border-right:none}
 .mstrip-num{font-size:26px;font-weight:300;font-family:'Geist Mono',monospace;line-height:1;letter-spacing:-1px;margin-bottom:3px}
-.mstrip-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace}
-.sdiv{padding:6px 20px 6px 20px;background:var(--bg);border-bottom:1px solid var(--line);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-4);font-family:'Geist Mono',monospace;display:flex;align-items:center;justify-content:space-between}
+.mstrip-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-4);font-family:'Geist Mono',monospace}
+.sdiv{padding:8px 20px;background:var(--bg);border-bottom:1px solid var(--line);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4);font-family:'Geist Mono',monospace}
 
 /* Staff rows */
-/* ROSTER ROWS — Apple-style single-line cards */
-.srow{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);transition:background .12s;min-height:0}
+.srow{display:grid;grid-template-columns:1fr auto auto auto auto auto;gap:8px;align-items:center;padding:13px 20px;border-bottom:1px solid var(--line);transition:background .12s}
 .srow:last-child{border-bottom:none}
-.srow:hover{background:rgba(0,0,0,.015)}
-.srow:hover .srow-actions{opacity:1}
-/* Left: avatar + info */
-.srow-avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ink-3);flex-shrink:0;font-family:'Geist Mono',monospace}
-.srow-info{flex:1;min-width:0}
-.srow-name{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
-.srow-role-wrap{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:2px}
-.role-lbl{font-size:11px;color:var(--ink-3);cursor:pointer;transition:color .12s}
-.role-lbl:hover{color:var(--ink)}
-.role-inp{font-size:11px;font-family:'Geist',sans-serif;border:1px solid var(--green-accent);border-radius:6px;padding:2px 8px;background:var(--surface);color:var(--ink);display:none;width:180px;box-shadow:0 0 0 2px rgba(61,107,61,.1)}
-.role-inp:focus{outline:none}
-.cross-tag{font-size:9px;background:var(--blue-bg);color:var(--blue-text);padding:1px 6px;border-radius:20px;font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:.02em}
-.trn-tag{font-size:9px;color:var(--amber-text);background:var(--amber-bg);padding:1px 6px;border-radius:20px;font-family:'Geist Mono',monospace;font-weight:600}
+.srow:hover{background:rgba(0,0,0,.02)}
+.srow-name{font-size:13px;font-weight:500;margin-bottom:1px}
+.srow-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.role-lbl{font-size:11px;color:var(--ink-3);cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s,color .15s}
+.role-lbl:hover{color:var(--ink);border-bottom-color:var(--ink-3)}
+.role-inp{font-size:11px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:2px 6px;background:var(--bg);color:var(--ink);display:none;width:170px}
+.role-inp:focus{outline:none;border-color:var(--green-accent);box-shadow:0 0 0 2px rgba(61,107,61,.1)}
 .srow-shifts{font-size:10px;color:var(--ink-4);font-family:'Geist Mono',monospace}
-/* Availability dots — compact */
-.srow-avail-dots{display:flex;gap:3px;margin-top:4px}
-.avail-dot{width:18px;height:4px;border-radius:2px;font-size:0}
-.avail-dot.on{background:var(--green-accent)}
-.avail-dot.off{background:var(--line-2)}
-/* Right side controls */
-.srow-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-/* Tier badge — clickable pill that cycles */
-.tier-badge{font-size:10px;font-weight:700;font-family:'Geist Mono',monospace;padding:3px 9px;border-radius:20px;cursor:pointer;transition:opacity .12s;white-space:nowrap;user-select:none;border:none}
-.tier-badge:hover{opacity:.75}
-.tier-t1{background:var(--teal-bg);color:var(--teal-text)}
-.tier-t2{background:var(--blue-bg);color:var(--blue-text)}
-.tier-t3{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
-.tier-training{background:var(--amber-bg);color:var(--amber-text)}
-.tier-consultant{background:var(--purple-bg);color:var(--purple-text)}
-.tier-flex{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line-2)}
-.tier-none{background:var(--surface-2);color:var(--ink-4);border:1px solid var(--line-2)}
-/* Hidden tier select — activated by badge click */
-.tier-sel{font-size:11px;font-family:'Geist Mono',monospace;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface);color:var(--ink);cursor:pointer;display:none}
+.cross-tag{font-size:10px;background:var(--blue-bg);color:var(--blue-text);padding:1px 6px;border-radius:4px;font-family:'Geist Mono',monospace;font-weight:500}
+.trn-tag{font-size:10px;color:#7a5500}
+.tier-sel{font-size:11px;font-family:'Geist Mono',monospace;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface);color:var(--ink);cursor:pointer}
 .tier-sel:focus{outline:none;border-color:var(--green-accent)}
-/* Action buttons — hidden until hover */
-.srow-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
-.icon-btn{width:26px;height:26px;border-radius:8px;border:1px solid var(--line-2);background:transparent;color:var(--ink-4);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
-.icon-btn:hover{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
-.icon-btn.del{color:var(--ink-4)}
+.icon-btn{width:26px;height:26px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
 .icon-btn.del:hover{background:var(--red-bg);color:var(--red-text);border-color:#f0b8b8}
 .add-strip{padding:11px 18px;display:flex;gap:8px;flex-wrap:wrap;background:var(--surface-2);border-top:1px solid var(--line)}
 .add-strip input,.add-strip select{font-size:12px;font-family:'Geist',sans-serif;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:6px 10px;background:var(--surface);color:var(--ink)}
@@ -260,7 +234,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .tl-date{font-size:13px;font-weight:600;margin-bottom:2px}
 .tl-desc{font-size:12px;color:var(--ink-3);line-height:1.6}
 
-@media(max-width:900px){.health-row{grid-template-columns:1fr 1fr}}@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.nav{overflow-x:auto}.srow-actions{opacity:1}}
+@media(max-width:900px){.health-row{grid-template-columns:1fr 1fr}}@media(max-width:640px){.health-row{grid-template-columns:1fr}.mstrip{grid-template-columns:repeat(2,1fr)}.nav{overflow-x:auto}.srow{grid-template-columns:1fr auto auto auto}}
 
 /* GREETING BANNER */
 .greeting-banner{background:linear-gradient(135deg,#1a2e1a 0%,#243d24 100%);border-radius:var(--r-xl);padding:28px 28px 24px;margin-bottom:20px;box-shadow:0 4px 20px rgba(26,46,26,.2);position:relative;overflow:hidden}
@@ -439,42 +413,6 @@ input::placeholder{color:var(--ink-4)}
 .proj-progress-fill{height:100%;border-radius:3px;background:var(--teal);transition:width .5s}
 .proj-progress-fill.warn{background:var(--amber)}
 .proj-progress-fill.bad{background:var(--red)}
-
-/* AVAILABILITY */
-/* srow-avail replaced by avail-dot system */
-
-/* AVAILABILITY MODAL */
-.avail-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:center;justify-content:center}
-.avail-modal{background:var(--surface);border-radius:var(--r-xl);padding:24px;width:360px;box-shadow:var(--shadow-lg)}
-.avail-modal-title{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
-.avail-modal-sub{font-size:12px;color:var(--ink-3);margin-bottom:18px}
-.avail-days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-.avail-day{padding:8px 4px;text-align:center;border-radius:10px;border:1px solid var(--line-2);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;user-select:none}
-.avail-day.on{background:var(--green);color:#fff;border-color:var(--green)}
-.avail-day.off{background:var(--surface-2);color:var(--ink-4)}
-.avail-early{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);border-radius:10px;margin-bottom:18px;cursor:pointer}
-.avail-early-lbl{font-size:12px;font-weight:500}
-.avail-early-sub{font-size:11px;color:var(--ink-3)}
-
-/* SCHEDULE BUILDER OUTPUT */
-.sched-grid{display:grid;grid-template-columns:120px repeat(7,1fr);gap:1px;background:var(--line);border-radius:var(--r-xl);overflow:hidden;margin-bottom:16px;border:1px solid var(--line)}
-.sched-cell{background:var(--surface);padding:8px 10px;font-size:11px;min-height:44px}
-.sched-hdr{background:var(--surface-2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:'Geist Mono',monospace;padding:8px 10px;display:flex;align-items:center}
-.sched-role{background:var(--surface-3);font-size:11px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;padding:8px 10px}
-.sched-assign{font-size:11px;font-weight:500;color:var(--ink);margin-bottom:2px}
-.sched-assign.empty{color:var(--red);font-style:italic}
-.sched-assign.warn{color:var(--amber)}
-.sched-time{font-size:10px;color:var(--ink-4);font-family:'Geist Mono',monospace}
-.sched-issue{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-top:2px}
-.sched-issue.clopen{background:var(--red-bg);color:var(--red-text)}
-.sched-coverage{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.sched-cov-tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:11px;box-shadow:var(--shadow-sm)}
-.sched-cov-num{font-size:20px;font-weight:300;font-family:'Geist Mono',monospace;letter-spacing:-1px}
-
-/* SUB-TABS */
-.sub-tab{padding:6px 14px;border-radius:9px;border:none;background:transparent;font-size:12px;font-weight:500;color:var(--ink-3);cursor:pointer;transition:all .15s;font-family:'Geist',sans-serif}
-.sub-tab:hover{color:var(--ink-2)}
-.sub-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);font-weight:600}
 </style>
 </head>
 <body>
@@ -512,7 +450,8 @@ input::placeholder{color:var(--ink-4)}
 
 <div class="nav">
   <button class="nav-tab active" onclick="showTab('roster')">Roster <span class="nav-badge ok" id="nb-roster">OK</span></button>
-  <button class="nav-tab" onclick="showTab('schedule')">Schedule</button>
+  <button class="nav-tab" onclick="showTab('week')">Week Schedule</button>
+  <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
   <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
   <button class="nav-tab" onclick="showTab('infra')">Infrastructure</button>
   <button class="nav-tab" id="nav-team" onclick="showTab('team')">🔒 Operations</button>
@@ -544,31 +483,6 @@ input::placeholder{color:var(--ink-4)}
     <div class="brief-text brief-loading" id="brief-text">Analysing roster and schedule…</div>
     <div class="brief-stamp" id="brief-stamp"></div>
     
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
-    <div class="card" style="margin-bottom:0">
-      <div class="card-hdr">
-        <div><div class="card-title">FOH Callout</div><div class="card-sub">Bar · Floor · Host</div></div>
-        <button class="btn btn-sm btn-primary" onclick="runCallout()">Simulate</button>
-      </div>
-      <div style="padding:12px 16px;border-bottom:1px solid var(--line)">
-        <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="clearCallout()">Clear</button><span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;align-self:center"></span></div>
-      </div>
-      <div id="callout-result" style="padding:14px 16px;font-size:12px;color:var(--ink-4);font-family:'Geist Mono',monospace">Select staff above then hit Simulate</div>
-    </div>
-    <div class="card" style="margin-bottom:0">
-      <div class="card-hdr">
-        <div><div class="card-title">Kitchen Callout</div><div class="card-sub">Cooks · Porter</div></div>
-        <button class="btn btn-sm btn-primary" onclick="runKitchenCallout()">Simulate</button>
-      </div>
-      <div style="padding:12px 16px;border-bottom:1px solid var(--line)">
-        <div id="kitchen-callout-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="clearKitchenCallout()">Clear</button><span id="kitchen-callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace;align-self:center"></span></div>
-      </div>
-      <div id="kitchen-callout-result" style="padding:14px 16px;font-size:12px;color:var(--ink-4);font-family:'Geist Mono',monospace">Select kitchen staff above then hit Simulate</div>
-    </div>
   </div>
 
   <div class="tab-intro">
@@ -614,13 +528,8 @@ input::placeholder{color:var(--ink-4)}
 </div>
 
 <!-- WEEK -->
-<div id="tab-schedule" class="tab-pane">
-  <div style="display:flex;gap:2px;margin-bottom:20px;background:var(--surface-2);border-radius:12px;padding:3px;width:fit-content;border:1px solid var(--line)">
-    <button class="sub-tab active" id="subtab-week-btn" onclick="showSubTab('week')">Current week</button>
-    <button class="sub-tab" id="subtab-builder-btn" onclick="showSubTab('builder')">Schedule builder</button>
-  </div>
-  <div id="subtab-week">
-    <div class="tab-intro">
+<div id="tab-week" class="tab-pane">
+  <div class="tab-intro">
     <div class="ti-icon">📅</div>
     <div>
       <div class="ti-title">Weekly Schedule & Coverage Validation</div>
@@ -649,24 +558,29 @@ input::placeholder{color:var(--ink-4)}
     </div>
   </div>
   <div id="week-summary"></div>
-  </div>
-  <div id="subtab-builder" style="display:none">
-    <div class="tab-intro">
-    <div class="ti-icon">🗓️</div>
+</div>
+
+<!-- CALLOUT -->
+<div id="tab-callout" class="tab-pane">
+  <div class="tab-intro">
+    <div class="ti-icon">🚨</div>
     <div>
-      <div class="ti-title">Optimised Schedule Builder</div>
-      <div class="ti-desc">Generates a weekly schedule from availability, roles, reliability ratings, and clopening rules. One click — review and publish.</div>
-      <div class="ti-how">Set each staff member's available days on the Roster tab, then hit Generate. The engine fills shifts by role priority, avoids clopening, and weights by reliability score.</div>
+      <div class="ti-title">Callout Simulator</div>
+      <div class="ti-desc">Run any callout scenario — single or multiple people out at once. Shows the exact cascade, revenue impact, and who to call first.</div>
+      <div class="ti-how">Tap any staff members who called out, then hit Simulate. Run this at the start of each week to pre-identify your highest risk days.</div>
     </div>
   </div>
-
-  <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
-    <button class="btn btn-primary" onclick="generateOptimisedSchedule()">⚡ Generate schedule</button>
-    <button class="btn btn-sm" onclick="applyOptimisedSchedule()" id="apply-sched-btn" style="display:none">✓ Apply to week schedule</button>
-    <span id="sched-status" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
-  </div>
-
-  <div id="sched-output"></div>
+  <div class="card">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:10px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Who called out?</div>
+      <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="runCallout()">Simulate callout</button>
+        <button class="btn btn-sm" onclick="clearCallout()">Clear</button>
+        <span id="callout-count" style="font-size:11px;color:var(--ink-3);font-family:'Geist Mono',monospace"></span>
+      </div>
+    </div>
+    <div style="padding:16px 18px" id="callout-result"><div style="text-align:center;padding:20px 0;color:var(--ink-4);font-size:12px;font-family:'Geist Mono',monospace">Select staff above then hit Simulate</div></div>
   </div>
 </div>
 
@@ -750,6 +664,8 @@ input::placeholder{color:var(--ink-4)}
   </div>
 </div>
 
+</div>
+
 <!-- SHIFT REPORTS TAB -->
 <div id="tab-shifts" class="tab-pane">
   <div class="tab-intro">
@@ -794,8 +710,11 @@ input::placeholder{color:var(--ink-4)}
   <div id="be-projection" style="margin-bottom:16px"></div>
   <div class="card">
     <div class="card-hdr">
-      <div class="card-title">Break-even by night — staffing adjusted</div>
-      <button class="btn btn-sm" onclick="loadLiveSales()">↻ Live tonight</button>
+      <div><div class="card-title">Break-even by night — staffing adjusted</div><div class="card-sub" id="be-avg-stamp">12mo avg last updated: static model</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="refreshNightlyAverages()" id="refresh-avgs-btn">↻ Refresh 12mo avgs</button>
+        <button class="btn btn-sm" onclick="loadLiveSales()">↻ Live tonight</button>
+      </div>
     </div>
     <div id="be-table"></div>
     <div style="padding:12px 20px;font-size:11px;color:var(--ink-4);border-top:1px solid var(--line);line-height:1.7">
@@ -803,12 +722,6 @@ input::placeholder{color:var(--ink-4)}
     </div>
   </div>
 </div>
-
-
-<!-- SCHEDULE BUILDER TAB -->
-
-
-</div><!-- end .page -->
 
 <!-- HIRING MODAL -->
 <div class="modal-overlay" id="hiring-modal">
@@ -1216,56 +1129,26 @@ function analyzeScheduleConflicts(){
 }
 
 // ══ ROSTER RENDER ══
-function tierBadgeClass(t){
-  var map={T1:"tier-t1",T2:"tier-t2",T3:"tier-t3",Training:"tier-training",Consultant:"tier-consultant",Flex:"tier-flex",None:"tier-none"};
-  return map[t]||"tier-none";
-}
-function cycleTier(id){
-  var s=byId(id);if(!s)return;
-  var order=["T1","T2","T3","Training","Flex","None"];
-  var idx=order.indexOf(s.tier);
-  s.tier=order[(idx+1)%order.length];
-  renderRoster();if(activeTab==="week")renderWeek();saveState();
-}
 function sRow(s){
+  var cross=isCross(s)?'<span class="cross-tag">cross-trained</span>':"";
   var isKitchen=getTeams(s).includes("kitchen");
-  var avail=s.available||["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  var early=s.earlyShift||false;
-  var initials=s.name.split(" ").map(function(w){return w[0];}).slice(0,2).join("").toUpperCase();
-  // Availability dots — Mon Tue Wed Thu Fri Sat Sun
-  var allDays=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  var dots=allDays.map(function(d){
-    return'<div class="avail-dot '+(avail.indexOf(d)>-1?"on":"off")+'" title="'+d+'"></div>';
-  }).join("");
-  // Tags
-  var tags="";
-  if(isCross(s)) tags+='<span class="cross-tag">cross-trained</span>';
-  if(s.weekendOnly) tags+='<span class="trn-tag" style="background:var(--blue-bg);color:var(--blue-text)">wknd</span>';
-  if(s.tier==="Training") tags+='<span class="trn-tag">onboarding</span>';
-  if(early) tags+='<span class="trn-tag" style="background:var(--teal-bg);color:var(--teal-text)">early ok</span>';
+  var wkndOnlyTag=s.weekendOnly?'<span class="trn-tag" style="color:var(--blue-text);background:var(--blue-bg);padding:1px 5px;border-radius:3px;font-size:9px">wknd only</span>':"";
+  var wkndToggle=isKitchen?'<button class="icon-btn" onclick="toggleWeekendOnly('+s.id+')" title="'+(s.weekendOnly?"Remove weekend-only":"Mark as weekend-only")+'" style="font-size:9px;'+(s.weekendOnly?"background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)":"")+'">'+(s.weekendOnly?"W":"W?")+'</button>':"";
+  var trn=s.tier==="Training"?'<span class="trn-tag">· onboarding</span>':"";
+  var sh=s.shifts>0?'<span class="srow-shifts">'+s.shifts+'sh</span>':"";
+  var opts=["T1","T2","T3","Training","Consultant","Flex","None"].map(function(t){return'<option'+(s.tier===t?" selected":"")+'>'+t+'</option>';}).join("");
   return'<div class="srow" id="sr-'+s.id+'">'+
-    // Avatar
-    '<div class="srow-avatar">'+initials+'</div>'+
-    // Info block
-    '<div class="srow-info">'+
-      '<div class="srow-name">'+s.name+'</div>'+
-      '<div class="srow-role-wrap">'+
-        '<span class="role-lbl" id="rl-'+s.id+'" onclick="startEdit('+s.id+')" title="Tap to edit role">'+s.role+'</span>'+
-        '<input class="role-inp" id="ri-'+s.id+'" value="'+s.role+'" onblur="saveEdit('+s.id+')" onkeydown="if(event.key===\'Enter\')saveEdit('+s.id+');if(event.key===\'Escape\')cancelEdit('+s.id+')"/>'+
-        tags+
-      '</div>'+
-      '<div class="srow-avail-dots" onclick="openAvailModal('+s.id+')" title="Edit availability" style="cursor:pointer">'+dots+'</div>'+
-    '</div>'+
-    // Right controls
-    '<div class="srow-right">'+
-      '<button class="tier-badge '+tierBadgeClass(s.tier)+'" onclick="cycleTier('+s.id+')" title="Tap to change tier">'+s.tier+'</button>'+
-      '<div class="srow-actions">'+
-        '<button class="icon-btn" onclick="ovTeams('+s.id+')" title="Override teams">⇄</button>'+
-        (isKitchen?'<button class="icon-btn" onclick="toggleWeekendOnly('+s.id+')" title="Toggle weekend-only" style="font-size:9px;'+(s.weekendOnly?"background:var(--blue-bg);color:var(--blue-text)":"")+'">W</button>':'')+
-        '<button class="icon-btn del" onclick="delStaff('+s.id+')" title="Remove">✕</button>'+
-      '</div>'+
-    '</div>'+
-  '</div>';
+    '<div><div class="srow-name">'+s.name+'</div>'+
+    '<div class="srow-meta">'+
+    '<span class="role-lbl" id="rl-'+s.id+'" onclick="startEdit('+s.id+')" title="Click to edit">'+s.role+'</span>'+
+    '<input class="role-inp" id="ri-'+s.id+'" value="'+s.role+'" onblur="saveEdit('+s.id+')" onkeydown="if(event.key===\'Enter\')saveEdit('+s.id+');if(event.key===\'Escape\')cancelEdit('+s.id+')"/>'+
+    cross+wkndOnlyTag+trn+sh+'</div></div>'+
+    wkndToggle+
+    tierPill(s.tier)+
+    '<select class="tier-sel" onchange="setTier('+s.id+',this.value)">'+opts+'</select>'+
+    '<button class="icon-btn" onclick="ovTeams('+s.id+')" title="Override teams">⇄</button>'+
+    '<button class="icon-btn del" onclick="delStaff('+s.id+')" title="Remove">✕</button>'+
+    '</div>';
 }
 function sec(lbl,members,id){
   var inner=members.length?members.map(sRow).join(""):'<div style="padding:12px 18px;font-size:12px;color:var(--ink-4)">No staff in this group.</div>';
@@ -1284,7 +1167,7 @@ function renderRoster(){
     if(s.tier==="T1")t1++;else if(s.tier==="T2")t2++;else if(s.tier==="T3")t3++;else if(s.tier==="Training")trn++;
   });
   ["m-t1","m-t2","m-t3","m-trn"].forEach(function(id,i){var el=document.getElementById(id);if(el)el.textContent=[t1,t2,t3,trn][i];});
-  renderHealth();populateCallout();populateKitchenCallout();renderFeedback();renderHeaderChips();renderStamp();
+  renderHealth();populateCallout();renderFeedback();renderHeaderChips();renderStamp();
   generateBrief(false);
 }
 
@@ -1671,8 +1554,8 @@ function applyRatingsModifier(score,teamIds){
   if(avgTeamRating>=10) modifier=5;else if(avgTeamRating>=7) modifier=0;else if(avgTeamRating>=5) modifier=-10;else if(avgTeamRating>=3) modifier=-20;else modifier=-30;
   return Math.max(0,Math.min(100,score+modifier));
 }
-function getBarRatingModifier(){return staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="None"&&s.tier!=="Consultant"&&avgRating(s.id)!==null;}).map(function(s){return s.id;});}
-function getFloorRatingModifier(){return staff.filter(function(s){return getTeams(s).includes("floor")&&s.tier!=="None"&&avgRating(s.id)!==null;}).map(function(s){return s.id;});}
+function getBarRatingModifier(){return staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="None"&&s.tier!=="Consultant";}).map(function(s){return s.id;});}
+function getFloorRatingModifier(){return staff.filter(function(s){return getTeams(s).includes("floor")&&s.tier!=="None";}).map(function(s){return s.id;});}
 function hasAnyRatings(){return Object.keys(ratings).length>0;}
 function ratingsAreStale(){if(!ratingsLastSaved) return true;return Math.floor((Date.now()-new Date(ratingsLastSaved).getTime())/(1000*60*60*24))>30;}
 function submitPin(){
@@ -2195,8 +2078,10 @@ function generateBrief(force){
   var h=calcHealth();var k=calcKitchenHealth();
   var barT1s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T1"&&s.name!=="Tanner Floyd";});
   var barT2s=staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier==="T2";});
+  var provenT1s=barT1s.filter(function(s){return (s.shifts||0)>=10;});
+  var newT1s=barT1s.filter(function(s){return (s.shifts||0)<10;});
   var hasEvents=staff.some(function(s){return s.role.toLowerCase().includes("events");});
-  var kaveka=staff.find(function(s){return s.name.toLowerCase().includes("kaveka");});
+  var bT1effBrief=typeof effectiveT1Count==="function"?effectiveT1Count(staff.filter(function(s){return getTeams(s).includes("bar")&&s.tier!=="Consultant";})):barT1s.length;
   var barGapDays=[];
   DAYS.forEach(function(d){
     (WEEK[d]||[]).forEach(function(sh){
@@ -2206,28 +2091,59 @@ function generateBrief(force){
   barGapDays=barGapDays.filter(function(v,i,a){return a.indexOf(v)===i;});
   var conflicts=analyzeScheduleConflicts();
   var sentences=[];var actions=0;
-  if(barT1s.length===0){sentences.push("No dedicated T1 bartender on the roster -- every bar shift this week is at risk across all 7 seats.");actions++;}
-  else if(barT1s.length===1){
-    var n=barT1s[0].name.split(" ")[0];
-    if(barGapDays.length>0){sentences.push("<strong>"+n+"</strong> is your only reliable bar cover -- "+barGapDays.join(", ")+" "+(barGapDays.length===1?"has":"have")+" a coverage gap before the schedule goes out.");actions++;}
-    else{sentences.push("<strong>"+n+"</strong> is carrying the bar solo this week. One callout and you're back in last Saturday's position.");actions++;}
-  }else{
-    var ns=barT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
-    if(barGapDays.length>0){sentences.push(ns+" are covering bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a gap -- assign a backup before publishing.");actions++;}
-    else sentences.push("Bar coverage solid -- "+ns+" both scheduled with backups.");
+
+  // Bar coverage status — be specific about proven vs unproven
+  if(barT1s.length===0){
+    sentences.push("No T1 bartender on the roster -- every bar shift this week is at risk.");actions++;
+  } else if(provenT1s.length===0){
+    sentences.push("All T1 bartenders have under 10 shifts -- bar coverage technically staffed but reliability unproven. Run ratings after their first full month.");actions++;
+  } else if(provenT1s.length===1){
+    var pn=provenT1s[0].name.split(" ")[0];
+    sentences.push("<strong>"+pn+"</strong> is your only proven T1 bartender. "+(newT1s.length>0?newT1s.map(function(s){return s.name.split(" ")[0];}).join(" and ")+" "+(newT1s.length===1?"is":"are")+" still building tenure.":"")+" One callout from "+pn+" and you are in backup territory.");actions++;
+  } else {
+    var ns=provenT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
+    if(barGapDays.length>0){
+      sentences.push(ns+" carry the bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a coverage gap -- assign a backup before publishing.");actions++;
+    } else if(newT1s.length>0){
+      sentences.push("Bar is covered by "+ns+" with "+newT1s.map(function(s){return s.name.split(" ")[0];}).join(" and ")+" building tenure as T1 backup.");
+    } else {
+      sentences.push("Bar coverage solid -- "+ns+" scheduled with backups.");
+    }
   }
-  if(barT2s.length<2){sentences.push("Bar backup bench is thin -- Camille cross-training session needs to happen before April 4.");actions++;}
-  if(conflicts.conflicts.length>0){sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;}
-  if(conflicts.warnings.length>0){sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");}
-  if(kaveka) sentences.push("<strong>Kaveka</strong> exits April 4. Bar handoff must be complete before then.");
-  if(!hasEvents){sentences.push("Events Lead still open -- private dining is untapped revenue and the JD is ready to post.");actions++;}
+
+  // Bench depth — only flag if genuinely thin (low effective T1 AND no T2s)
+  if(barT2s.length===0 && bT1effBrief < 3){
+    sentences.push("No T2 backup bench. Camille cross-training for a floor T1 is the fastest route to resilience.");actions++;
+  }
+
+  // Schedule issues
+  if(conflicts.conflicts.length>0){
+    sentences.push("Schedule conflict: "+conflicts.conflicts[0].msg);actions++;
+  }
+  if(conflicts.warnings.length>0){
+    sentences.push(conflicts.warnings[0].msg+" -- adjust days off to be back-to-back.");
+  }
+
+  // Events Lead — only mention if it's genuinely a decision on the horizon
+  // Frame as a revenue opportunity, not a missing person
+  if(!hasEvents){
+    sentences.push("Events Lead role still unfilled -- private dining target of $120-180K this year is untapped revenue. Commission-forward role means near-zero downside.");actions++;
+  }
+
   // Kitchen check
   var savedDay2=activeDay;var kitchenIssues=[];
   DAYS.forEach(function(d){activeDay=d;var ki=calcKitchenHealth();if(!ki.canOpen)kitchenIssues.push(d+" (no lead cook)");});
   activeDay=savedDay2;
-  if(kitchenIssues.length>0){sentences.push("Kitchen gap: no lead line cook scheduled on "+kitchenIssues.slice(0,2).join(", ")+(kitchenIssues.length>2?" and "+(kitchenIssues.length-2)+" more":"")+". Fix before publishing.");actions++;}
-  if(hasAnyRatings&&hasAnyRatings()&&ratingsAreStale&&ratingsAreStale()){sentences.push("Team ratings haven't been updated in over 30 days -- review before they stop being meaningful.");}
-  sentences.push(actions===0?"Coverage looks good -- nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
+  if(kitchenIssues.length>0){
+    sentences.push("Kitchen gap: no lead line cook scheduled on "+kitchenIssues.slice(0,2).join(", ")+(kitchenIssues.length>2?" and "+(kitchenIssues.length-2)+" more":"")+". Fix before publishing.");actions++;
+  }
+
+  // Ratings freshness
+  if(hasAnyRatings&&hasAnyRatings()&&ratingsAreStale&&ratingsAreStale()){
+    sentences.push("Team ratings haven't been updated in over 30 days -- review before they stop being meaningful.");
+  }
+
+  sentences.push(actions===0?"Nothing critical before publishing this week.":actions+" thing"+(actions===1?" needs":"s need")+" resolving before the schedule goes out.");
   var briefEl=document.getElementById("brief-text");
   if(briefEl){briefEl.className="brief-text";briefEl.innerHTML=sentences.join(" ");}
   var stampEl=document.getElementById("brief-stamp");
@@ -2259,7 +2175,10 @@ function generateAIBrief(){
     });
   }
   var systemMsg="You are writing a weekly ops brief for Ryan Reynolds, owner of WEST10WEST, a 23-seat West Village restaurant. Address Tanner Floyd (Managing Partner) directly. Style: Ryan's voice -- short declarative sentences, specific names and numbers, no em dashes, no fluff, no corporate language. Max 5 sentences. End with exactly what needs resolving before the schedule goes out.";
-  var userMsg="Current state: Bar "+h.bs+"% ("+h.bT1+" T1 bartenders, "+h.bT2+" T2). Floor "+h.fs+"% ("+h.leads+" leads). Kitchen "+k.score+"% ("+k.leadCooks+" lead cooks, "+k.totalCooks+" total cooks, "+k.porters+" porters). T1 bar: "+(barT1s.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Events Lead: "+(!hasEvents?"open":"filled")+". Conflicts: "+(conflicts.conflicts.length>0?conflicts.conflicts.map(function(c){return c.msg;}).join("; "):"none")+". Kaveka exits April 4."+(shiftLines.length>0?" Recent shift notes: "+shiftLines.join(" // "):"")+" Write the brief.";
+  var provenT1sAi=barT1s.filter(function(s){return (s.shifts||0)>=10;});
+  var newT1sAi=barT1s.filter(function(s){return (s.shifts||0)<10;});
+  var barDetail=barT1s.length>0?barT1s.map(function(s){return s.name.split(" ")[0]+" ("+(s.shifts||0)+" shifts)";}).join(", "):"none";
+  var userMsg="Current state: Bar "+h.bs+"% ("+h.bT1+" T1, "+h.bT2+" T2). Floor "+h.fs+"% ("+h.leads+" leads). Kitchen "+k.score+"% ("+k.leadCooks+" lead cooks, "+k.totalCooks+" total cooks, "+k.porters+" porters). T1 bartenders with tenure: "+barDetail+". Proven (10+ shifts): "+(provenT1sAi.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Building tenure (under 10 shifts): "+(newT1sAi.map(function(s){return s.name.split(" ")[0];}).join(", ")||"none")+". Events Lead role: "+(!hasEvents?"unfilled (private dining revenue untapped)":"filled")+". Conflicts this week: "+(conflicts.conflicts.length>0?conflicts.conflicts.map(function(c){return c.msg;}).join("; "):"none")+"."+(shiftLines.length>0?" Recent shift notes: "+shiftLines.join(" // "):"")+" Rules: T1 is the highest tier (do not say promote T1 to T2). Do not mention Kaveka or past departures. Do not hallucinate events or roles not listed here. If everything is solid, say so briefly. Be directional -- tell Tanner exactly what to do, not just what is happening.";
   fetch("/api/claude",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -2301,54 +2220,30 @@ function checkWelcome(){renderGreeting();}
 function dismissWelcome(){}
 
 // ══ TAB NAV ══
-function showSubTab(name){
-  if(name==="week"||name==="builder"){
-    var wEl=document.getElementById("subtab-week");
-    var bEl=document.getElementById("subtab-builder");
-    var wBtn=document.getElementById("subtab-week-btn");
-    var bBtn=document.getElementById("subtab-builder-btn");
-    if(wEl)wEl.style.display=name==="week"?"":"none";
-    if(bEl)bEl.style.display=name==="builder"?"":"none";
-    if(wBtn)wBtn.className="sub-tab"+(name==="week"?" active":"");
-    if(bBtn)bBtn.className="sub-tab"+(name==="builder"?" active":"");
-    if(name==="week"){renderDayBtns();renderWeek();}
-    if(name==="builder"&&typeof generateOptimisedSchedule==="function"){
-      // Re-render if already generated
-      var out=document.getElementById("sched-output");
-      if(out&&out.innerHTML===""&&optimisedSchedule)renderScheduleOutput(optimisedSchedule,[],{});
-    }
-  }
-}
 function showTab(t){
   activeTab=t;
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){
-    el.className="nav-tab"+(["roster","schedule","feedback","infra","team","shifts","breakeven"][i]===t?" active":"");
-  });
-  var paneId=t==="week"?"tab-schedule":("tab-"+t);
-  var pane=document.getElementById(paneId);
-  if(pane)pane.classList.add("active");
-  if(t==="schedule"||t==="week"){renderDayBtns();renderWeek();}
-  if(t==="roster"){generateBrief(false);populateCallout();populateKitchenCallout();}
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts","breakeven"][i]===t?" active":"");});
+  document.getElementById("tab-"+t).classList.add("active");
+  if(t==="week"){renderDayBtns();renderWeek();}
+  if(t==="callout")populateCallout();
   if(t==="infra")renderInfra();
+  if(t==="roster")generateBrief(false);
   if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
   if(t==="shifts")loadShiftReports();
   if(t==="breakeven")renderBreakeven();
-  if(t==="feedback")renderFeedback();
 }
 
 // ══ DATE ══
 function updateDate(){
-  var D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  var d=new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
-  document.getElementById("live-date").textContent=D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate()+" (NYC)";
+  var d=new Date(),D=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById("live-date").textContent=D[d.getDay()]+" "+M[d.getMonth()]+" "+d.getDate();
 }
 
 // ══ INIT ══
 
 // == BREAK-EVEN ==
-var BE_FIXED_MONTHLY=19376; // Loaded live from sheet — see loadFixedCosts()
-var BE_FIXED_LOADING=false;
+var BE_FIXED_MONTHLY=19038;
 var BE_COGS=0.25;
 var BE_PAYROLL_TAX=0.1065;
 var BE_NIGHTLY_FIXED=(BE_FIXED_MONTHLY*12/52)/7;
@@ -2380,10 +2275,7 @@ function renderProjection(){
   var el = document.getElementById("be-projection");
   if(!el) return;
 
-  // Use NYC time throughout projection calculations
-  var nowUtc = new Date();
-  var nycStr2 = nowUtc.toLocaleString("en-US",{timeZone:"America/New_York"});
-  var now = new Date(nycStr2);
+  var now = new Date();
   var dayOfMonth = now.getDate();
   var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
   var daysElapsed = dayOfMonth;
@@ -2433,8 +2325,8 @@ function renderProjection(){
   // Conservative: -12% (one bad stretch, weather, slow season)
   // Base: weighted day projection
   // Optimistic: +12% (strong weekend, events, seasonal pop)
-  var projConservative = Math.max(Math.round(mtdActual), Math.round(projBase * 0.88));
-  var projOptimistic   = Math.max(Math.round(projBase * 1.12), Math.round(mtdActual));
+  var projConservative = Math.round(projBase * 0.88);
+  var projOptimistic   = Math.round(projBase * 1.12);
 
   // What's needed per remaining night to hit break-even?
   var neededToBreakeven = Math.max(0, monthlyBe - mtdActual);
@@ -2521,25 +2413,118 @@ function renderProjection(){
 }
 
 
-// == LIVE FIXED COSTS FROM GOOGLE SHEET ==
-function loadFixedCosts(){
-  if(BE_FIXED_LOADING) return;
-  BE_FIXED_LOADING=true;
-  fetch('/api/sheets')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.fixedMonthly&&!isNaN(d.fixedMonthly)){
-        BE_FIXED_MONTHLY=d.fixedMonthly;
-        if(typeof renderBeSummary==='function') renderBeSummary();
-        if(typeof renderProjection==='function') renderProjection();
+// == REFRESH NIGHTLY AVERAGES FROM SQUARE (trailing 12 months) ==
+function refreshNightlyAverages(){
+  var btn=document.getElementById("refresh-avgs-btn");
+  var stamp=document.getElementById("be-avg-stamp");
+  if(btn){btn.disabled=true;btn.textContent="↻ Loading 12mo data...";}
+  if(stamp)stamp.textContent="Fetching 12 months of data from Square...";
+
+  // Calculate 12 months back from today in NYC time
+  var nowUtc=new Date();
+  var nycNow=new Date(nowUtc.toLocaleString("en-US",{timeZone:"America/New_York"}));
+  var endIso=new Date(Date.UTC(nycNow.getFullYear(),nycNow.getMonth(),nycNow.getDate(),5,0,0)).toISOString();
+  var start=new Date(Date.UTC(nycNow.getFullYear()-1,nycNow.getMonth(),nycNow.getDate(),5,0,0)).toISOString();
+
+  squareOrdersFetch(start, endIso,
+    function(orders){
+      // Bucket orders by day of week using NYC time
+      var dayBuckets={Sunday:[],Monday:[],Tuesday:[],Wednesday:[],Thursday:[],Friday:[],Saturday:[]};
+      var dayNames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      // Group orders by date string (NYC) first
+      var dateNets={}; // {"2026-04-18": {day:"Friday", net: 4500}}
+      orders.forEach(function(o){
+        if(!o.created_at) return;
+        var created=new Date(o.created_at);
+        // Convert to NYC
+        var nycStr=created.toLocaleString("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",weekday:"long"});
+        // Extract date key — use weekday parse
+        var parts=nycStr.split(", ");
+        var weekday=parts[0];
+        var dateKey=parts[1]+" "+parts[2]; // "04/18/2026 ..."
+        var total=(o.total_money&&o.total_money.amount)||0;
+        var tax=(o.total_tax_money&&o.total_tax_money.amount)||0;
+        var tip=(o.total_tip_money&&o.total_tip_money.amount)||0;
+        var svc=(o.total_service_charge_money&&o.total_service_charge_money.amount)||0;
+        var net=(total-tax-tip-svc)/100;
+        if(!dateNets[dateKey]) dateNets[dateKey]={day:weekday,net:0};
+        dateNets[dateKey].net+=net;
+      });
+      // Now aggregate by day of week
+      Object.values(dateNets).forEach(function(d){
+        if(dayBuckets[d.day]) dayBuckets[d.day].push(d.net);
+      });
+      // Calculate averages
+      var newAvgs={};
+      dayNames.forEach(function(day){
+        var vals=dayBuckets[day];
+        if(vals.length===0){newAvgs[day]=null;return;}
+        var sum=vals.reduce(function(a,b){return a+b;},0);
+        newAvgs[day]=Math.round(sum/vals.length);
+      });
+      // Update BE_NIGHTS in place
+      var updated=0;
+      BE_NIGHTS.forEach(function(n){
+        if(newAvgs[n.day]!==null&&newAvgs[n.day]!==undefined){
+          n.avgSales=newAvgs[n.day];
+          updated++;
+        }
+      });
+      // Recompute day weights for projection
+      if(typeof BE_DAY_WEIGHTS!=="undefined"){
+        var total=BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0);
+        BE_NIGHTS.forEach(function(n){ BE_DAY_WEIGHTS[n.day]=n.avgSales/total; });
       }
-      BE_FIXED_LOADING=false;
-    })
-    .catch(function(){BE_FIXED_LOADING=false;});
+      // Persist to localStorage so it sticks across sessions
+      try{
+        var payload={avgs:newAvgs,savedAt:new Date().toISOString()};
+        localStorage.setItem("w10w-nightly-avgs",JSON.stringify(payload));
+      }catch(e){}
+      // Re-render
+      if(typeof renderBeTable==="function") renderBeTable();
+      if(typeof renderBeSummary==="function") renderBeSummary();
+      if(typeof renderProjection==="function") renderProjection();
+      if(btn){btn.disabled=false;btn.textContent="↻ Refresh 12mo avgs";}
+      if(stamp){
+        var d=new Date();
+        var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        stamp.textContent="12mo avg refreshed "+M[d.getMonth()]+" "+d.getDate()+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})+" · "+orders.length+" orders analysed";
+      }
+    },
+    function(){
+      if(btn){btn.disabled=false;btn.textContent="↻ Refresh 12mo avgs";}
+      if(stamp)stamp.textContent="Could not load — check Square connection";
+    }
+  );
+}
+
+// Load persisted averages on init if they exist
+function loadPersistedAverages(){
+  try{
+    var saved=localStorage.getItem("w10w-nightly-avgs");
+    if(!saved) return;
+    var p=JSON.parse(saved);
+    if(!p.avgs||!p.savedAt) return;
+    BE_NIGHTS.forEach(function(n){
+      if(p.avgs[n.day]) n.avgSales=p.avgs[n.day];
+    });
+    if(typeof BE_DAY_WEIGHTS!=="undefined"){
+      var total=BE_NIGHTS.reduce(function(s,n){return s+n.avgSales;},0);
+      BE_NIGHTS.forEach(function(n){ BE_DAY_WEIGHTS[n.day]=n.avgSales/total; });
+    }
+    // Set stamp
+    setTimeout(function(){
+      var stamp=document.getElementById("be-avg-stamp");
+      if(stamp){
+        var d=new Date(p.savedAt);
+        var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        stamp.textContent="12mo avg refreshed "+M[d.getMonth()]+" "+d.getDate();
+      }
+    },100);
+  }catch(e){}
 }
 
 function renderBreakeven(){
-  if(!BE_FIXED_LOADING) loadFixedCosts();
   renderBeSummary();renderBeTable();renderBeLive(null);renderProjection();
   if(!beLiveSales&&!beLiveLoading) loadLiveSales();
   if(!beMonthlyLive&&!beMonthlyLoading) loadMonthlySales();
@@ -2602,8 +2587,7 @@ function renderBeTable(){
 function renderBeLive(sales){
   var el=document.getElementById("be-live-card");if(!el)return;
   var days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  var nycNow2=new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
-  var tonight=days[nycNow2.getDay()]; // Always NYC day
+  var tonight=days[new Date().getDay()];
   var nd=BE_NIGHTS.find(function(n){return n.day===tonight;});
   if(!nd)return;
   if(sales===null){
@@ -2647,31 +2631,28 @@ function squareNetFromOrders(orders){
 
 function squareOrdersFetch(startIso, endIso, onSuccess, onFail){
   var ordersUrl="https://connect.squareup.com/v2/orders/search";
-  var allOrders=[];
-  function fetchPage(cursor){
-    var bodyObj={location_ids:["LHSVRCNXBB7E8"],query:{filter:{
+  var body=JSON.stringify({
+    location_ids:["LHSVRCNXBB7E8"],
+    query:{filter:{
       date_time_filter:{created_at:{start_at:startIso,end_at:endIso}},
-      state_filter:{states:["COMPLETED"]}}},limit:500};
-    if(cursor) bodyObj.cursor=cursor;
-    fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({url:ordersUrl,method:"POST",body:JSON.stringify(bodyObj)})})
-    .then(function(r){return r.json();})
-    .then(function(d){
-      if(d.orders===undefined){onFail();return;}
-      allOrders=allOrders.concat(d.orders);
-      if(d.cursor&&d.orders.length===500){fetchPage(d.cursor);}
-      else{onSuccess(allOrders);}
-    }).catch(function(){onFail();});
-  }
-  fetchPage(null);
+      state_filter:{states:["COMPLETED"]}
+    }},
+    limit:500
+  });
+  fetch("/api/proxy",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({url:ordersUrl,method:"POST",body:body})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.orders!==undefined) onSuccess(d.orders);
+    else onFail();
+  })
+  .catch(function(){onFail();});
 }
 
 function loadLiveSales(){
   beLiveLoading=true;
   var now=new Date();
-  // Always use NYC midnight as start of "tonight"
-  var nycNow=new Date(now.toLocaleString("en-US",{timeZone:"America/New_York"}));
-  var start=new Date(Date.UTC(nycNow.getFullYear(),nycNow.getMonth(),nycNow.getDate(),5,0,0)).toISOString(); // midnight NYC
+  var start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).toISOString();
   squareOrdersFetch(start, now.toISOString(),
     function(orders){
       var net=squareNetFromOrders(orders);
@@ -2684,11 +2665,8 @@ function loadLiveSales(){
 function loadMonthlySales(){
   beMonthlyLoading=true;
   var now=new Date();
-  // Always use NYC timezone for date boundaries (UTC-4 EDT / UTC-5 EST)
-  // Get current NYC date components
-  var nycStr=now.toLocaleString("en-US",{timeZone:"America/New_York"});
-  var nycDate=new Date(nycStr);
-  var start=new Date(Date.UTC(nycDate.getFullYear(),nycDate.getMonth(),1,5,0,0)).toISOString(); // 5am UTC = midnight EDT
+  // Pull from start of current calendar month for accurate "this month" figure
+  var start=new Date(now.getFullYear(),now.getMonth(),1).toISOString();
   squareOrdersFetch(start, now.toISOString(),
     function(orders){
       var net=squareNetFromOrders(orders);
@@ -2700,444 +2678,12 @@ function loadMonthlySales(){
   );
 }
 
-
-// == AVAILABILITY MODAL ==
-var availModalStaffId = null;
-
-function openAvailModal(id) {
-  var s = byId(id);
-  if(!s) return;
-  availModalStaffId = id;
-  var avail = s.available || ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  var early = s.earlyShift || false;
-  var days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  var dayHtml = days.map(function(d){
-    return '<div class="avail-day '+(avail.indexOf(d)>-1?"on":"off")+'" onclick="toggleAvailDay(\''+d+'\')" id="avail-day-'+d+'">'+d+'</div>';
-  }).join("");
-  var html =
-    '<div class="avail-modal-overlay" id="avail-modal-overlay" onclick="closeAvailModal(event)">' +
-    '<div class="avail-modal">' +
-      '<div class="avail-modal-title">'+s.name+'</div>' +
-      '<div class="avail-modal-sub">Set available days and shift preference</div>' +
-      '<div class="avail-days">'+dayHtml+'</div>' +
-      '<div class="avail-early" onclick="toggleEarlyShift()">' +
-        '<div style="width:36px;height:20px;border-radius:10px;background:'+(early?"var(--green)":"var(--line-2)")+';position:relative;transition:background .15s;flex-shrink:0" id="early-toggle">'+
-          '<div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;transition:left .15s;left:'+(early?"18px":"2px")+'" id="early-knob"></div>'+
-        '</div>' +
-        '<div><div class="avail-early-lbl">Early shift (11am start)</div><div class="avail-early-sub">Can be scheduled for weekend lunch service</div></div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
-        '<button class="btn btn-sm" onclick="closeAvailModal()">Cancel</button>' +
-        '<button class="btn btn-sm btn-primary" onclick="saveAvailModal()">Save</button>' +
-      '</div>' +
-    '</div></div>';
-  document.body.insertAdjacentHTML('beforeend', html);
-}
-
-function toggleAvailDay(day) {
-  var el = document.getElementById("avail-day-"+day);
-  if(!el) return;
-  el.classList.toggle("on");
-  el.classList.toggle("off");
-}
-
-function toggleEarlyShift() {
-  var tog = document.getElementById("early-toggle");
-  var knob = document.getElementById("early-knob");
-  if(!tog) return;
-  var isOn = tog.style.background.includes("green") || tog.style.background === "var(--green)";
-  tog.style.background = isOn ? "var(--line-2)" : "var(--green)";
-  knob.style.left = isOn ? "2px" : "18px";
-}
-
-function saveAvailModal() {
-  var s = byId(availModalStaffId);
-  if(!s) return;
-  var days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  s.available = days.filter(function(d){
-    var el = document.getElementById("avail-day-"+d);
-    return el && el.classList.contains("on");
-  });
-  var tog = document.getElementById("early-toggle");
-  s.earlyShift = tog ? (tog.style.background === "var(--green)" || tog.style.background.includes("1a2e1a")) : false;
-  closeAvailModal();
-  renderRoster();
-  saveState();
-}
-
-function closeAvailModal(e) {
-  if(e && e.target.id !== "avail-modal-overlay") return;
-  var el = document.getElementById("avail-modal-overlay");
-  if(el) el.remove();
-}
-
-// == SCHEDULE BUILDER ENGINE ==
-var SHIFT_TIMES = {
-  bar:    {normal: "4–11:30pm", early: "11am–11:30pm"},
-  floor:  {normal: "4–11:30pm", early: "11am–11:30pm"},
-  kitchen:{normal: "12–11pm",   early: "11am–11pm"}
-};
-
-var DAYS_ORDER = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-// Positions needed per day per team
-// Positions per day — weekends get 2 bartenders + 2 servers for lunch service
-var WEEKDAY_POSITIONS = [
-  {role:"Bar",        team:"bar",     tier:"T1", critical:true},
-  {role:"Bar Backup", team:"bar",     tier:"T2", critical:false},
-  {role:"Floor Lead", team:"floor",   tier:null, critical:true},
-  {role:"Server 1",   team:"floor",   tier:null, critical:false},
-  {role:"Server 2",   team:"floor",   tier:null, critical:false},
-  {role:"Host",       team:"floor",   tier:null, critical:false},
-  {role:"Lead Cook",  team:"kitchen", tier:null, critical:true},
-  {role:"Line Cook",  team:"kitchen", tier:null, critical:true},
-  {role:"Porter",     team:"kitchen", tier:null, critical:true},
-];
-var WEEKEND_POSITIONS = [
-  {role:"Bar 1",      team:"bar",     tier:"T1", critical:true},
-  {role:"Bar 2",      team:"bar",     tier:"T1", critical:true},  // 2nd bartender for lunch
-  {role:"Floor Lead", team:"floor",   tier:null, critical:true},
-  {role:"Server 1",   team:"floor",   tier:null, critical:false},
-  {role:"Server 2",   team:"floor",   tier:null, critical:false},
-  {role:"Server 3",   team:"floor",   tier:null, critical:false},  // extra cover for 12-11
-  {role:"Host",       team:"floor",   tier:null, critical:false},
-  {role:"Lead Cook",  team:"kitchen", tier:null, critical:true},
-  {role:"Line Cook",  team:"kitchen", tier:null, critical:true},
-  {role:"Porter 1",   team:"kitchen", tier:null, critical:true},
-  {role:"Porter 2",   team:"kitchen", tier:null, critical:true},   // 2 porters for Sat/Sun
-];
-
-var optimisedSchedule = null;
-
-function getReliability(s) {
-  var r = avgRating ? avgRating(s.id) : null;
-  return r !== null ? r : 5; // default 5 if unrated
-}
-
-function canWorkDay(s, day) {
-  var avail = s.available || ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  if(avail.indexOf(day) === -1) return false;
-  if(s.weekendOnly && ["Mon","Tue","Wed","Thu","Fri"].indexOf(day) > -1) return false;
-  return true;
-}
-
-function staffForPosition(pos, day, assigned, prevDayAssigned, weekAssigned) {
-  var isWeekend = ["Sat","Sun"].indexOf(day) > -1;
-  var dayIdx = DAYS_ORDER.indexOf(day);
-  var prevDay = dayIdx > 0 ? DAYS_ORDER[dayIdx-1] : null;
-
-  var eligible = staff.filter(function(s) {
-    if(!s) return false;
-    if(pos.team !== "kitchen" && (s.tier === "None" || s.tier === "Consultant")) return false;
-    if(pos.team === "kitchen" && s.name.toLowerCase() === "new hire (open)") return false;
-    if(!canWorkDay(s, day)) return false;
-    if(assigned[day] && assigned[day].indexOf(s.id) > -1) return false;
-
-    var teams = getTeams(s);
-    var role = s.role.toLowerCase();
-
-    // Bar positions
-    if(pos.team === "bar") {
-      if(!teams.includes("bar")) return false;
-      if(pos.role === "Bar" || pos.role === "Bar 1") {
-        return s.tier === "T1";
-      }
-      if(pos.role === "Bar 2") {
-        // 2nd bartender: T1 preferred, T2 acceptable on weekends
-        return s.tier === "T1" || s.tier === "T2";
-      }
-      if(pos.role === "Bar Backup") {
-        return s.tier === "T1" || s.tier === "T2";
-      }
-    }
-
-    // Floor positions
-    if(pos.team === "floor") {
-      if(!teams.includes("floor")) return false;
-      if(pos.role === "Floor Lead") {
-        return role.includes("floor lead") || role.includes("managing partner");
-      }
-      if(pos.role === "Host") {
-        return role.includes("host");
-      }
-      // Servers — T1, T2, T3 eligible
-      return s.tier === "T1" || s.tier === "T2" || s.tier === "T3";
-    }
-
-    // Kitchen
-    if(pos.team === "kitchen") {
-      if(!teams.includes("kitchen")) return false;
-      if(pos.role === "Lead Cook") return role.includes("lead");
-      if(pos.role.startsWith("Line Cook")) return role.includes("line cook") || role.includes("lead line");
-      if(pos.role.startsWith("Porter")) return role.includes("porter");
-    }
-    return false;
-  });
-
-  if(eligible.length === 0) return null;
-
-  // SCORING — higher = better candidate for this slot
-  eligible.sort(function(a, b) {
-    return score(b, day, pos, prevDay, prevDayAssigned, weekAssigned) -
-           score(a, day, pos, prevDay, prevDayAssigned, weekAssigned);
-  });
-
-  return eligible[0];
-}
-
-function score(s, day, pos, prevDay, prevDayAssigned, weekAssigned) {
-  var pts = 0;
-
-  // 1. RELIABILITY — most important factor (0-10 from ratings)
-  pts += getReliability(s) * 3;
-
-  // 2. TIER — T1 preferred for critical roles
-  var tierPts = {T1:10, T2:6, T3:3, Training:1, Flex:2};
-  pts += (tierPts[s.tier] || 0);
-
-  // 3. AVOID CLOPENING — heavy penalty if worked close shift yesterday
-  if(prevDay && prevDayAssigned[prevDay] && prevDayAssigned[prevDay].indexOf(s.id) > -1) {
-    pts -= 25; // strong discouragement
-  }
-
-  // 4. WORKLOAD BALANCE — penalise staff already scheduled many days this week
-  var daysWorked = weekAssigned ? weekAssigned[s.id] || 0 : 0;
-  if(daysWorked >= 5) pts -= 15;
-  else if(daysWorked >= 4) pts -= 8;
-  else if(daysWorked >= 3) pts -= 3;
-
-  // 5. AVAILABILITY PREFERENCE — earlyShift bonus on weekends
-  var isWeekend = ["Sat","Sun"].indexOf(day) > -1;
-  if(isWeekend && s.earlyShift) pts += 5;
-
-  // 6. ROLE MATCH — exact role match bonus
-  var role = s.role.toLowerCase();
-  if(pos.role.startsWith("Bar") && role.includes("bartender")) pts += 4;
-  if(pos.role === "Floor Lead" && role.includes("floor lead")) pts += 4;
-  if(pos.role === "Lead Cook" && role.includes("lead line cook")) pts += 4;
-
-  // 7. CROSS-TRAINING bonus — versatile staff score slightly higher for backup roles
-  if(isCross(s) && !pos.critical) pts += 2;
-
-  return pts;
-}
-
-function generateOptimisedSchedule() {
-  var statusEl = document.getElementById("sched-status");
-  var applyBtn = document.getElementById("apply-sched-btn");
-  if(statusEl) statusEl.textContent = "Generating...";
-
-  var schedule = {};
-  var assigned = {};       // day -> [staffIds assigned today]
-  var prevAssigned = {};   // for clopening detection
-  var weekAssigned = {};   // staffId -> days worked this week
-
-  DAYS_ORDER.forEach(function(day) {
-    schedule[day] = [];
-    assigned[day] = [];
-    var isWeekend = ["Sat","Sun"].indexOf(day) > -1;
-    var positions = isWeekend ? WEEKEND_POSITIONS : WEEKDAY_POSITIONS;
-
-    positions.forEach(function(pos) {
-      var candidate = staffForPosition(pos, day, assigned, prevAssigned, weekAssigned);
-      var time;
-      if(isWeekend) {
-        time = (candidate && candidate.earlyShift) ? "11am–11pm" : "12–11pm";
-        if(pos.team === "bar") time = (candidate && candidate.earlyShift) ? "11am–11:30pm" : "12–11:30pm";
-      } else {
-        time = pos.team === "kitchen" ? "12–11pm" : "4–11:30pm";
-      }
-
-      var dayIdx = DAYS_ORDER.indexOf(day);
-      var prevDay = dayIdx > 0 ? DAYS_ORDER[dayIdx-1] : null;
-      var hasClopen = candidate && prevDay &&
-        prevAssigned[prevDay] && prevAssigned[prevDay].indexOf(candidate.id) > -1;
-
-      schedule[day].push({
-        pos: pos.role,
-        team: pos.team,
-        staffId: candidate ? candidate.id : null,
-        staffName: candidate ? candidate.name : null,
-        tier: candidate ? candidate.tier : null,
-        time: time,
-        critical: pos.critical,
-        clopening: hasClopen,
-        warning: !candidate && pos.critical,
-        scoreVal: candidate ? score(candidate, day, pos, prevDay, prevAssigned, weekAssigned) : 0
-      });
-
-      if(candidate) {
-        assigned[day].push(candidate.id);
-        weekAssigned[candidate.id] = (weekAssigned[candidate.id] || 0) + 1;
-      }
-    });
-
-    prevAssigned[day] = assigned[day].slice();
-  });
-
-  // Post-process: detect any remaining clopening issues
-  var issues = [];
-  DAYS_ORDER.forEach(function(day, di) {
-    if(di === 0) return;
-    var prevDay = DAYS_ORDER[di-1];
-    schedule[day].forEach(function(slot) {
-      if(slot.clopening && slot.staffName) {
-        issues.push(slot.staffName.split(" ")[0] + ": " + prevDay + "→" + day);
-      }
-    });
-  });
-
-  // Calculate staff day counts for display
-  var staffDayCounts = {};
-  DAYS_ORDER.forEach(function(day) {
-    (schedule[day]||[]).forEach(function(slot) {
-      if(slot.staffId) {
-        staffDayCounts[slot.staffId] = (staffDayCounts[slot.staffId]||0) + 1;
-      }
-    });
-  });
-
-  optimisedSchedule = schedule;
-  renderScheduleOutput(schedule, issues, staffDayCounts);
-  if(statusEl) statusEl.textContent = issues.length > 0 ? issues.length + " clopening flag(s)" : "✓ Optimised schedule ready";
-  if(applyBtn) applyBtn.style.display = "";
-}
-
-function renderScheduleBuilder() {
-  // Just show the generate button — output renders after click
-  var out = document.getElementById("sched-output");
-  if(out && out.innerHTML === "" && optimisedSchedule) {
-    renderScheduleOutput(optimisedSchedule, []);
-  }
-}
-
-
-// == KITCHEN CALLOUT ==
-var kitchenCalloutSelected=[];
-function populateKitchenCallout(){
-  var wrap=document.getElementById("kitchen-callout-chips");if(!wrap)return;
-  // Kitchen staff all have tier "None" — filter by name only
-  var kitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.name.toLowerCase()!=="new hire (open)";});
-  wrap.innerHTML=kitchen.map(function(s){
-    var sel=kitchenCalloutSelected.indexOf(s.id)>-1;
-    var role=s.role.toLowerCase();
-    var roleTag=role.includes("lead")?"Lead":role.includes("porter")?"Porter":"Cook";
-    return'<span class="co-chip'+(sel?" selected":"")+'" onclick="toggleKitchenChip('+s.id+')">'+
-      s.name.split(" ")[0]+
-      '<span style="font-size:9px;opacity:.6;margin-left:3px">'+roleTag+'</span>'+
-    '</span>';
-  }).join("");
-  var cnt=document.getElementById("kitchen-callout-count");
-  if(cnt)cnt.textContent=kitchenCalloutSelected.length>0?kitchenCalloutSelected.length+" out":"";
-}
-function toggleKitchenChip(id){
-  var idx=kitchenCalloutSelected.indexOf(id);
-  if(idx>-1)kitchenCalloutSelected.splice(idx,1);else kitchenCalloutSelected.push(id);
-  populateKitchenCallout();
-}
-function clearKitchenCallout(){
-  kitchenCalloutSelected=[];populateKitchenCallout();
-  var el=document.getElementById("kitchen-callout-result");
-  if(el)el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';
-}
-function runKitchenCallout(){
-  var el=document.getElementById("kitchen-callout-result");
-  if(!kitchenCalloutSelected.length){el.innerHTML='<div style="padding:12px 0;color:var(--ink-4);font-size:12px;font-family:\'Geist Mono\',monospace;text-align:center">Select kitchen staff above then hit Simulate</div>';return;}
-  var DAYNAMES=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  var todayName=DAYNAMES[new Date().getDay()];
-  var isWeekend=["Friday","Saturday","Sunday"].indexOf(todayName)>-1;
-  var portersNeeded=isWeekend?2:1;
-  var calledIds=kitchenCalloutSelected;
-  var calledOut=calledIds.map(function(id){return byId(id);}).filter(Boolean);
-  var leadsOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("lead");});
-  var cooksOut=calledOut.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead");});
-  var portersOut=calledOut.filter(function(s){return s.role.toLowerCase().includes("porter");});
-  var allKitchen=staff.filter(function(s){return getTeams(s).includes("kitchen")&&s.name.toLowerCase()!=="new hire (open)";});
-  var leadsLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("lead")&&calledIds.indexOf(s.id)===-1;});
-  var cooksLeft=allKitchen.filter(function(s){var r=s.role.toLowerCase();return(r.includes("line cook")||r.includes("cook"))&&!r.includes("lead")&&calledIds.indexOf(s.id)===-1;});
-  var portersLeft=allKitchen.filter(function(s){return s.role.toLowerCase().includes("porter")&&calledIds.indexOf(s.id)===-1;});
-  var totalCooksAvail=leadsLeft.length+cooksLeft.length;
-  var names=calledOut.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" + ");
-  var canRun=totalCooksAvail>=1&&portersLeft.length>=1;
-  var sev=!canRun?"al-red":leadsLeft.length===0||totalCooksAvail<2?"al-amber":"al-green";
-  var html='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">'+todayName+' · '+(isWeekend?"Weekend — 2 porters required":"Weekday — 1 porter required")+'</div>';
-  html+='<div class="alert '+sev+'" style="margin-bottom:12px">'+names+' out. ';
-  if(!canRun)html+='<strong>Kitchen cannot run service.</strong>';
-  else if(leadsLeft.length===0)html+='No lead — most senior cook on the pass.';
-  else if(totalCooksAvail<2)html+='Thin kitchen — limited menu.';
-  else html+='Service can run.';
-  html+='</div>';
-  if(leadsOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Lead cascade</div>';
-    if(leadsLeft.length>0){
-      html+='<div class="cascade-row"><div class="cascade-num">1</div><div><div class="cascade-name">'+leadsLeft[0].name.split(" ")[0]+' moves to the pass</div><div class="cascade-sub">Brief on specials before service opens</div></div></div>';
-      if(cooksLeft.length>0)html+='<div class="cascade-row"><div class="cascade-num">2</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' absorbs the station</div><div class="cascade-sub">Line cook covers vacated station</div></div></div>';
-    }else if(cooksLeft.length>0){
-      html+='<div class="cascade-row"><div class="cascade-num" style="background:var(--amber-bg);color:var(--amber-text);border-color:#f5d28a">!</div><div><div class="cascade-name">'+cooksLeft[0].name.split(" ")[0]+' runs the pass</div><div class="cascade-sub">No lead. Call Tanner. Run focused menu — drop specials requiring pass attention.</div></div></div>';
-    }else{html+='<div class="alert al-red">No kitchen staff to cover the pass. Call Tanner immediately.</div>';}
-  }
-  if(cooksOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Cook coverage</div>';
-    if(totalCooksAvail>=2)html+='<div class="alert al-green">'+totalCooksAvail+" cooks remaining — service runs.</div>";
-    else if(totalCooksAvail===1){var rem=leadsLeft[0]||cooksLeft[0];html+='<div class="alert al-amber"><strong>1 cook remaining'+(rem?" ("+rem.name.split(" ")[0]+")":'')+'.</strong> Limited menu, consider 10pm cut.</div>';}
-    else html+='<div class="alert al-red"><strong>No cooks remaining. Kitchen cannot operate.</strong></div>';
-  }
-  if(portersOut.length>0){
-    html+='<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin:12px 0 8px">Porter coverage</div>';
-    if(portersLeft.length>=portersNeeded)html+='<div class="alert al-green">'+portersLeft.length+" porters remaining.</div>";
-    else if(portersLeft.length===1&&isWeekend)html+='<div class="alert al-amber"><strong>1 porter on a weekend (need 2).</strong> Extended shift. Cooks assist during peaks.</div>';
-    else html+='<div class="alert al-red"><strong>No porter.</strong> Cooks absorb dish support. Reduce table rotation.</div>';
-  }
-  var sc=0;sc+=totalCooksAvail>=3?40:totalCooksAvail===2?30:totalCooksAvail===1?15:0;sc+=leadsLeft.length>=1?30:0;sc+=portersLeft.length>=portersNeeded?20:portersLeft.length>=1?10:0;sc+=cooksLeft.length>=2?10:cooksLeft.length>=1?5:0;
-  var scColor=sc>=70?"var(--teal)":sc>=40?"var(--amber)":"var(--red)";
-  html+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--ink-4);font-family:\'Geist Mono\',monospace;text-transform:uppercase;letter-spacing:.06em">Post-callout kitchen health</span><span style="font-size:16px;font-weight:600;font-family:\'Geist Mono\',monospace;color:'+scColor+'">'+sc+'%</span></div>';
-  el.innerHTML=html;
-}
-
-// == SCHEDULE OUTPUT ==
-function renderScheduleOutput(schedule, issues, staffDayCounts) {
-  var el=document.getElementById("sched-output");if(!el)return;
-  staffDayCounts=staffDayCounts||{};
-  var DAYS_O=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-  var filledCount=0,totalCount=0,criticalMissing=0;
-  DAYS_O.forEach(function(day){(schedule[day]||[]).forEach(function(s){totalCount++;if(s.staffId)filledCount++;else if(s.critical)criticalMissing++;});});
-  var html='<div class="sched-coverage">'+
-    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:var(--teal)">'+filledCount+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Filled</div></div>'+
-    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:'+(criticalMissing>0?"var(--red)":"var(--ink-4)")+'">'+criticalMissing+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Critical gaps</div></div>'+
-    '<div class="sched-cov-tile"><div class="sched-cov-num" style="color:'+(issues.length>0?"var(--amber)":"var(--ink-4)")+'">'+issues.length+'</div><div style="font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;font-family:\'Geist Mono\',monospace">Clopening flags</div></div>'+
-  '</div>';
-  if(issues.length>0)html+='<div class="alert al-amber" style="margin-bottom:14px"><strong>Clopening:</strong> '+issues.join(" · ")+'</div>';
-  html+='<div class="sched-grid">';
-  html+='<div class="sched-hdr">Position</div>';
-  DAYS_O.forEach(function(d){html+='<div class="sched-hdr">'+d+'</div>';});
-  var posOrder=["Bar","Bar 1","Bar 2","Bar Backup","Floor Lead","Server 1","Server 2","Server 3","Host","Lead Cook","Line Cook","Porter","Porter 1","Porter 2"];
-  posOrder.forEach(function(posName){
-    var hasAny=DAYS_O.some(function(day){return(schedule[day]||[]).some(function(s){return s.pos===posName;});});
-    if(!hasAny)return;
-    html+='<div class="sched-role">'+posName+'</div>';
-    DAYS_O.forEach(function(day){
-      var slot=(schedule[day]||[]).find(function(s){return s.pos===posName;});
-      if(!slot){html+='<div class="sched-cell"></div>';return;}
-      var nameClass=slot.staffId?(slot.clopening?"warn":""):"empty";
-      var name=slot.staffName?slot.staffName.split(" ")[0]:"OPEN";
-      html+='<div class="sched-cell"><div class="sched-assign '+nameClass+'">'+name+'</div><div class="sched-time">'+slot.time+'</div>'+(slot.clopening?'<div class="sched-issue clopen">clopen</div>':'')+'</div>';
-    });
-  });
-  html+='</div>';
-  if(Object.keys(staffDayCounts).length>0){
-    html+='<div style="margin-top:14px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);font-family:\'Geist Mono\',monospace;margin-bottom:8px">Staff workload</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
-    Object.keys(staffDayCounts).forEach(function(id){var s=byId(parseInt(id));if(!s)return;var days=staffDayCounts[id];var color=days>=5?"var(--amber)":days<=2?"var(--ink-4)":"var(--teal)";html+='<div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:11px;box-shadow:var(--shadow-sm)"><span style="font-weight:600">'+s.name.split(" ")[0]+'</span> <span style="font-family:\'Geist Mono\',monospace;color:'+color+';font-weight:600">'+days+'d</span></div>';});
-    html+='</div></div>';
-  }
-  html+='<div style="font-size:11px;color:var(--ink-4);margin-top:8px">Review and click "Apply to week schedule" to push to the Schedule tab.</div>';
-  el.innerHTML=html;
-}
-
 async function init(){
   updateDate();
   await loadState();
   await loadRatings();
   loadSquareToken();
+  loadPersistedAverages();
   renderRoster();
   renderDayBtns();
   renderWeek();
@@ -3145,8 +2691,6 @@ async function init(){
   renderHeaderChips();
   renderStamp();
   generateBrief(false);
-  populateCallout();
-  populateKitchenCallout();
   checkWelcome();
 }
 
