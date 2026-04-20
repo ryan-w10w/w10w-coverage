@@ -950,7 +950,9 @@ input::placeholder{color:var(--ink-4)}
         <th>Stream</th>
         <th class="num">Revenue MTD</th>
         <th class="num">COGS MTD</th>
-        <th class="num">COGS %</th>
+        <th class="num">Base</th>
+        <th class="num">Waste</th>
+        <th class="num">Effective</th>
         <th>Source</th>
       </tr></thead>
       <tbody id="fh-cogs-tbody"></tbody>
@@ -1000,6 +1002,21 @@ input::placeholder{color:var(--ink-4)}
         <div class="fh-input-row">
           <div class="fh-input-lbl">Food COGS <span style="color:var(--ink-4);font-weight:400">%</span></div>
           <input type="number" class="fh-input-field" id="fh-input-food" placeholder="15.3" step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-4);margin-top:14px;margin-bottom:6px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.08em">Waste factor &mdash; spoilage, spillage, comps, overproduction</div>
+      <div class="fh-cogs-inputs">
+        <div class="fh-input-row">
+          <div class="fh-input-lbl">Cocktail waste <span style="color:var(--ink-4);font-weight:400">%</span></div>
+          <input type="number" class="fh-input-field" id="fh-input-cktl-waste" placeholder="2.0" step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
+        </div>
+        <div class="fh-input-row">
+          <div class="fh-input-lbl">Wine waste <span style="color:var(--ink-4);font-weight:400">%</span></div>
+          <input type="number" class="fh-input-field" id="fh-input-wine-waste" placeholder="4.0" step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
+        </div>
+        <div class="fh-input-row">
+          <div class="fh-input-lbl">Food waste <span style="color:var(--ink-4);font-weight:400">%</span></div>
+          <input type="number" class="fh-input-field" id="fh-input-food-waste" placeholder="10.0" step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
         </div>
       </div>
     </div>
@@ -3528,6 +3545,9 @@ var fhState = {
   cocktailCogsPct: null,
   wineCogsPct: null,
   foodCogsPct: null,
+  cocktailWastePct: null,
+  wineWastePct: null,
+  foodWastePct: null,
   cashBalance: 0,
   totalDebt: 0,
   laborPct: 29.3,
@@ -3543,7 +3563,7 @@ var fhState = {
   lastUpdated: null
 };
 
-var FH_DEFAULTS = { cocktailCogsPct:14.5, wineCogsPct:22.0, foodCogsPct:15.3 };
+var FH_DEFAULTS = { cocktailCogsPct:14.5, wineCogsPct:22.0, foodCogsPct:15.3, cocktailWastePct:2.0, wineWastePct:4.0, foodWastePct:10.0 };
 var FH_TARGETS = { cashTarget:30000, creditLimit:70000, q1AvgMonthly:91344 };
 var FH_TANNER_SALARY_MONTHLY = 7084;  // Only salaried staff — Square Labor API misses this
 
@@ -3563,6 +3583,9 @@ function fhLoadInputs(){
       if(p.cocktailCogsPct!==undefined) fhState.cocktailCogsPct = p.cocktailCogsPct;
       if(p.wineCogsPct!==undefined) fhState.wineCogsPct = p.wineCogsPct;
       if(p.foodCogsPct!==undefined) fhState.foodCogsPct = p.foodCogsPct;
+      if(p.cocktailWastePct!==undefined) fhState.cocktailWastePct = p.cocktailWastePct;
+      if(p.wineWastePct!==undefined) fhState.wineWastePct = p.wineWastePct;
+      if(p.foodWastePct!==undefined) fhState.foodWastePct = p.foodWastePct;
     }
   }catch(e){}
 }
@@ -3574,18 +3597,27 @@ function fhSaveInputs(){
   var cktl = parseFloat(document.getElementById("fh-input-cktl").value);
   var wine = parseFloat(document.getElementById("fh-input-wine").value);
   var food = parseFloat(document.getElementById("fh-input-food").value);
+  var cktlW = parseFloat(document.getElementById("fh-input-cktl-waste").value);
+  var wineW = parseFloat(document.getElementById("fh-input-wine-waste").value);
+  var foodW = parseFloat(document.getElementById("fh-input-food-waste").value);
   fhState.cashBalance = cash;
   fhState.totalDebt = debt;
   fhState.laborPct = labor;
   if(!isNaN(cktl)) fhState.cocktailCogsPct = cktl;
   if(!isNaN(wine)) fhState.wineCogsPct = wine;
   if(!isNaN(food)) fhState.foodCogsPct = food;
+  if(!isNaN(cktlW)) fhState.cocktailWastePct = cktlW;
+  if(!isNaN(wineW)) fhState.wineWastePct = wineW;
+  if(!isNaN(foodW)) fhState.foodWastePct = foodW;
   try{
     localStorage.setItem("w10w-fh-inputs", JSON.stringify({
       cashBalance: cash, totalDebt: debt, laborPct: labor,
       cocktailCogsPct: fhState.cocktailCogsPct,
       wineCogsPct: fhState.wineCogsPct,
-      foodCogsPct: fhState.foodCogsPct
+      foodCogsPct: fhState.foodCogsPct,
+      cocktailWastePct: fhState.cocktailWastePct,
+      wineWastePct: fhState.wineWastePct,
+      foodWastePct: fhState.foodWastePct
     }));
   }catch(e){}
 }
@@ -3601,6 +3633,9 @@ function fhPopulateInputFields(){
   setVal("fh-input-cktl", fhState.cocktailCogsPct, FH_DEFAULTS.cocktailCogsPct);
   setVal("fh-input-wine", fhState.wineCogsPct, FH_DEFAULTS.wineCogsPct);
   setVal("fh-input-food", fhState.foodCogsPct, FH_DEFAULTS.foodCogsPct);
+  setVal("fh-input-cktl-waste", fhState.cocktailWastePct, FH_DEFAULTS.cocktailWastePct);
+  setVal("fh-input-wine-waste", fhState.wineWastePct, FH_DEFAULTS.wineWastePct);
+  setVal("fh-input-food-waste", fhState.foodWastePct, FH_DEFAULTS.foodWastePct);
   // Labor — prefer live from Square
   var laborEl = document.getElementById("fh-input-labor");
   var laborSrc = document.getElementById("fh-labor-src");
@@ -3913,9 +3948,17 @@ function fhCalcScore(){
   // Food revenue from derivation = totalMtd - cktl - wine (only if totalMtd exists and split done)
   var foodRevCalc = (totalMtd > 0 && fhState.splitStatus === "done") ? Math.max(0, totalMtd - cktlRev - wineRev) : foodRev;
 
-  var cktlRate = (inputs.cocktailCogsPct !== null ? inputs.cocktailCogsPct : FH_DEFAULTS.cocktailCogsPct) / 100;
-  var wineRate = (inputs.wineCogsPct !== null ? inputs.wineCogsPct : FH_DEFAULTS.wineCogsPct) / 100;
-  var foodRate = (inputs.foodCogsPct !== null ? inputs.foodCogsPct : FH_DEFAULTS.foodCogsPct) / 100;
+  var cktlBase = (inputs.cocktailCogsPct !== null ? inputs.cocktailCogsPct : FH_DEFAULTS.cocktailCogsPct) / 100;
+  var wineBase = (inputs.wineCogsPct !== null ? inputs.wineCogsPct : FH_DEFAULTS.wineCogsPct) / 100;
+  var foodBase = (inputs.foodCogsPct !== null ? inputs.foodCogsPct : FH_DEFAULTS.foodCogsPct) / 100;
+  var cktlWaste = (inputs.cocktailWastePct !== null ? inputs.cocktailWastePct : FH_DEFAULTS.cocktailWastePct) / 100;
+  var wineWaste = (inputs.wineWastePct !== null ? inputs.wineWastePct : FH_DEFAULTS.wineWastePct) / 100;
+  var foodWaste = (inputs.foodWastePct !== null ? inputs.foodWastePct : FH_DEFAULTS.foodWastePct) / 100;
+
+  // Effective COGS = base × (1 + waste%) — accounts for spoilage, spillage, comps, overproduction
+  var cktlRate = cktlBase * (1 + cktlWaste);
+  var wineRate = wineBase * (1 + wineWaste);
+  var foodRate = foodBase * (1 + foodWaste);
 
   var cktlCogs = cktlRev * cktlRate;
   var wineCogs = wineRev * wineRate;
@@ -3994,6 +4037,8 @@ function fhCalcScore(){
     cktlRev: cktlRev, wineRev: wineRev, foodRev: foodRevCalc,
     cktlCogs: cktlCogs, wineCogs: wineCogs, foodCogs: foodCogs,
     cktlRate: cktlRate*100, wineRate: wineRate*100, foodRate: foodRate*100,
+    cktlBase: cktlBase*100, wineBase: wineBase*100, foodBase: foodBase*100,
+    cktlWaste: cktlWaste*100, wineWaste: wineWaste*100, foodWaste: foodWaste*100,
     fixedMonthly: fixedMonthly,
     totalMtd: totalMtd,
     marginAfterCogs: totalMtd - totalCogs,
@@ -4063,13 +4108,15 @@ function renderFinancialHealth(){
   // COGS table
   var tbody = document.getElementById("fh-cogs-tbody");
   if(tbody){
-    function row(name, rev, cogs, pct, src){
+    function row(name, rev, cogs, base, waste, effective, src){
       var srcTag = '<span class="fh-src-tag ' + src + '">' + src + '</span>';
       return '<tr>'+
         '<td style="font-weight:500">'+name+'</td>'+
         '<td class="num">'+(rev!==null?fhMoney(rev):"—")+'</td>'+
         '<td class="num">'+(cogs!==null?fhMoney(cogs):"—")+'</td>'+
-        '<td class="num">'+(pct!==null?fhPct(pct):"—")+'</td>'+
+        '<td class="num" style="color:var(--ink-3)">'+(base!==null?fhPct(base):"—")+'</td>'+
+        '<td class="num" style="color:var(--ink-3)">'+(waste!==null?"+"+waste.toFixed(1)+"%":"—")+'</td>'+
+        '<td class="num" style="font-weight:600">'+(effective!==null?fhPct(effective):"—")+'</td>'+
         '<td>'+srcTag+'</td>'+
       '</tr>';
     }
@@ -4082,13 +4129,15 @@ function renderFinancialHealth(){
     var cogsSrc = splitDone ? "live" : "calc";
     var blendedCogs = calc.cktlCogs + calc.wineCogs + calc.foodCogs;
     tbody.innerHTML =
-      row("Cocktail", calc.cktlRev, calc.cktlCogs, calc.cktlRate, cktlSrc) +
-      row("Wine", calc.wineRev, calc.wineCogs, calc.wineRate, wineSrc) +
-      row("Food", calc.foodRev, calc.foodCogs, calc.foodRate, foodSrc) +
+      row("Cocktail", calc.cktlRev, calc.cktlCogs, calc.cktlBase, calc.cktlWaste, calc.cktlRate, cktlSrc) +
+      row("Wine", calc.wineRev, calc.wineCogs, calc.wineBase, calc.wineWaste, calc.wineRate, wineSrc) +
+      row("Food", calc.foodRev, calc.foodCogs, calc.foodBase, calc.foodWaste, calc.foodRate, foodSrc) +
       '<tr class="total"><td>Blended total</td>'+
       '<td class="num">'+fhMoney(calc.totalMtd)+'</td>'+
       '<td class="num">'+fhMoney(blendedCogs)+'</td>'+
-      '<td class="num">'+fhPct(calc.blendedPct)+'</td>'+
+      '<td class="num" style="color:var(--ink-3)">—</td>'+
+      '<td class="num" style="color:var(--ink-3)">—</td>'+
+      '<td class="num" style="font-weight:600">'+fhPct(calc.blendedPct)+'</td>'+
       '<td><span class="fh-src-tag '+cogsSrc+'">'+cogsSrc+'</span></td></tr>';
   }
 
