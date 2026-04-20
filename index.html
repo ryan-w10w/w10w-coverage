@@ -3387,7 +3387,14 @@ function renderTodayCard(){
     var mtdPct=Math.round((mtdSales/mtdTarget)*100);
     mtdLbl="$"+Math.round(mtdSales).toLocaleString();
     mtdCls=mtdPct>=100?"ok":mtdPct>=80?"":"warn";
-  } else { mtdLbl="Loading..."; mtdCls=""; }
+  } else if(beMonthlyLoading){
+    mtdLbl="Loading...";
+    mtdCls="";
+  } else {
+    // Fetch finished but no value — show placeholder, will retry on next interval
+    mtdLbl="—";
+    mtdCls="";
+  }
   el.innerHTML=
     '<div class="today-hdr">'+
       '<div class="today-status-badge"><div class="today-status-dot '+dotClass+'"></div>'+badgeText+'</div>'+
@@ -4383,8 +4390,14 @@ function loadMonthlySales(){
       beMonthlyLive=Math.round(net*100)/100;
       beMonthlyLoading=false;
       renderBeSummary();renderProjection();
+      // Update Today card on Roster so "Month so far" stops showing Loading
+      if(typeof renderTodayCard==='function') renderTodayCard();
     },
-    function(){beMonthlyLoading=false;}
+    function(){
+      beMonthlyLoading=false;
+      // On failure, still re-render today card — it'll show an error state instead of infinite Loading
+      if(typeof renderTodayCard==='function') renderTodayCard();
+    }
   );
 }
 
