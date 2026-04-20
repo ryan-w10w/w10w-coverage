@@ -58,12 +58,14 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .ep-add input,.ep-add select{font-size:11px;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:4px 8px;background:var(--bg);color:var(--ink);flex:1}
 .ep-add input:focus,.ep-add select:focus{outline:none;border-color:var(--green-accent)}
 
-.nav{background:var(--surface);border-bottom:1px solid var(--line);padding:0 32px;display:flex;align-items:center;gap:2px;overflow-x:auto}
-.nav-tab{padding:0 16px;height:46px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink-3);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:-.01em}.nav-tab:hover{color:var(--ink-2);background:rgba(0,0,0,.02)}
-.nav-tab:hover{color:var(--ink)}
-.nav-tab.active{color:var(--ink);border-bottom-color:var(--green)}
+.nav{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:4px;overflow-x:auto}
+.nav-tab{padding:7px 13px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink-2);border:none;background:var(--green-light);cursor:pointer;border-radius:9px;transition:background .18s ease,color .18s ease,transform .12s ease;white-space:nowrap;letter-spacing:-.01em;font-family:inherit}.nav-tab:hover:not(.active){color:var(--green);background:#dbe8db}
+/* duplicate removed */
+.nav-tab.active{color:#fff;background:var(--green)}
 .nav-badge{font-size:10px;font-weight:600;padding:1px 5px;border-radius:10px;background:var(--red-bg);color:var(--red)}
-.nav-badge.ok{background:var(--teal-bg);color:var(--teal)}
+.nav-badge.ok{background:#fff;color:var(--teal);box-shadow:inset 0 0 0 1px rgba(13,122,90,.15)}
+.nav-tab.active .nav-badge{background:rgba(255,255,255,.2);color:#fff;box-shadow:none}
+.nav-tab.active .nav-badge.ok{background:rgba(255,255,255,.2);color:#fff;box-shadow:none}
 
 .page{max-width:1200px;margin:0 auto;padding:14px 32px 80px}
 .tab-pane{display:none}.tab-pane.active{display:block}
@@ -669,8 +671,7 @@ input::placeholder{color:var(--ink-4)}
 
 <div class="nav">
   <button class="nav-tab active" onclick="showTab('roster')">Roster <span class="nav-badge ok" id="nb-roster">OK</span></button>
-  <button class="nav-tab" onclick="showTab('week')">Week Schedule</button>
-  <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
+  <button class="nav-tab" onclick="showTab('schedule')">Schedule</button>
   <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
   <button class="nav-tab" id="nav-team" onclick="showTab('team')">🔒 Operations</button>
   <button class="nav-tab" onclick="showTab('shifts')">Shift Reports</button>
@@ -742,19 +743,21 @@ input::placeholder{color:var(--ink-4)}
 </div>
 
 <!-- WEEK -->
-<div id="tab-week" class="tab-pane">
-  <div class="tab-intro">
-    <div class="ti-icon">📅</div>
-    <div>
-      <div class="ti-title">Weekly Schedule & Coverage Validation</div>
-      <div class="ti-desc">Set who's on each shift per day. Every bar shift is validated — qualified primary and backup both required for green. Changes save and sync to the team.</div>
-      <div class="ti-how">Select a day → Edit shifts → assign via dropdowns → Save. Takes under 5 minutes. The brief on the Roster tab reflects the current schedule automatically.</div>
-    </div>
+<div id="tab-schedule" class="tab-pane">
+  <div style="margin-bottom:14px">
+    <div style="font-size:20px;font-weight:600;letter-spacing:-.3px;margin-bottom:3px">Schedule</div>
+    <div style="font-size:12px;color:var(--ink-3)">Build the week, validate coverage, and simulate callouts. Changes save and sync to the team.</div>
   </div>
+
   <div class="week-nav" id="day-btns"></div>
+
+  <!-- SHIFTS for selected day -->
   <div class="card">
     <div class="card-hdr">
-      <div><div class="card-title" id="week-card-title">Monday shifts</div><div class="card-sub">Bar shifts need T1/T2 primary + at least one backup.</div></div>
+      <div>
+        <div class="card-title" id="week-card-title">Monday shifts</div>
+        <div class="card-sub">Bar shifts need T1/T2 primary + at least one backup.</div>
+      </div>
       <button class="btn btn-sm" onclick="toggleWeekEditor()" id="edit-btn">Edit shifts</button>
     </div>
     <div id="week-view">
@@ -766,21 +769,24 @@ input::placeholder{color:var(--ink-4)}
     <div id="week-editor" style="display:none">
       <div class="week-edit-hdr">
         <span style="font-size:12px;font-weight:500">Edit assignments for <span id="editor-day-lbl"></span></span>
-        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="addShiftRow()">+ Shift</button><button class="btn btn-sm btn-primary" onclick="saveWeek()">Save</button></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="addShiftRow()">+ Shift</button>
+          <button class="btn btn-sm btn-primary" onclick="saveWeek()">Save</button>
+        </div>
       </div>
       <div id="editor-rows"></div>
     </div>
   </div>
   <div id="week-summary"></div>
-</div>
 
-<!-- CALLOUT -->
-<div id="tab-callout" class="tab-pane">
-  <div style="margin-bottom:14px">
-    <div style="font-size:20px;font-weight:600;letter-spacing:-.3px;margin-bottom:3px">Callout simulator</div>
-    <div style="font-size:12px;color:var(--ink-3)">Pick anyone who's out, get a cascade impact analysis, a risk score, and a step-by-step action plan.</div>
-  </div>
-  <div class="card">
+  <!-- CALLOUT SIMULATOR -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">If someone calls out</div>
+        <div class="card-sub">Pick anyone out, get a risk score, ranked covers, and a step-by-step plan.</div>
+      </div>
+    </div>
     <div style="padding:14px 18px;border-bottom:1px solid var(--line)">
       <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:10px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Who called out?</div>
       <div id="callout-checkboxes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
@@ -1893,7 +1899,7 @@ function renderFeedback(){
       impact:"Performance + morale risk",
       impactClass:"high",
       action:"Fix in Week Schedule",
-      actionTab:"week"
+      actionTab:"schedule"
     });
   }
 
@@ -1931,7 +1937,7 @@ function renderFeedback(){
       impact:"Full night closed per day",
       impactClass:"high",
       action:"Edit Week Schedule",
-      actionTab:"week"
+      actionTab:"schedule"
     });
   }
 
@@ -1970,7 +1976,7 @@ function renderFeedback(){
       impact:"Callout probability up",
       impactClass:"",
       action:"Edit Week Schedule",
-      actionTab:"week"
+      actionTab:"schedule"
     });
   }
 
@@ -3054,10 +3060,9 @@ function showTab(t){
   // Close avail modal when switching tabs
   var am=document.getElementById("avail-modal-overlay"); if(am) am.classList.remove("show");
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","team","shifts","breakeven","financial"][i]===t?" active":"");});
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","schedule","feedback","team","shifts","breakeven","financial"][i]===t?" active":"");});
   document.getElementById("tab-"+t).classList.add("active");
-  if(t==="week"){renderDayBtns();renderWeek();}
-  if(t==="callout")populateCallout();
+  if(t==="schedule"){renderDayBtns();renderWeek();populateCallout();}
   if(t==="roster")generateBrief(false);
   if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
   if(t==="shifts")loadShiftReports();
@@ -3394,7 +3399,7 @@ function renderTodayCard(){
     '<div class="today-metrics">'+
       '<div><div class="today-metric-lbl">Tonight\'s roster</div>'+
       '<div class="today-metric-val '+staffCls+'">'+staffLbl+'</div>'+
-      '<div class="today-metric-sub">'+(gaps>0?"Open Week Schedule to fill":"Ready for service")+'</div></div>'+
+      '<div class="today-metric-sub">'+(gaps>0?"Open Schedule to fill":"Ready for service")+'</div></div>'+
       '<div><div class="today-metric-lbl">Kitchen</div>'+
       '<div class="today-metric-val '+kitCls+'">'+kitLbl+'</div>'+
       '<div class="today-metric-sub">'+(k.porters>=1?k.porters+" porter"+(k.porters>1?"s":""):"No porter today")+'</div></div>'+
