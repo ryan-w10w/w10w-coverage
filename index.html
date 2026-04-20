@@ -65,7 +65,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .nav-badge{font-size:10px;font-weight:600;padding:1px 5px;border-radius:10px;background:var(--red-bg);color:var(--red)}
 .nav-badge.ok{background:var(--teal-bg);color:var(--teal)}
 
-.page{max-width:1060px;margin:0 auto;padding:32px 24px 100px}
+.page{max-width:1100px;margin:0 auto;padding:14px 24px 80px}
 .tab-pane{display:none}.tab-pane.active{display:block}
 
 /* BRIEF */
@@ -543,7 +543,7 @@ input::placeholder{color:var(--ink-4)}
 
 
 /* ═══ FINANCIAL HEALTH TAB ═══ */
-.fh-hero{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;padding:24px 28px;background:linear-gradient(135deg,#1a2e1a 0%,#243d24 100%);border-radius:var(--r-xl);margin-bottom:14px;color:#fff;position:relative;overflow:hidden}
+.fh-hero{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;padding:20px 26px;background:linear-gradient(135deg,#1a2e1a 0%,#243d24 100%);border-radius:var(--r-xl);margin-bottom:14px;color:#fff;position:relative;overflow:hidden}
 .fh-hero::before{content:"";position:absolute;top:-60px;right:-60px;width:240px;height:240px;background:rgba(255,255,255,.03);border-radius:50%}
 .fh-score-ring{position:relative;width:120px;height:120px;flex-shrink:0;z-index:1}
 .fh-score-svg{transform:rotate(-90deg)}
@@ -672,7 +672,6 @@ input::placeholder{color:var(--ink-4)}
   <button class="nav-tab" onclick="showTab('week')">Week Schedule</button>
   <button class="nav-tab" onclick="showTab('callout')">Callout Sim</button>
   <button class="nav-tab" onclick="showTab('feedback')">Insights <span class="nav-badge" id="nb-feedback">—</span></button>
-  <button class="nav-tab" onclick="showTab('infra')">Infrastructure</button>
   <button class="nav-tab" id="nav-team" onclick="showTab('team')">🔒 Operations</button>
   <button class="nav-tab" onclick="showTab('shifts')">Shift Reports</button>
   <button class="nav-tab" onclick="showTab('breakeven')">Break-even</button>
@@ -804,26 +803,6 @@ input::placeholder{color:var(--ink-4)}
   <div id="insights-hero"></div>
   <div id="feedback-cards"></div>
 </div>
-
-<!-- INFRA -->
-<div id="tab-infra" class="tab-pane">
-  <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:20px;font-weight:600;letter-spacing:-.3px;margin-bottom:3px">Infrastructure</div>
-      <div style="font-size:12px;color:var(--ink-3)">Operational build items. Check off as completed — progress tracked live.</div>
-    </div>
-    <div style="font-size:11px;color:var(--ink-3);font-family:\'Geist Mono\',monospace" id="infra-overall-stat">—</div>
-  </div>
-  <div class="card"><div class="card-hdr"><div class="card-title">Camille's consulting scope</div></div><div id="infra-camille"></div></div>
-  <div class="card"><div class="card-hdr"><div class="card-title">Ordering + financial infrastructure</div></div><div id="infra-ordering"></div></div>
-  <div class="card">
-    <div class="card-hdr"><div class="card-title">Transition timeline</div></div>
-    <div class="tl-row"><div class="tl-num">1</div><div><div class="tl-date">Now — Apr 4</div><div class="tl-desc">Kaveka transition. Tanner covers bar ops. Grace + Laura primary coverage. Begin Camille engagement + post T1 JD to Indeed.</div></div></div>
-    <div class="tl-row"><div class="tl-num">2</div><div><div class="tl-date">Apr 5 — Apr 18</div><div class="tl-desc">New T1 hire. Camille builds Cocktail Guide + trains T2s. Ordering forms + Apps Script live. Camille + Ryan establish COGS baseline.</div></div></div>
-    <div class="tl-row"><div class="tl-num">3</div><div><div class="tl-date">Apr 19+</div><div class="tl-desc">New T1 onboarded. Bar runs independently. Camille quarterly retainer for menu refresh + P&L review. Health target: 80%+.</div></div></div>
-  </div>
-</div>
-
 
 <!-- TEAM RATINGS TAB -->
 <div id="tab-team" class="tab-pane">
@@ -996,8 +975,12 @@ input::placeholder{color:var(--ink-4)}
           <input type="number" class="fh-input-field" id="fh-input-debt" placeholder="0" oninput="fhSaveInputs();renderFinancialHealth()" />
         </div>
         <div class="fh-input-row">
-          <div class="fh-input-lbl">Labor % of revenue <span style="color:var(--ink-4);font-weight:400">%</span></div>
-          <input type="number" class="fh-input-field" id="fh-input-labor" placeholder="29.3" step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
+          <div class="fh-input-lbl">
+            <span>Labor % of revenue <span style="color:var(--ink-4);font-weight:400">%</span></span>
+            <span class="fh-src-tag live" id="fh-labor-src" style="display:none">LIVE</span>
+          </div>
+          <input type="number" class="fh-input-field" id="fh-input-labor" placeholder="loading..." step="0.1" oninput="fhSaveInputs();renderFinancialHealth()" />
+          <div style="font-size:10px;color:var(--ink-4);margin-top:4px;font-family:\'Geist Mono\',monospace" id="fh-labor-meta">Will auto-fill from Square shifts</div>
         </div>
       </div>
       <div style="font-size:11px;color:var(--ink-4);margin-top:14px;margin-bottom:6px;font-family:'Geist Mono',monospace;text-transform:uppercase;letter-spacing:.08em">COGS rates &mdash; from sheets or manual override</div>
@@ -1921,8 +1904,8 @@ function renderFeedback(){
       body:"Zero T1 coverage across 9 bar shifts. Post a bartender JD immediately. Option A: 1 full-time T1 (4-5 shifts). Option B: 2 part-timers (2-3 shifts each).",
       impact:"$"+weeklyBarRisk.toLocaleString()+"/week at risk",
       impactClass:"high",
-      action:"Post JD",
-      actionTab:"infra"
+      action:"Add to roster",
+      actionTab:"roster"
     });
   } else if(provenT1s.length===0){
     var ntNames=newT1s.map(function(s){return s.name.split(" ")[0]+" ("+(s.shifts||0)+"sh)";}).join(", ");
@@ -1974,8 +1957,8 @@ function renderFeedback(){
       body:"Without a T2, your only coverage is T1. One T1 callout = you call another T1 on their day off (overtime + fatigue). Cross-training a floor T1 is the cheapest path. Alternative: new T2 hire.",
       impact:"Overtime + fatigue risk",
       impactClass:"",
-      action:"Infrastructure plan",
-      actionTab:"infra"
+      action:"Review team",
+      actionTab:"team"
     });
   }
 
@@ -2001,7 +1984,7 @@ function renderFeedback(){
       body="Just onboarded. Get "+s.name.split(" ")[0]+" a clear first-month plan and schedule 3-5 shifts so you have data to rate.";
       metaTxt="0 shifts — too early to read";
       actionTxt="Plan onboarding";
-      actionTab="infra";
+      actionTab="roster";
     } else if(sh<5){
       body=s.name.split(" ")[0]+" still in the learning curve. Ratings now would be unreliable. Aim for 5-8 shifts before first assessment.";
       metaTxt=sh+" shifts — still early";
@@ -2053,8 +2036,8 @@ function renderFeedback(){
       body:"Commission-forward role means near-zero downside. The JD is ready to post. Every month without an Events Lead is ~$10-15K of revenue not captured.",
       impact:"$10-15K/month lost",
       impactClass:"high",
-      action:"Post JD",
-      actionTab:"infra"
+      action:"Add role",
+      actionTab:"roster"
     });
   }
 
@@ -3071,11 +3054,10 @@ function showTab(t){
   // Close avail modal when switching tabs
   var am=document.getElementById("avail-modal-overlay"); if(am) am.classList.remove("show");
   document.querySelectorAll(".tab-pane").forEach(function(el){el.classList.remove("active");});
-  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","infra","team","shifts","breakeven","financial"][i]===t?" active":"");});
+  document.querySelectorAll(".nav-tab").forEach(function(el,i){el.className="nav-tab"+(["roster","week","callout","feedback","team","shifts","breakeven","financial"][i]===t?" active":"");});
   document.getElementById("tab-"+t).classList.add("active");
   if(t==="week"){renderDayBtns();renderWeek();}
   if(t==="callout")populateCallout();
-  if(t==="infra")renderInfra();
   if(t==="roster")generateBrief(false);
   if(t==="team"){showTeamTab();if(teamUnlocked)renderRatingsCards();}
   if(t==="shifts")loadShiftReports();
@@ -3537,6 +3519,9 @@ var fhState = {
   cashBalance: 0,
   totalDebt: 0,
   laborPct: 29.3,
+  laborCostMtd: null,
+  laborSource: null,
+  laborShiftCount: 0,
   activePillar: 1,
   loading: false,
   splitStatus: "pending",  // pending | loading | done | error
@@ -3598,10 +3583,28 @@ function fhPopulateInputFields(){
   };
   setVal("fh-input-cash", fhState.cashBalance || null, "0");
   setVal("fh-input-debt", fhState.totalDebt || null, "0");
-  setVal("fh-input-labor", fhState.laborPct, "29.3");
   setVal("fh-input-cktl", fhState.cocktailCogsPct, FH_DEFAULTS.cocktailCogsPct);
   setVal("fh-input-wine", fhState.wineCogsPct, FH_DEFAULTS.wineCogsPct);
   setVal("fh-input-food", fhState.foodCogsPct, FH_DEFAULTS.foodCogsPct);
+  // Labor — prefer live from Square
+  var laborEl = document.getElementById("fh-input-labor");
+  var laborSrc = document.getElementById("fh-labor-src");
+  var laborMeta = document.getElementById("fh-labor-meta");
+  if(laborEl && fhState.laborCostMtd !== null && fhState.totalMtd > 0){
+    var livePct = Math.round((fhState.laborCostMtd / fhState.totalMtd) * 1000) / 10;
+    laborEl.value = livePct;
+    fhState.laborPct = livePct;
+    if(laborSrc) laborSrc.style.display = "inline-flex";
+    if(laborMeta) laborMeta.innerHTML = "$" + fhState.laborCostMtd.toLocaleString() + " labor cost &middot; " + fhState.laborShiftCount + " shifts &middot; incl 10.65% tax uplift";
+  } else if(laborEl){
+    if(fhState.laborSource === "manual"){
+      if(laborEl.value === "" || !laborEl.value) laborEl.value = fhState.laborPct || 29.3;
+      if(laborSrc) laborSrc.style.display = "none";
+      if(laborMeta) laborMeta.textContent = "Square labor fetch failed — manual value";
+    } else {
+      if(!laborEl.value) laborEl.placeholder = "loading...";
+    }
+  }
 }
 
 // ═══ SQUARE CATEGORY SPLIT ═══
@@ -3741,6 +3744,73 @@ function fhLoadCogsFromSheets(onDone){
 }
 
 // ═══ FETCH ALL ═══
+
+// ═══ SQUARE LABOR COST FROM LABOR API ═══
+function fhFetchLaborCost(onDone){
+  var nowUtc = new Date();
+  var nyc = new Date(nowUtc.toLocaleString("en-US",{timeZone:"America/New_York"}));
+  // NYC month start at midnight local → 5am UTC
+  var startIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), 1, 5, 0, 0)).toISOString();
+  var endIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), nyc.getDate()+1, 5, 0, 0)).toISOString();
+
+  var allShifts = [];
+  function fetchPage(cursor){
+    var bodyObj = {
+      query: {
+        filter: {
+          location_ids: ["LHSVRCNXBB7E8"],
+          start: { start_at: startIso, end_at: endIso }
+        }
+      },
+      limit: 200
+    };
+    if(cursor) bodyObj.cursor = cursor;
+    fetch("/api/proxy", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        url: "https://connect.squareup.com/v2/labor/shifts/search",
+        method: "POST",
+        body: JSON.stringify(bodyObj)
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.shifts === undefined){ if(onDone) onDone(null); return; }
+      allShifts = allShifts.concat(d.shifts);
+      if(d.cursor && d.shifts.length === 200){ fetchPage(d.cursor); }
+      else { aggregateLabor(); }
+    })
+    .catch(function(){ if(onDone) onDone(null); });
+  }
+  function aggregateLabor(){
+    var totalWages = 0;
+    allShifts.forEach(function(sh){
+      if(!sh.start_at || !sh.end_at) return;
+      var startMs = new Date(sh.start_at).getTime();
+      var endMs = new Date(sh.end_at).getTime();
+      // Subtract unpaid break time
+      var breakMs = 0;
+      (sh.breaks || []).forEach(function(br){
+        if(br.is_paid === false && br.start_at && br.end_at){
+          breakMs += new Date(br.end_at).getTime() - new Date(br.start_at).getTime();
+        }
+      });
+      var netHours = Math.max(0, (endMs - startMs - breakMs) / (1000 * 60 * 60));
+      var hourlyRateCents = (sh.wage && sh.wage.hourly_rate && sh.wage.hourly_rate.amount) || 0;
+      totalWages += netHours * (hourlyRateCents / 100);
+    });
+    // Apply payroll tax uplift (10.65% — matches break-even model)
+    var totalLaborCost = totalWages * 1.1065;
+    if(onDone) onDone({
+      wages: Math.round(totalWages),
+      totalCost: Math.round(totalLaborCost),
+      shiftCount: allShifts.length
+    });
+  }
+  fetchPage(null);
+}
+
 function fhFetchAll(){
   var btn = document.getElementById("fh-fetch-btn");
   if(btn){ btn.disabled = true; btn.textContent = "↻ Loading…"; }
@@ -3783,6 +3853,19 @@ function fhFetchAll(){
   pending++;
   fhLoadCogsFromSheets(pendCheck);
 
+  // 4. Labor cost from Square Labor API — only re-compute pct after totalMtd resolved
+  pending++;
+  fhFetchLaborCost(function(labor){
+    if(labor){
+      fhState.laborCostMtd = labor.totalCost;
+      fhState.laborShiftCount = labor.shiftCount;
+      fhState.laborSource = "live";
+    } else {
+      fhState.laborSource = "manual";
+    }
+    pendCheck();
+  });
+
   // Intermediate render
   renderFinancialHealth();
 }
@@ -3819,8 +3902,12 @@ function fhCalcScore(){
   else if(daysRunway >= 7) p1 = 5;
   else p1 = 2;
 
-  // Pillar 2 — Profitability
-  var prime = blendedPct + (inputs.laborPct || 29.3);
+  // Pillar 2 — Profitability — prefer live labor from Square when available
+  var laborPctLive = (inputs.laborCostMtd !== null && totalMtd > 0)
+    ? (inputs.laborCostMtd / totalMtd) * 100
+    : null;
+  var effectiveLaborPct = laborPctLive !== null ? laborPctLive : (inputs.laborPct || 29.3);
+  var prime = blendedPct + effectiveLaborPct;
   var p2;
   if(prime <= 55) p2 = 25;
   else if(prime <= 60) p2 = 21;
@@ -3879,7 +3966,10 @@ function fhCalcScore(){
     cktlRate: cktlRate*100, wineRate: wineRate*100, foodRate: foodRate*100,
     fixedMonthly: fixedMonthly,
     totalMtd: totalMtd,
-    marginAfterCogs: totalMtd - totalCogs
+    marginAfterCogs: totalMtd - totalCogs,
+    laborPct: effectiveLaborPct,
+    laborPctLive: laborPctLive,
+    laborCostMtd: inputs.laborCostMtd
   };
 }
 
@@ -3956,7 +4046,7 @@ function renderFinancialHealth(){
     var splitDone = fhState.splitStatus === "done";
     var cktlSrc = splitDone ? "live" : "calc";
     var wineSrc = splitDone ? "live" : "calc";
-    var foodSrc = "calc";
+    var foodSrc = splitDone ? "live" : "calc";
     var cogsSrc = fhState.cogsStatus === "done" ? "sheets" : fhState.cogsStatus === "cached" ? "sheets" : "manual";
     var blendedCogs = calc.cktlCogs + calc.wineCogs + calc.foodCogs;
     tbody.innerHTML =
@@ -4053,9 +4143,9 @@ function renderFhDetail(calc){
     html = '<div class="fh-detail">'+
       '<div class="fh-detail-hdr"><div class="fh-detail-title">Profitability — prime cost discipline</div><div class="fh-detail-score">'+calc.p2+' / 25</div></div>'+
       '<div class="fh-metric-grid">'+
-        metric("Prime cost", calc.prime+"%", "COGS + labor", primeCls)+
-        metric("Blended COGS", calc.blendedPct+"%", "of revenue")+
-        metric("Labor", (fhState.laborPct||29.3)+"%", "monthly actual")+
+        metric("Prime cost", calc.prime.toFixed(1)+"%", "COGS + labor", primeCls)+
+        metric("Blended COGS", calc.blendedPct.toFixed(1)+"%", "of revenue")+
+        metric("Labor", calc.laborPct.toFixed(1)+"%", (calc.laborPctLive!==null?"live from Square":"manual entry"))+
         metric("After-COGS $", fhMoney(calc.marginAfterCogs), "margin available")+
       '</div>';
     if(calc.prime > 68) html += finding("Prime cost over 68%. Either COGS or labor (or both) need attention. Start with the higher of the two.", "bad");
