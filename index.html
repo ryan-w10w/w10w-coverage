@@ -2949,8 +2949,16 @@ function generateAIBrief(){
     var r=(typeof getStaffRating==="function")?getStaffRating(s.id):{};
     var avg=(typeof avgRating==="function")?avgRating(s.id):null;
     var sh=s.shifts||0;
-    var tenureBand = sh>=30?"proven" : sh>=15?"established" : sh>=5?"developing" : "new";
-    var parts=[s.name.split(" ")[0]+" ("+s.tier+", "+sh+"sh, "+tenureBand+")"];
+    // Flex = past employees, already trained. Tenure band doesn't apply — they are fully trained but availability-uncertain.
+    var tenureBand;
+    if(s.tier==="Flex"){
+      tenureBand = "past-employee-fully-trained-sporadic-availability";
+    } else if(s.tier==="Consultant"){
+      tenureBand = "consultant";
+    } else {
+      tenureBand = sh>=30?"proven" : sh>=15?"established" : sh>=5?"developing" : "new";
+    }
+    var parts=[s.name.split(" ")[0]+" ("+s.tier+", "+sh+"sh since-return, "+tenureBand+")"];
     if(avg!==null){
       parts.push("overall "+avg+"/10");
       if(r.reliability) parts.push("reliability "+r.reliability);
@@ -2995,8 +3003,16 @@ function generateAIBrief(){
     "You are sharing what's actually going through your head this week. The output reads as your analysis, not a status report. "+
     "STYLE: short declarative sentences in Ryan's voice. Specific names and numbers always. No em dashes. No corporate language. No 'I would suggest' - just direct observations and calls. Max 6 sentences. "+
     "RULES THAT ARE ABSOLUTE: (1) T1 is the highest tier — never say 'promote T1 to T2'. T2 is backup. (2) Do not mention anyone who has left the company. (3) Do not invent roles or people not listed. "+
-    "THIS IS THE LEVEL OF REASONING REQUIRED: For each person in training or with under 10 shifts, think through: how many shifts have they had, what are their ratings trending, have they shown they're ready to be on team 1. If someone has no ratings yet — say so, don't guess. "+
+    "TIER DEFINITIONS YOU MUST RESPECT: "+
+    "- T1 = current primary operator, fully trained, reliable. Top of the org. "+
+    "- T2 = current backup operator, trained, less shifts than T1. "+
+    "- T3 = current support role, trained for specific functions. "+
+    "- Training = NEW hire being developed. Ratings + shift count tell you if they'll make it. "+
+    "- Flex = FORMER EMPLOYEE who returned to occasional shifts. ALREADY FULLY TRAINED. Low shift count does NOT mean they are new or unproven — it means they are only available occasionally. Their ratings reflect actual capability. Treat them as reliable pick-up cover, not as trainees or people to evaluate. Never suggest fast-tracking their training or running them through development. "+
+    "- Consultant = external advisor (e.g., Camille). Not a scheduled operator. "+
+    "THIS IS THE LEVEL OF REASONING REQUIRED: For each person in Training tier or with under 10 shifts as a non-Flex, think through: how many shifts have they had, what are their ratings trending, have they shown they're ready to be on team 1. If someone has no ratings yet — say so, don't guess. "+
     "For proven T1s — think about whether the scheduling is taxing them. For new T1s — think about their trajectory toward 10 shifts. For T2 backup — think about whether Camille cross-training or promoting an established T2 candidate makes sense. "+
+    "For Flex — assess them as cover depth, not as development projects. Good Flex ratings = a useful phone call when someone calls out, nothing more. "+
     "End with a single sentence stating the 1-2 things that actually need Tanner's action this week, specific and dateless.";
 
   // ═══ USER MESSAGE — analytical prompt ═══
@@ -3010,7 +3026,7 @@ function generateAIBrief(){
   if(barT2s.length>0) userMsg+="T2 bartenders: "+barT2s.map(staffProfile).join(" | ")+"\n";
   else userMsg+="T2 bartenders: NONE\n";
   if(barTraining.length>0) userMsg+="In training (bar): "+barTraining.map(staffProfile).join(" | ")+"\n";
-  if(barFlex.length>0) userMsg+="Flex bar: "+barFlex.map(staffProfile).join(" | ")+"\n";
+  if(barFlex.length>0) userMsg+="Flex bar (past employees, fully trained, sporadic availability): "+barFlex.map(staffProfile).join(" | ")+"\n";
 
   userMsg+="\nFLOOR ROSTER DETAIL:\n";
   if(floorLeads.length>0) userMsg+="Floor Leads: "+floorLeads.map(staffProfile).join(" | ")+"\n";
