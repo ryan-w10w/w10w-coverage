@@ -65,7 +65,7 @@ body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--ink);min-he
 .nav-badge{font-size:10px;font-weight:600;padding:1px 5px;border-radius:10px;background:var(--red-bg);color:var(--red)}
 .nav-badge.ok{background:var(--teal-bg);color:var(--teal)}
 
-.page{max-width:1100px;margin:0 auto;padding:14px 24px 80px}
+.page{max-width:1200px;margin:0 auto;padding:14px 32px 80px}
 .tab-pane{display:none}.tab-pane.active{display:block}
 
 /* BRIEF */
@@ -3520,6 +3520,8 @@ var fhState = {
   totalDebt: 0,
   laborPct: 29.3,
   laborCostMtd: null,
+  laborHourlyWages: null,
+  laborSalaryMtd: null,
   laborSource: null,
   laborShiftCount: 0,
   activePillar: 1,
@@ -3531,6 +3533,7 @@ var fhState = {
 
 var FH_DEFAULTS = { cocktailCogsPct:14.5, wineCogsPct:22.0, foodCogsPct:15.3 };
 var FH_TARGETS = { cashTarget:30000, creditLimit:70000, q1AvgMonthly:91344 };
+var FH_TANNER_SALARY_MONTHLY = 7084;  // Only salaried staff — Square Labor API misses this
 
 function fhSeats(){
   var m = new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"})).getMonth();
@@ -3595,7 +3598,13 @@ function fhPopulateInputFields(){
     laborEl.value = livePct;
     fhState.laborPct = livePct;
     if(laborSrc) laborSrc.style.display = "inline-flex";
-    if(laborMeta) laborMeta.innerHTML = "$" + fhState.laborCostMtd.toLocaleString() + " labor cost &middot; " + fhState.laborShiftCount + " shifts &middot; incl 10.65% tax uplift";
+    if(laborMeta){
+      var parts = [];
+      if(fhState.laborHourlyWages) parts.push("$"+fhState.laborHourlyWages.toLocaleString()+" hourly wages");
+      if(fhState.laborSalaryMtd) parts.push("$"+fhState.laborSalaryMtd.toLocaleString()+" salary (Tanner prorated)");
+      parts.push("+10.65% tax");
+      laborMeta.innerHTML = parts.join(" &middot; ") + " &rarr; $" + fhState.laborCostMtd.toLocaleString() + " total";
+    }
   } else if(laborEl){
     if(fhState.laborSource === "manual"){
       if(laborEl.value === "" || !laborEl.value) laborEl.value = fhState.laborPct || 29.3;
@@ -3784,7 +3793,7 @@ function fhFetchLaborCost(onDone){
     .catch(function(){ if(onDone) onDone(null); });
   }
   function aggregateLabor(){
-    var totalWages = 0;
+    var totalHourlyWages = 0;
     allShifts.forEach(function(sh){
       if(!sh.start_at || !sh.end_at) return;
       var startMs = new Date(sh.start_at).getTime();
@@ -3798,12 +3807,19 @@ function fhFetchLaborCost(onDone){
       });
       var netHours = Math.max(0, (endMs - startMs - breakMs) / (1000 * 60 * 60));
       var hourlyRateCents = (sh.wage && sh.wage.hourly_rate && sh.wage.hourly_rate.amount) || 0;
-      totalWages += netHours * (hourlyRateCents / 100);
+      totalHourlyWages += netHours * (hourlyRateCents / 100);
     });
-    // Apply payroll tax uplift (10.65% — matches break-even model)
-    var totalLaborCost = totalWages * 1.1065;
+    // Add Tanner's monthly salary — only salaried staff, prorated to MTD
+    // Salaried staff don't appear in Square Labor shifts; without this, labor % reads low.
+    var nyc = new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
+    var daysPassed = nyc.getDate();
+    var daysInMonth = new Date(nyc.getFullYear(), nyc.getMonth()+1, 0).getDate();
+    var salaryMtd = (FH_TANNER_SALARY_MONTHLY * daysPassed) / daysInMonth;
+    // Apply payroll tax uplift (10.65% — matches break-even model) to both streams
+    var totalLaborCost = (totalHourlyWages + salaryMtd) * 1.1065;
     if(onDone) onDone({
-      wages: Math.round(totalWages),
+      hourlyWages: Math.round(totalHourlyWages),
+      salaryMtd: Math.round(salaryMtd),
       totalCost: Math.round(totalLaborCost),
       shiftCount: allShifts.length
     });
@@ -3858,6 +3874,8 @@ function fhFetchAll(){
   fhFetchLaborCost(function(labor){
     if(labor){
       fhState.laborCostMtd = labor.totalCost;
+      fhState.laborHourlyWages = labor.hourlyWages;
+      fhState.laborSalaryMtd = labor.salaryMtd;
       fhState.laborShiftCount = labor.shiftCount;
       fhState.laborSource = "live";
     } else {
@@ -4047,7 +4065,9 @@ function renderFinancialHealth(){
     var cktlSrc = splitDone ? "live" : "calc";
     var wineSrc = splitDone ? "live" : "calc";
     var foodSrc = splitDone ? "live" : "calc";
-    var cogsSrc = fhState.cogsStatus === "done" ? "sheets" : fhState.cogsStatus === "cached" ? "sheets" : "manual";
+    // Match per-row logic — when Square split is live, the blended is live too.
+    // The COGS rate source is separately noted in the header text above.
+    var cogsSrc = splitDone ? "live" : "calc";
     var blendedCogs = calc.cktlCogs + calc.wineCogs + calc.foodCogs;
     tbody.innerHTML =
       row("Cocktail", calc.cktlRev, calc.cktlCogs, calc.cktlRate, cktlSrc) +
@@ -4057,7 +4077,7 @@ function renderFinancialHealth(){
       '<td class="num">'+fhMoney(calc.totalMtd)+'</td>'+
       '<td class="num">'+fhMoney(blendedCogs)+'</td>'+
       '<td class="num">'+fhPct(calc.blendedPct)+'</td>'+
-      '<td>'+(cogsSrc==="sheets"?'<span class="fh-src-tag sheets">sheets</span>':'<span class="fh-src-tag manual">manual</span>')+'</td></tr>';
+      '<td><span class="fh-src-tag '+cogsSrc+'">'+cogsSrc+'</span></td></tr>';
   }
 
   // COGS stamp
