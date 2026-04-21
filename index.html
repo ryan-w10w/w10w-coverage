@@ -2888,24 +2888,75 @@ function generateBrief(force){
     }
   }
 
-  // Bar status — tenure-aware with specific reasoning
-  if(barT1s.length===0){
+  // Bar status — composite signal: shifts × ratings × velocity
+  // A "carrier" is someone you can count on for the bar this week.
+  // Definition: (10+ shifts proven) OR (rated 7+ avg AND 3+ shifts) OR (rated 8+ AND any shifts)
+  // An "emerging" T1 has high ratings but low shift count — schedule them aggressively to build tenure
+  function carrierStatus(s){
+    var sh = s.shifts || 0;
+    var avg = (typeof avgRating === "function") ? avgRating(s.id) : null;
+    if(sh >= 10) return {kind:"proven", note:sh+"sh"};
+    if(avg !== null && avg >= 8) return {kind:"emerging-strong", note:sh+"sh, "+avg+"/10"};
+    if(avg !== null && avg >= 7 && sh >= 3) return {kind:"emerging", note:sh+"sh, "+avg+"/10"};
+    if(avg !== null && avg >= 7) return {kind:"emerging-early", note:sh+"sh, "+avg+"/10"};
+    if(avg !== null && avg < 6) return {kind:"struggling", note:sh+"sh, "+avg+"/10"};
+    return {kind:"unproven", note:sh+"sh, unrated"};
+  }
+
+  var barT1Carriers = barT1s.map(function(s){ return {staff:s, status:carrierStatus(s)}; });
+  var anchors = barT1Carriers.filter(function(x){return x.status.kind === "proven";});
+  var emergingStrong = barT1Carriers.filter(function(x){return x.status.kind === "emerging-strong";});
+  var emerging = barT1Carriers.filter(function(x){return x.status.kind === "emerging" || x.status.kind === "emerging-early";});
+  var struggling = barT1Carriers.filter(function(x){return x.status.kind === "struggling";});
+  var unproven = barT1Carriers.filter(function(x){return x.status.kind === "unproven";});
+
+  function nameTag(x){ return "<strong>"+x.staff.name.split(" ")[0]+"</strong> ("+x.status.note+")"; }
+  function justName(x){ return "<strong>"+x.staff.name.split(" ")[0]+"</strong>"; }
+
+  if(barT1s.length === 0){
     sentences.push("No T1 bartender on the roster. Every bar shift this week is at risk.");actions++;
-  } else if(provenT1s.length===0){
-    var ntn=newT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong> ("+(s.shifts||0)+"sh)";}).join(", ");
-    sentences.push("All T1 bartenders unproven: "+ntn+". Coverage is staffed on paper but reliability is unknown until they hit 10+ shifts.");actions++;
-  } else if(provenT1s.length===1){
-    var pn=provenT1s[0].name.split(" ")[0];
-    sentences.push("<strong>"+pn+"</strong> is the only proven T1."+(newT1s.length>0?" "+newT1s.map(function(s){return s.name.split(" ")[0]+" ("+(s.shifts||0)+"sh)";}).join(" and ")+" still building tenure.":"")+" One callout from "+pn+" and you are in backup territory.");actions++;
+  } else if(anchors.length === 0 && emergingStrong.length === 0 && emerging.length === 0){
+    // Nobody proven AND nobody rated well yet
+    var allT1s = barT1Carriers.map(nameTag).join(", ");
+    sentences.push("T1 bartenders unproven: "+allT1s+". Coverage staffed on paper but reliability unknown until shifts and ratings come in.");actions++;
   } else {
-    var ns=provenT1s.map(function(s){return"<strong>"+s.name.split(" ")[0]+"</strong>";}).join(" and ");
-    if(barGapDays.length>0){
-      sentences.push(ns+" carry the bar but "+barGapDays.join(", ")+" still "+(barGapDays.length===1?"has":"have")+" a coverage gap. Assign a backup before publishing.");actions++;
-    } else if(newT1s.length>0){
-      sentences.push("Bar covered by "+ns+". "+newT1s.map(function(s){return s.name.split(" ")[0]+" ("+(s.shifts||0)+"sh)";}).join(" and ")+" building tenure as T1 backup.");
+    // Build a sentence that names the actual carriers
+    var carrierGroup = anchors.concat(emergingStrong); // proven + emerging-strong both count as carriers
+    var carrierTxt;
+    if(carrierGroup.length === 1){
+      carrierTxt = justName(carrierGroup[0]) + " carries the bar";
+    } else if(carrierGroup.length === 2){
+      carrierTxt = justName(carrierGroup[0]) + " and " + justName(carrierGroup[1]) + " carry the bar";
     } else {
-      sentences.push("Bar coverage solid. "+ns+" scheduled with backups.");
+      carrierTxt = carrierGroup.slice(0,-1).map(justName).join(", ") + " and " + justName(carrierGroup[carrierGroup.length-1]) + " carry the bar";
     }
+
+    // Append emerging note — these are people Tanner should lean into
+    var emergingTxt = "";
+    if(emergingStrong.length > 0 && carrierGroup.length > emergingStrong.length){
+      // Already mentioned above in carrierGroup
+    }
+    if(emerging.length > 0){
+      emergingTxt = " " + emerging.map(nameTag).join(" and ") + " emerging fast — schedule aggressively to build tenure.";
+    }
+
+    // Coverage gap detail or struggling note
+    var coverageTxt = "";
+    if(barGapDays.length > 0){
+      coverageTxt = " " + barGapDays.join(", ") + " still " + (barGapDays.length===1?"has":"have") + " a gap — assign a backup before publishing.";
+      actions++;
+    } else if(carrierGroup.length === 1 && emerging.length === 0){
+      coverageTxt = " One callout puts you in backup territory.";
+      actions++;
+    }
+
+    var strugglingTxt = "";
+    if(struggling.length > 0){
+      strugglingTxt = " " + struggling.map(nameTag).join(", ") + " under-performing — direct conversation needed.";
+      actions++;
+    }
+
+    sentences.push(carrierTxt + "." + emergingTxt + coverageTxt + strugglingTxt);
   }
 
   // Trainee watch — Ryan's level of thinking
@@ -2934,7 +2985,7 @@ function generateBrief(force){
   }
 
   if(!hasEvents){
-    sentences.push("Events Lead role unfilled. Private dining target $120-180K/yr is untapped. Commission-forward means near-zero downside.");actions++;
+    sentences.push("Events Lead still open — see Insights for the case.");actions++;
   }
 
   // Kitchen check
@@ -3047,7 +3098,7 @@ function generateAIBrief(){
     "- Flex = FORMER EMPLOYEE who returned to occasional shifts. ALREADY FULLY TRAINED. Low shift count does NOT mean they are new or unproven — it means they are only available occasionally. Their ratings reflect actual capability. Treat them as reliable pick-up cover, not as trainees or people to evaluate. Never suggest fast-tracking their training or running them through development. "+
     "- Consultant = external advisor (e.g., Camille). Not a scheduled operator. "+
     "THIS IS THE LEVEL OF REASONING REQUIRED: For each person in Training tier or with under 10 shifts as a non-Flex, think through: how many shifts have they had, what are their ratings trending, have they shown they're ready to be on team 1. If someone has no ratings yet — say so, don't guess. "+
-    "For proven T1s — think about whether the scheduling is taxing them. For new T1s — think about their trajectory toward 10 shifts. For T2 backup — think about whether Camille cross-training or promoting an established T2 candidate makes sense. "+
+    "For proven T1s (10+ shifts) — think about whether the scheduling is taxing them. For new T1s — DO NOT just look at shift count. A T1 with 1 shift but a 9/10 rating is emerging FAST and should be scheduled aggressively, not buried. The signal is shifts × ratings. Identify who is actually carrying the bar AND who is rising. For T2 backup — think about whether Camille cross-training or promoting an established T2 candidate makes sense. "+
     "For Flex — assess them as cover depth, not as development projects. Good Flex ratings = a useful phone call when someone calls out, nothing more. "+
     "End with a single sentence stating the 1-2 things that actually need Tanner's action this week, specific and dateless.";
 
@@ -3109,7 +3160,7 @@ function generateAIBrief(){
     userMsg += " // CONTEXT: A 1h shift on Square almost always means somebody forgot to clock out or got cut early without a logged reason. A 13h+ shift means somebody forgot to clock out. Both inflate labor cost reporting. Surface these directly to Tanner — they need fixing before payroll.";
   }
 
-  userMsg+="\nNow think through the state like Ryan would. For trainees and new T1s specifically, reason about whether they've shown enough to be counted on. For T2 backup, think about whether we actually need a new hire or whether cross-training solves it. If yesterday's labor ratio or shift anomalies were flagged above, lead with those since they're the freshest operational signals. End with what Tanner needs to actually do this week.";
+  userMsg+="\nNow think through the state like Ryan would. For trainees and new T1s specifically, reason about whether they've shown enough to be counted on. For T2 backup, think about whether we actually need a new hire or whether cross-training solves it. If yesterday's labor ratio or shift anomalies were flagged above, lead with those since they're the freshest operational signals. CHRONIC items (Events Lead unfilled, Paquita, etc.) get ONE short sentence MAX — Tanner has heard the case before, just remind him it's still open. End with what Tanner needs to actually do this week.";
 
   fetch("/api/claude",{
     method:"POST",
