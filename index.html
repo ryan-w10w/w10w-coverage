@@ -2859,6 +2859,35 @@ function generateBrief(force){
   var conflicts=analyzeScheduleConflicts();
   var sentences=[];var actions=0;
 
+  // YESTERDAY LABOR CHECK — surface as first signal if abnormal
+  if(typeof yesterdayLaborData !== "undefined" && yesterdayLaborData && yesterdayLaborData.status === "bad"){
+    var yd = yesterdayLaborData;
+    sentences.push("Yesterday ("+yd.dayName+") hit <strong>"+yd.ratio+"% labor-to-sales</strong> vs "+yd.avgRatio+"% avg ("+(yd.delta>0?"+":"")+yd.delta+"pts). Worth a look at who was scheduled — common cause is over-staffing on a slow day.");
+    actions++;
+  }
+  // TONIGHT SCHEDULE ANOMALIES — schedule mistakes Tanner can fix before service
+  if(typeof tonightScheduleData !== "undefined" && tonightScheduleData && tonightScheduleData.anomalies.length > 0){
+    var schedBad = tonightScheduleData.anomalies.filter(function(a){return a.severity === "bad";});
+    if(schedBad.length > 0){
+      var schedMsg = schedBad.length === 1
+        ? "Schedule flag for tonight: " + schedBad[0].message
+        : "<strong>" + schedBad.length + " schedule flags</strong> for tonight — fix in Square before service.";
+      sentences.push(schedMsg);
+      actions++;
+    }
+  }
+  // YESTERDAY SHIFT ANOMALIES — forgot clock-outs / 1h shifts / no-break compliance
+  if(typeof yesterdayShiftAnomalies !== "undefined" && yesterdayShiftAnomalies.length > 0){
+    var badAnoms = yesterdayShiftAnomalies.filter(function(a){return a.severity === "bad";});
+    if(badAnoms.length > 0){
+      var anomMsg = badAnoms.length === 1
+        ? "Shift flag from yesterday: "+badAnoms[0].message
+        : "<strong>"+badAnoms.length+" shift flags</strong> from yesterday — including "+badAnoms[0].job+" at "+badAnoms[0].hours+"h. Check the Today card before payroll.";
+      sentences.push(anomMsg);
+      actions++;
+    }
+  }
+
   // Bar status — tenure-aware with specific reasoning
   if(barT1s.length===0){
     sentences.push("No T1 bartender on the roster. Every bar shift this week is at risk.");actions++;
@@ -2936,6 +2965,13 @@ function generateAIBrief(){
   var btn=document.getElementById("ai-brief-btn");
   var result=document.getElementById("ai-brief-result");
   if(!btn||!result) return;
+  // Refresh yesterday labor data in background if we don't have it yet
+  if(typeof yesterdayLaborData === "undefined" || yesterdayLaborData === null){
+    if(typeof loadYesterdayLabor === "function") loadYesterdayLabor();
+  }
+  if(typeof tonightScheduleData === "undefined" || tonightScheduleData === null){
+    if(typeof loadTonightSchedule === "function") loadTonightSchedule();
+  }
   btn.textContent="✦ Thinking...";btn.disabled=true;
   result.style.display="block";
   result.innerHTML="<em style='color:rgba(255,255,255,.5);font-size:11px'>Analysing roster, ratings, tenure, and shift data...</em>";
@@ -3045,12 +3081,40 @@ function generateAIBrief(){
 
   if(shiftLines.length>0) userMsg+="\nRECENT SHIFT NOTES: "+shiftLines.join(" // ")+"\n";
 
-  userMsg+="\nNow think through the state like Ryan would. For trainees and new T1s specifically, reason about whether they've shown enough to be counted on. For T2 backup, think about whether we actually need a new hire or whether cross-training solves it. End with what Tanner needs to actually do this week.";
+  // YESTERDAY'S LABOR-TO-SALES RATIO — a Ryan-level call-out
+  if(typeof yesterdayLaborData !== "undefined" && yesterdayLaborData && yesterdayLaborData.ratio){
+    var yd = yesterdayLaborData;
+    userMsg += "\nYESTERDAY LABOR CHECK: "+yd.dayName+" was "+yd.ratio+"% labor-to-sales ($"+yd.laborCost.toLocaleString()+" labor on $"+yd.net.toLocaleString()+" net).";
+    if(yd.avgRatio !== null){
+      userMsg += " Avg for "+yd.dayName+" is "+yd.avgRatio+"%. Delta: "+(yd.delta>0?"+":"")+yd.delta+"pts.";
+    }
+    if(yd.status === "bad"){
+      userMsg += " THIS IS UNUSUALLY HIGH — flag it in your brief and tell Tanner to review who was scheduled. On a slow day this often means too many bodies (e.g., two porters when one is enough).";
+    } else if(yd.status === "warn"){
+      userMsg += " Slightly above normal — mention it briefly so Tanner is aware.";
+    }
+  }
+
+  // TONIGHT'S SCHEDULE ANOMALIES — schedule mistakes Tanner built that need fixing before service
+  if(typeof tonightScheduleData !== "undefined" && tonightScheduleData && tonightScheduleData.anomalies.length > 0){
+    userMsg += "\nTONIGHT SCHEDULE ANOMALIES (from what Tanner published in Square): ";
+    userMsg += tonightScheduleData.anomalies.map(function(a){return "["+a.severity.toUpperCase()+"] "+a.message;}).join(" // ");
+    userMsg += " // CONTEXT: These are mistakes in the published schedule itself — a cook scheduled for 1 hour, two porters on a slow day, etc. They are fixable RIGHT NOW in Square before service starts. Lead with these — they\'re the most actionable signal.";
+  }
+
+  // YESTERDAY SHIFT ANOMALIES — forgotten clock-outs, suspicious shift lengths
+  if(typeof yesterdayShiftAnomalies !== "undefined" && yesterdayShiftAnomalies.length > 0){
+    userMsg += "\nYESTERDAY SHIFT ANOMALIES: ";
+    userMsg += yesterdayShiftAnomalies.map(function(a){return "["+a.severity.toUpperCase()+"] "+a.message;}).join(" // ");
+    userMsg += " // CONTEXT: A 1h shift on Square almost always means somebody forgot to clock out or got cut early without a logged reason. A 13h+ shift means somebody forgot to clock out. Both inflate labor cost reporting. Surface these directly to Tanner — they need fixing before payroll.";
+  }
+
+  userMsg+="\nNow think through the state like Ryan would. For trainees and new T1s specifically, reason about whether they've shown enough to be counted on. For T2 backup, think about whether we actually need a new hire or whether cross-training solves it. If yesterday's labor ratio or shift anomalies were flagged above, lead with those since they're the freshest operational signals. End with what Tanner needs to actually do this week.";
 
   fetch("/api/claude",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:500,system:systemMsg,messages:[{role:"user",content:userMsg}]})
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:600,system:systemMsg,messages:[{role:"user",content:userMsg}]})
   })
   .then(function(r){return r.json();})
   .then(function(data){
@@ -3340,6 +3404,58 @@ function closeAvailModal(e){
 // ═══════════════════════════════════════════════════════
 // TODAY DASHBOARD CARD (top of Roster tab)
 // ═══════════════════════════════════════════════════════
+// Build the "yesterday" call-out line(s) for the Today card, only when noteworthy
+function renderYesterdayCallout(){
+  var blocks = [];
+
+  // Block 1: labor-to-sales ratio
+  if(yesterdayLaborData && yesterdayLaborData.ratio){
+    var d = yesterdayLaborData;
+    if(d.status === "bad"){
+      blocks.push({ color:"#f87171", prefix:"Heads up", msg:"Yesterday (" + d.dayName + ") hit " + d.ratio + "% labor / sales — " + (d.delta > 0 ? "+" + d.delta : d.delta) + "pts above the " + d.avgRatio + "% avg for that day. Worth a look at who was on." });
+    } else if(d.status === "warn"){
+      blocks.push({ color:"#fbbf24", prefix:"Note", msg:"Yesterday (" + d.dayName + ") was " + d.ratio + "% labor / sales vs " + d.avgRatio + "% avg." });
+    }
+  }
+
+  // Block 2: TONIGHT'S SCHEDULE anomalies (1h shifts scheduled, double-stacking, etc)
+  if(typeof tonightScheduleData !== "undefined" && tonightScheduleData && tonightScheduleData.anomalies.length > 0){
+    var schedBad = tonightScheduleData.anomalies.filter(function(a){return a.severity === "bad";});
+    var schedWarn = tonightScheduleData.anomalies.filter(function(a){return a.severity === "warn";});
+    if(schedBad.length > 0){
+      var sblines = schedBad.slice(0,3).map(function(a){return "&bull; " + a.message;}).join("<br>");
+      var sbmore = schedBad.length > 3 ? "<br><em style=\"opacity:.7\">+" + (schedBad.length - 3) + " more</em>" : "";
+      blocks.push({ color:"#f87171", prefix:"Schedule flag" + (schedBad.length > 1 ? "s" : "") + " for tonight", msg: sblines + sbmore });
+    }
+    if(schedWarn.length > 0){
+      var swlines = schedWarn.slice(0,2).map(function(a){return "&bull; " + a.message;}).join("<br>");
+      blocks.push({ color:"#fbbf24", prefix:"Schedule note for tonight", msg: swlines });
+    }
+  }
+
+  // Block 3: yesterday's shift anomalies (forgotten clock-outs, missing breaks — historical)
+  if(typeof yesterdayShiftAnomalies !== "undefined" && yesterdayShiftAnomalies.length > 0){
+    var bad = yesterdayShiftAnomalies.filter(function(a){return a.severity === "bad";});
+    var warn = yesterdayShiftAnomalies.filter(function(a){return a.severity === "warn";});
+    if(bad.length > 0){
+      var lines = bad.slice(0,3).map(function(a){return "&bull; " + a.message;}).join("<br>");
+      var moreTxt = bad.length > 3 ? "<br><em style=\"opacity:.7\">+" + (bad.length - 3) + " more</em>" : "";
+      blocks.push({ color:"#f87171", prefix:"Yesterday flag" + (bad.length > 1 ? "s" : ""), msg: lines + moreTxt });
+    } else if(warn.length > 0){
+      var wlines = warn.slice(0,2).map(function(a){return "&bull; " + a.message;}).join("<br>");
+      blocks.push({ color:"#fbbf24", prefix:"Yesterday compliance check", msg: wlines });
+    }
+  }
+
+  if(blocks.length === 0) return "";
+
+  return blocks.map(function(b){
+    return '<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.06);border-left:3px solid ' + b.color + ';border-radius:6px;font-size:12.5px;line-height:1.55;color:rgba(255,255,255,.85);position:relative;z-index:1">' +
+      '<strong style="color:' + b.color + ';font-weight:600;letter-spacing:.02em">' + b.prefix + ':</strong> ' + b.msg +
+      '</div>';
+  }).join("");
+}
+
 function renderTodayCard(){
   var el=document.getElementById("today-card");
   if(!el) return;
@@ -3360,11 +3476,20 @@ function renderTodayCard(){
   if(hour>=serviceStart && hour<serviceEnd) state="live";
   else if(hour>=serviceEnd || hour<4) state="closed";
   else state="prep";
-  // Roster today
-  var todayShifts=(WEEK[dayShort[dayIdx]]||[]);
-  var filled=todayShifts.filter(function(sh){return sh.pid&&sh.pid!==0;}).length;
-  var totalPositions=todayShifts.length;
-  var gaps=totalPositions-filled;
+  // Roster today — prefer Square scheduled shifts (source of truth), fall back to in-app WEEK
+  var filled, totalPositions, gaps, rosterSource;
+  if(tonightScheduleData && tonightScheduleData.totalCount > 0){
+    totalPositions = tonightScheduleData.totalCount;
+    filled = totalPositions; // Square shifts that exist are by definition "filled" — they have a person
+    gaps = 0;
+    rosterSource = "square";
+  } else {
+    var todayShifts = (WEEK[dayShort[dayIdx]] || []);
+    filled = todayShifts.filter(function(sh){return sh.pid && sh.pid !== 0;}).length;
+    totalPositions = todayShifts.length;
+    gaps = totalPositions - filled;
+    rosterSource = "tool";
+  }
   // MTD
   var mtdSales=beMonthlyLive||null;
   var weeklyBe=BE_NIGHTS.reduce(function(s,n){return s+n.beTarget;},0);
@@ -3408,10 +3533,27 @@ function renderTodayCard(){
       sub="Next service: tomorrow";
     }
   }
-  var staffLbl, staffCls;
-  if(totalPositions===0){staffLbl="No schedule set";staffCls="";}
-  else if(gaps===0){staffLbl="All "+filled+" filled";staffCls="ok";}
-  else {staffLbl=filled+"/"+totalPositions+" filled";staffCls=gaps>=2?"bad":"warn";}
+  var staffLbl, staffCls, staffSubLbl;
+  if(totalPositions===0){
+    staffLbl = "No schedule set";
+    staffCls = "";
+    staffSubLbl = rosterSource === "square" ? "Nothing on Square for tonight" : "Set in Schedule tab";
+  } else if(rosterSource === "square"){
+    // Show count + breakdown of jobs
+    staffLbl = totalPositions + " on schedule";
+    staffCls = "ok";
+    var breakdown = tonightScheduleData.jobBreakdown;
+    var topJobs = Object.keys(breakdown).map(function(j){ return breakdown[j] + " " + j.toLowerCase(); }).slice(0,2).join(" · ");
+    staffSubLbl = topJobs || "From Square";
+  } else if(gaps === 0){
+    staffLbl = "All " + filled + " filled";
+    staffCls = "ok";
+    staffSubLbl = "Ready for service";
+  } else {
+    staffLbl = filled + "/" + totalPositions + " filled";
+    staffCls = gaps >= 2 ? "bad" : "warn";
+    staffSubLbl = "Open Schedule to fill";
+  }
   var k=calcKitchenHealth();
   var kitLbl=k.canOpen?k.leadCooks+" lead &middot; "+k.totalCooks+" cooks":"Cannot open";
   var kitCls=k.canOpen?"":"bad";
@@ -3439,14 +3581,15 @@ function renderTodayCard(){
     '<div class="today-metrics">'+
       '<div><div class="today-metric-lbl">Tonight\'s roster</div>'+
       '<div class="today-metric-val '+staffCls+'">'+staffLbl+'</div>'+
-      '<div class="today-metric-sub">'+(gaps>0?"Open Schedule to fill":"Ready for service")+'</div></div>'+
+      '<div class="today-metric-sub">'+staffSubLbl+'</div></div>'+
       '<div><div class="today-metric-lbl">Kitchen</div>'+
       '<div class="today-metric-val '+kitCls+'">'+kitLbl+'</div>'+
       '<div class="today-metric-sub">'+(k.porters>=1?k.porters+" porter"+(k.porters>1?"s":""):"No porter today")+'</div></div>'+
       '<div><div class="today-metric-lbl">Month so far</div>'+
       '<div class="today-metric-val '+mtdCls+'">'+mtdLbl+'</div>'+
       '<div class="today-metric-sub">vs $'+mtdTarget.toLocaleString()+' break-even</div></div>'+
-    '</div>';
+    '</div>'+
+    renderYesterdayCallout();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3468,6 +3611,346 @@ function loadFixedCosts(){
     })
     .catch(function(){BE_FIXED_LOADING=false;});
 }
+
+// ═══════════════════════════════════════════════════════
+// YESTERDAY'S LABOR-TO-SALES RATIO
+// Pulls yesterday's net sales + labor cost (incl Tanner prorated) for benchmark detection
+// ═══════════════════════════════════════════════════════
+var yesterdayLaborData = null; // {date, dayName, net, laborCost, ratio, avgRatio, status}
+var yesterdayLaborLoading = false;
+var yesterdayShiftAnomalies = []; // [{severity, type, job, hours, window, message}]
+
+function loadYesterdayLabor(){
+  if(yesterdayLaborLoading) return;
+  yesterdayLaborLoading = true;
+
+  var nowUtc = new Date();
+  var nyc = new Date(nowUtc.toLocaleString("en-US",{timeZone:"America/New_York"}));
+  // Yesterday in NYC = today's date - 1
+  var yIdx = (nyc.getDay() + 6) % 7; // 0=Sun → 6, 1=Mon → 0, etc. for our Mon-first ordering
+  var dayNamesFull = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var yDayName = dayNamesFull[(nyc.getDay() + 6) % 7]; // yesterday's day name
+
+  // NYC service-day boundaries: yesterday 5am UTC → today 5am UTC
+  var startIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), nyc.getDate()-1, 5, 0, 0)).toISOString();
+  var endIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), nyc.getDate(), 5, 0, 0)).toISOString();
+
+  var net = null, laborCost = null;
+  var pending = 2;
+  function checkDone(){
+    pending--;
+    if(pending > 0) return;
+    if(net === null || laborCost === null){
+      yesterdayLaborLoading = false;
+      yesterdayLaborData = null;
+      return;
+    }
+    var ratio = net > 0 ? (laborCost / net) * 100 : 0;
+    // Benchmark from BE_NIGHTS — avg ratio for this day-of-week
+    var benchmark = BE_NIGHTS.find(function(n){return n.day === yDayName;});
+    var avgRatio = benchmark && benchmark.avgSales > 0 ? (benchmark.labor / benchmark.avgSales) * 100 : null;
+    var status = "ok";
+    if(avgRatio !== null){
+      var delta = ratio - avgRatio;
+      if(delta > 10) status = "bad";       // 10+ points above avg = significant
+      else if(delta > 5) status = "warn";  // 5-10 points above = worth noting
+      else status = "ok";
+    } else if(ratio > 38){
+      status = "warn"; // fallback absolute threshold
+    }
+    yesterdayLaborData = {
+      dayName: yDayName,
+      net: Math.round(net),
+      laborCost: Math.round(laborCost),
+      ratio: Math.round(ratio * 10) / 10,
+      avgRatio: avgRatio !== null ? Math.round(avgRatio * 10) / 10 : null,
+      delta: avgRatio !== null ? Math.round((ratio - avgRatio) * 10) / 10 : null,
+      status: status
+    };
+    yesterdayLaborLoading = false;
+    if(typeof renderTodayCard === "function") renderTodayCard();
+  }
+
+  // Fetch yesterday's net sales
+  squareOrdersFetch(startIso, endIso, function(orders){
+    net = squareNetFromOrders(orders);
+    checkDone();
+  }, function(){
+    net = null;
+    checkDone();
+  });
+
+  // Fetch yesterday's labor (uses Square Labor API, plus Tanner prorated for the day)
+  var allShifts = [];
+  function fetchLaborPage(cursor){
+    var bodyObj = {
+      query: { filter: { location_ids: ["LHSVRCNXBB7E8"], start: { start_at: startIso, end_at: endIso } } },
+      limit: 200
+    };
+    if(cursor) bodyObj.cursor = cursor;
+    fetch("/api/proxy", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        url: "https://connect.squareup.com/v2/labor/shifts/search",
+        method: "POST", body: JSON.stringify(bodyObj)
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.shifts === undefined){ laborCost = null; checkDone(); return; }
+      allShifts = allShifts.concat(d.shifts);
+      if(d.cursor && d.shifts.length === 200){ fetchLaborPage(d.cursor); }
+      else { aggregateYesterdayLabor(); }
+    })
+    .catch(function(){ laborCost = null; checkDone(); });
+  }
+  function aggregateYesterdayLabor(){
+    var totalHourly = 0;
+    var shiftAnomalies = []; // detected red flags
+    allShifts.forEach(function(sh){
+      if(!sh.start_at || !sh.end_at) return;
+      var startMs = new Date(sh.start_at).getTime();
+      var endMs = new Date(sh.end_at).getTime();
+      var grossHours = (endMs - startMs) / (1000 * 60 * 60);
+      var breakMs = 0;
+      var paidBreakMs = 0;
+      (sh.breaks || []).forEach(function(br){
+        if(br.start_at && br.end_at){
+          var brMs = new Date(br.end_at).getTime() - new Date(br.start_at).getTime();
+          if(br.is_paid === false){ breakMs += brMs; }
+          else { paidBreakMs += brMs; }
+        }
+      });
+      var netHours = Math.max(0, (endMs - startMs - breakMs) / (1000 * 60 * 60));
+      var hourlyRateCents = (sh.wage && sh.wage.hourly_rate && sh.wage.hourly_rate.amount) || 0;
+      totalHourly += netHours * (hourlyRateCents / 100);
+
+      // ═══ SHIFT ANOMALY DETECTION ═══
+      var teamName = (sh.team_member_id) ? null : null; // we don't have name resolution from Labor API directly
+      // Try to resolve via job title from wage
+      var jobTitle = (sh.wage && sh.wage.title) || "Staff";
+      var personName = teamMemberMap[sh.team_member_id] || jobTitle;
+      var startTime = new Date(sh.start_at).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"});
+      var endTime = new Date(sh.end_at).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"});
+
+      // Flag 1: suspiciously short shift (<2.5h) — usually clocked-in-error or cut-early
+      if(grossHours > 0 && grossHours < 2.5){
+        shiftAnomalies.push({
+          severity: "bad",
+          type: "short",
+          job: jobTitle,
+          hours: Math.round(grossHours * 10) / 10,
+          window: startTime + "–" + endTime,
+          message: personName + " (" + jobTitle + ") logged only " + (Math.round(grossHours * 10) / 10) + "h (" + startTime + "–" + endTime + "). Usually a forgotten clock-out or unrecorded cut. Worth checking."
+        });
+      }
+      // Flag 2: suspiciously long shift (>12h) — usually forgot to clock out
+      else if(grossHours > 12){
+        shiftAnomalies.push({
+          severity: "bad",
+          type: "long",
+          job: jobTitle,
+          hours: Math.round(grossHours * 10) / 10,
+          window: startTime + "–" + endTime,
+          message: personName + " (" + jobTitle + ") shows " + Math.round(grossHours) + "h on the clock (" + startTime + "–" + endTime + "). Likely forgot to clock out — verify and adjust before payroll."
+        });
+      }
+      // Flag 3: long shift (6h+) with no break recorded — NY labor compliance risk
+      else if(netHours >= 6 && breakMs === 0 && paidBreakMs === 0){
+        shiftAnomalies.push({
+          severity: "warn",
+          type: "no-break",
+          job: jobTitle,
+          hours: Math.round(netHours * 10) / 10,
+          window: startTime + "–" + endTime,
+          message: personName + " (" + jobTitle + ") worked " + Math.round(netHours * 10) / 10 + "h with no break recorded. NY requires a 30-min meal break for shifts over 6h."
+        });
+      }
+    });
+
+    // Tanner's salary prorated for one day
+    var nyc2 = new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
+    var daysInMonth = new Date(nyc2.getFullYear(), nyc2.getMonth()+1, 0).getDate();
+    var tannerDay = (typeof FH_TANNER_SALARY_MONTHLY !== "undefined" ? FH_TANNER_SALARY_MONTHLY : 7084) / daysInMonth;
+    laborCost = (totalHourly + tannerDay) * 1.1065;
+    // Stash anomalies on the global so the brief and Today card can read them
+    yesterdayShiftAnomalies = shiftAnomalies;
+    checkDone();
+  }
+  fetchLaborPage(null);
+}
+
+// ═══════════════════════════════════════════════════════
+// TONIGHT'S SCHEDULED SHIFTS (from Square's published schedule)
+// Pulls today's scheduled shifts and validates the schedule itself for red flags
+// like 1-hour shifts, double-stacked porters on slow days, etc.
+// ═══════════════════════════════════════════════════════
+var tonightScheduleData = null; // {shifts:[], anomalies:[], totalCount, jobBreakdown}
+var tonightScheduleLoading = false;
+var teamMemberMap = {}; // id → name, populated from /v2/team-members/search
+
+function loadTeamMembers(onDone){
+  fetch("/api/proxy", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      url: "https://connect.squareup.com/v2/team-members/search",
+      method: "POST",
+      body: JSON.stringify({ query: { filter: { location_ids: ["LHSVRCNXBB7E8"], status: "ACTIVE" } }, limit: 200 })
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    (d.team_members || []).forEach(function(tm){
+      teamMemberMap[tm.id] = tm.given_name + (tm.family_name ? " " + tm.family_name : "");
+    });
+    if(onDone) onDone();
+  })
+  .catch(function(){ if(onDone) onDone(); });
+}
+
+function loadTonightSchedule(){
+  if(tonightScheduleLoading) return;
+  tonightScheduleLoading = true;
+
+  // Make sure team member names are loaded so we can name names in anomalies
+  if(Object.keys(teamMemberMap).length === 0){
+    loadTeamMembers(function(){ fetchTodaysShifts(); });
+  } else {
+    fetchTodaysShifts();
+  }
+
+  function fetchTodaysShifts(){
+    var nowUtc = new Date();
+    var nyc = new Date(nowUtc.toLocaleString("en-US",{timeZone:"America/New_York"}));
+    // Today in NYC: midnight today → midnight tomorrow (in UTC: 5am today → 5am tomorrow)
+    var startIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), nyc.getDate(), 5, 0, 0)).toISOString();
+    var endIso = new Date(Date.UTC(nyc.getFullYear(), nyc.getMonth(), nyc.getDate()+1, 5, 0, 0)).toISOString();
+
+    var allShifts = [];
+    function fetchPage(cursor){
+      var bodyObj = {
+        query: { filter: { location_ids: ["LHSVRCNXBB7E8"], start: { start_at: startIso, end_at: endIso } } },
+        limit: 200
+      };
+      if(cursor) bodyObj.cursor = cursor;
+      fetch("/api/proxy", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          url: "https://connect.squareup.com/v2/labor/shifts/search",
+          method: "POST", body: JSON.stringify(bodyObj)
+        })
+      })
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.shifts === undefined){ tonightScheduleLoading = false; tonightScheduleData = null; return; }
+        allShifts = allShifts.concat(d.shifts);
+        if(d.cursor && d.shifts.length === 200){ fetchPage(d.cursor); }
+        else { analyzeSchedule(); }
+      })
+      .catch(function(){ tonightScheduleLoading = false; tonightScheduleData = null; });
+    }
+
+    function analyzeSchedule(){
+      var anomalies = [];
+      var jobBreakdown = {}; // jobTitle → count
+      var shiftSummary = [];
+
+      // Day-of-week context for "this is a slow day" type reasoning
+      var dayNamesFull = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      var todayName = dayNamesFull[nyc.getDay()];
+      var benchmark = BE_NIGHTS.find(function(n){return n.day === todayName;});
+      var avgSales = benchmark ? benchmark.avgSales : 0;
+      // Slow day = below median (median of avgSales across BE_NIGHTS is ~$2,500)
+      var isSlowDay = avgSales > 0 && avgSales < 2500;
+
+      allShifts.forEach(function(sh){
+        if(!sh.start_at || !sh.end_at) return;
+        var startMs = new Date(sh.start_at).getTime();
+        var endMs = new Date(sh.end_at).getTime();
+        var grossHours = (endMs - startMs) / (1000 * 60 * 60);
+        var jobTitle = (sh.wage && sh.wage.title) || "Staff";
+        var name = teamMemberMap[sh.team_member_id] || jobTitle;
+        var startTime = new Date(sh.start_at).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"});
+        var endTime = new Date(sh.end_at).toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"});
+
+        // Track job breakdown
+        jobBreakdown[jobTitle] = (jobBreakdown[jobTitle] || 0) + 1;
+
+        shiftSummary.push({ name: name, job: jobTitle, hours: grossHours, window: startTime + "–" + endTime });
+
+        // Flag 1: very short scheduled shift (<3h) — almost always a schedule mistake
+        if(grossHours > 0 && grossHours < 3){
+          anomalies.push({
+            severity: "bad", type: "short-schedule",
+            message: name + " (" + jobTitle + ") scheduled for only " + (Math.round(grossHours * 10) / 10) + "h (" + startTime + "–" + endTime + "). That doesn\'t cover a real shift — verify this isn\'t a mistake."
+          });
+        }
+        // Flag 2: very long scheduled shift (>11h) — usually a typo or forgotten end-time
+        else if(grossHours > 11){
+          anomalies.push({
+            severity: "bad", type: "long-schedule",
+            message: name + " (" + jobTitle + ") scheduled for " + Math.round(grossHours) + "h (" + startTime + "–" + endTime + "). Looks like an end-time error — check the schedule."
+          });
+        }
+      });
+
+      // Flag 3: stacked support roles on slow weekday services
+      // Weekends (Sat/Sun) run lunch + dinner — stacking is expected and necessary.
+      // Only flag stacking on slow weekdays (Mon-Fri) where it almost always means over-staffing.
+      var isWeekend = todayName === "Saturday" || todayName === "Sunday";
+      var stackableRoles = ["Porter","Dishwasher","Busser"];
+      stackableRoles.forEach(function(role){
+        var matchKey = Object.keys(jobBreakdown).find(function(k){return k.toLowerCase().indexOf(role.toLowerCase()) > -1;});
+        if(matchKey && jobBreakdown[matchKey] > 1 && isSlowDay && !isWeekend){
+          anomalies.push({
+            severity: "warn", type: "stacked-support",
+            message: jobBreakdown[matchKey] + " " + matchKey.toLowerCase() + "s scheduled on " + todayName + " (avg sales $" + avgSales.toLocaleString() + " — a slower weekday). One is usually enough for a single dinner service — check if you can drop one shift."
+          });
+        }
+      });
+
+      // Flag 4: too many cooks/leads vs day's avg revenue (rough labor-band check on the schedule)
+      // Sum hours × rough rate to estimate scheduled labor cost, compare to typical % of revenue
+      var estLabor = 0;
+      allShifts.forEach(function(sh){
+        if(!sh.start_at || !sh.end_at) return;
+        var hrs = (new Date(sh.end_at).getTime() - new Date(sh.start_at).getTime()) / (1000*60*60);
+        var rateCents = (sh.wage && sh.wage.hourly_rate && sh.wage.hourly_rate.amount) || 2500; // default $25/h
+        estLabor += hrs * (rateCents / 100);
+      });
+      // Apply payroll tax + Tanner's day prorate
+      var nyc2 = new Date(new Date().toLocaleString("en-US",{timeZone:"America/New_York"}));
+      var daysInMonth = new Date(nyc2.getFullYear(), nyc2.getMonth()+1, 0).getDate();
+      var tannerDay = (typeof FH_TANNER_SALARY_MONTHLY !== "undefined" ? FH_TANNER_SALARY_MONTHLY : 7084) / daysInMonth;
+      var fullEstLabor = (estLabor + tannerDay) * 1.1065;
+      var projectedLaborPct = avgSales > 0 ? (fullEstLabor / avgSales) * 100 : null;
+      var typicalPct = (benchmark && benchmark.avgSales > 0) ? (benchmark.labor / benchmark.avgSales) * 100 : null;
+
+      if(projectedLaborPct !== null && typicalPct !== null && projectedLaborPct - typicalPct > 8){
+        anomalies.push({
+          severity: "warn", type: "schedule-overstaffed",
+          message: "Tonight\'s schedule projects " + Math.round(projectedLaborPct) + "% labor / sales vs " + Math.round(typicalPct) + "% typical for " + todayName + ". Either you\'re expecting a strong night or the schedule is heavy."
+        });
+      }
+
+      tonightScheduleData = {
+        shifts: shiftSummary,
+        anomalies: anomalies,
+        totalCount: allShifts.length,
+        jobBreakdown: jobBreakdown,
+        projectedLaborPct: projectedLaborPct,
+        typicalLaborPct: typicalPct,
+        estLaborCost: Math.round(fullEstLabor)
+      };
+      tonightScheduleLoading = false;
+      if(typeof renderTodayCard === "function") renderTodayCard();
+    }
+  }
+}
+
+
+
+
 
 // ═══════════════════════════════════════════════════════
 // REFRESH 12MO NIGHTLY AVERAGES FROM SQUARE
@@ -4473,6 +4956,8 @@ async function init(){
   loadSquareToken();
   loadPersistedAverages();
   fhLoadInputs();
+  loadYesterdayLabor();
+  loadTonightSchedule();
   renderRoster();
   renderDayBtns();
   renderWeek();
