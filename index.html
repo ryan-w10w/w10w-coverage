@@ -2876,7 +2876,7 @@ function generateBrief(force){
       actions++;
     }
   }
-  // YESTERDAY SHIFT ANOMALIES — forgot clock-outs / 1h shifts / no-break compliance
+  // YESTERDAY SHIFT ANOMALIES — forgot clock-outs / 1h shifts
   if(typeof yesterdayShiftAnomalies !== "undefined" && yesterdayShiftAnomalies.length > 0){
     var badAnoms = yesterdayShiftAnomalies.filter(function(a){return a.severity === "bad";});
     if(badAnoms.length > 0){
@@ -3433,17 +3433,13 @@ function renderYesterdayCallout(){
     }
   }
 
-  // Block 3: yesterday's shift anomalies (forgotten clock-outs, missing breaks — historical)
+  // Block 3: yesterday's shift anomalies (forgotten clock-outs / 1h shifts — fix before payroll)
   if(typeof yesterdayShiftAnomalies !== "undefined" && yesterdayShiftAnomalies.length > 0){
     var bad = yesterdayShiftAnomalies.filter(function(a){return a.severity === "bad";});
-    var warn = yesterdayShiftAnomalies.filter(function(a){return a.severity === "warn";});
     if(bad.length > 0){
       var lines = bad.slice(0,3).map(function(a){return "&bull; " + a.message;}).join("<br>");
       var moreTxt = bad.length > 3 ? "<br><em style=\"opacity:.7\">+" + (bad.length - 3) + " more</em>" : "";
       blocks.push({ color:"#f87171", prefix:"Yesterday flag" + (bad.length > 1 ? "s" : ""), msg: lines + moreTxt });
-    } else if(warn.length > 0){
-      var wlines = warn.slice(0,2).map(function(a){return "&bull; " + a.message;}).join("<br>");
-      blocks.push({ color:"#fbbf24", prefix:"Yesterday compliance check", msg: wlines });
     }
   }
 
@@ -3755,17 +3751,7 @@ function loadYesterdayLabor(){
           message: personName + " (" + jobTitle + ") shows " + Math.round(grossHours) + "h on the clock (" + startTime + "–" + endTime + "). Likely forgot to clock out — verify and adjust before payroll."
         });
       }
-      // Flag 3: long shift (6h+) with no break recorded — NY labor compliance risk
-      else if(netHours >= 6 && breakMs === 0 && paidBreakMs === 0){
-        shiftAnomalies.push({
-          severity: "warn",
-          type: "no-break",
-          job: jobTitle,
-          hours: Math.round(netHours * 10) / 10,
-          window: startTime + "–" + endTime,
-          message: personName + " (" + jobTitle + ") worked " + Math.round(netHours * 10) / 10 + "h with no break recorded. NY requires a 30-min meal break for shifts over 6h."
-        });
-      }
+
     });
 
     // Tanner's salary prorated for one day
