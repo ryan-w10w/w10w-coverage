@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>W10W Payroll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #293525;
+    --green-soft: #3a4a35;
+    --cream: #f6f3ec;
+    --cream-warm: #efe9dd;
+    --rule: #d8cfba;
+    --gold: #b8985a;
+    --flag: #a64d3f;
+    --muted: #6b6356;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--cream);
+    color: var(--green);
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  .uppercase { text-transform: uppercase; letter-spacing: 0.12em; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* PIN gate */
+  #gate {
+    position: fixed; inset: 0;
+    background: var(--green);
+    color: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  #gate .inner { text-align: center; }
+  #gate h1 {
+    font-size: 14px; font-weight: 400; letter-spacing: 0.32em;
+    text-transform: uppercase; margin: 0 0 48px 0; opacity: 0.85;
+  }
+  #gate input {
+    background: transparent; border: none; border-bottom: 1px solid var(--cream);
+    color: var(--cream); font-family: 'Jost', sans-serif; font-size: 28px;
+    text-align: center; padding: 8px 0; width: 180px; letter-spacing: 0.4em;
+    outline: none;
+  }
+  #gate .err { color: #e8b4a8; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 16px; height: 16px; }
+
+  /* Header */
+  header {
+    background: var(--green);
+    color: var(--cream);
+    padding: 36px 56px 32px;
+  }
+  header .brand { font-size: 11px; letter-spacing: 0.36em; text-transform: uppercase; opacity: 0.7; }
+  header h1 {
+    margin: 8px 0 0;
+    font-size: 38px;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  header .sub { margin-top: 6px; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6; }
+
+  /* Main */
+  main { padding: 48px 56px 80px; max-width: 1240px; }
+  section { margin-bottom: 56px; }
+  h2 {
+    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-weight: 500; color: var(--muted);
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Controls */
+  .controls { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label {
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted);
+  }
+  .field input[type="date"] {
+    background: transparent; border: none; border-bottom: 1px solid var(--green);
+    font-family: 'Jost', sans-serif; font-size: 16px; color: var(--green);
+    padding: 6px 4px; outline: none; min-width: 160px;
+  }
+  button {
+    font-family: 'Jost', sans-serif;
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    background: var(--green); color: var(--cream);
+    border: none; padding: 14px 28px;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  button:hover { opacity: 0.85; }
+  button.ghost { background: transparent; color: var(--green); border: 1px solid var(--green); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Summary grid */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    padding: 8px 0;
+  }
+  .summary .stat .label { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); }
+  .summary .stat .value { font-size: 32px; font-weight: 300; margin-top: 8px; }
+  .summary .stat .sub { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* Flags */
+  .flags-empty { color: var(--muted); font-style: italic; font-size: 13px; }
+  .flag {
+    border-left: 2px solid var(--flag);
+    padding: 8px 0 8px 18px;
+    margin-bottom: 14px;
+  }
+  .flag .kind {
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--flag);
+    font-weight: 500;
+  }
+  .flag .msg { margin-top: 4px; font-size: 14px; color: var(--green); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px 12px 12px 0; font-size: 13px; }
+  th {
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500;
+    border-bottom: 1px solid var(--rule);
+  }
+  td { border-bottom: 1px solid #e8e1cf; }
+  tr.total td {
+    border-bottom: none;
+    border-top: 1px solid var(--green);
+    padding-top: 16px;
+    font-weight: 500;
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td .role-tag {
+    display: inline-block;
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-left: 8px;
+  }
+
+  /* Day breakdown */
+  .day-header { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; margin: 28px 0 12px; color: var(--green); }
+  .day-meta { font-size: 11px; color: var(--muted); margin-left: 12px; }
+
+  /* Loading */
+  .loading { font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); }
+  .error-msg {
+    background: var(--cream-warm); padding: 16px 20px;
+    border-left: 2px solid var(--flag); font-size: 13px; color: var(--green);
+    margin-bottom: 24px;
+  }
+
+  /* Export modal-ish block */
+  .export-block {
+    margin-top: 32px;
+    background: var(--cream-warm);
+    padding: 24px 28px;
+  }
+  .export-block h3 {
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    font-weight: 500; margin: 0 0 16px 0; color: var(--muted);
+  }
+  .export-block pre {
+    font-family: 'Jost', sans-serif;
+    font-size: 13px;
+    background: white;
+    padding: 16px;
+    border: 1px solid var(--rule);
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+    color: var(--green);
+  }
+  .copy-row { display: flex; gap: 12px; margin-top: 12px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="inner">
+    <h1>W10W &middot; Payroll</h1>
+    <input type="password" id="pin" maxlength="6" autocomplete="off" inputmode="numeric" placeholder="••••">
+    <div class="err" id="gateErr"></div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">West10West</div>
+  <h1>Payroll</h1>
+  <div class="sub">Weekly review &middot; Sunday to Saturday</div>
+</header>
+
+<main id="app" class="hidden">
+
+  <section>
+    <h2>Pay Period</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="startDate">Start (Sunday)</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="field">
+        <label for="endDate">End (Saturday)</label>
+        <input type="date" id="endDate">
+      </div>
+      <button id="presetLastWeek" class="ghost">Last Week</button>
+      <button id="pullBtn">Pull Data</button>
+    </div>
+  </section>
+
+  <div id="errorBox" class="error-msg hidden"></div>
+  <div id="loadingBox" class="loading hidden">Loading payroll data...</div>
+
+  <div id="results" class="hidden">
+
+    <section>
+      <h2>Summary</h2>
+      <div class="summary">
+        <div class="stat">
+          <div class="label">Total Hours</div>
+          <div class="value num" id="sumHours">0.00</div>
+          <div class="sub" id="sumHoursSub">all roles</div>
+        </div>
+        <div class="stat">
+          <div class="label">Card Tips</div>
+          <div class="value num" id="sumCardTips">$0</div>
+          <div class="sub">paid via square</div>
+        </div>
+        <div class="stat">
+          <div class="label">Cash Tips</div>
+          <div class="value num" id="sumCashTips">$0</div>
+          <div class="sub">paid out nightly</div>
+        </div>
+        <div class="stat">
+          <div class="label">Avg Tips/Hr</div>
+          <div class="value num" id="sumTipRate">$0</div>
+          <div class="sub">card + cash blended</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Flags</h2>
+      <div id="flagsList"></div>
+    </section>
+
+    <section>
+      <h2>Per Employee</h2>
+      <table id="employeeTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th class="num">Hours</th>
+            <th class="num">Card Tips</th>
+            <th class="num">Cash Tips</th>
+            <th class="num">Cash Out</th>
+            <th class="num">Total Tips</th>
+          </tr>
+        </thead>
+        <tbody id="employeeBody"></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Daily Breakdown</h2>
+      <div id="dailyBlock"></div>
+    </section>
+
+    <section>
+      <h2>Square Payroll Entry</h2>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 0;">
+        Card tips per employee for the period. Enter these as Tips in Square Payroll. Cash tips are reported separately for tax declaration only — staff already received the cash.
+      </p>
+      <div class="export-block">
+        <h3>Copy &amp; Paste Block</h3>
+        <pre id="exportBlock"></pre>
+        <div class="copy-row">
+          <button id="copyBtn">Copy Block</button>
+          <button id="csvBtn" class="ghost">Download CSV</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<script>
+  // ============================================================
+  // CONFIG
+  // ============================================================
+  const PIN = '1987';
+  const TIP_MULTIPLIER = { server: 1.0, bartender: 1.0, floor_lead: 1.0, host: 0.7, training: 0, non_tipped: 0 };
+
+  // ============================================================
+  // PIN GATE
+  // ============================================================
+  const pinInput = document.getElementById('pin');
+  const gateErr = document.getElementById('gateErr');
+  pinInput.focus();
+  pinInput.addEventListener('input', () => {
+    if (pinInput.value.length === PIN.length) {
+      if (pinInput.value === PIN) {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').classList.remove('hidden');
+        setDefaultDates();
+      } else {
+        gateErr.textContent = 'Incorrect';
+        pinInput.value = '';
+      }
+    }
+  });
+
+  // ============================================================
+  // DATE HELPERS
+  // ============================================================
+  function fmtDate(d) {
+    return d.toISOString().slice(0, 10);
+  }
+  function setDefaultDates() {
+    // Default to last completed Sun-Sat week
+    const today = new Date();
+    const day = today.getDay(); // 0 = Sunday
+    const lastSat = new Date(today);
+    lastSat.setDate(today.getDate() - ((day + 1) % 7 || 7));
+    const lastSun = new Date(lastSat);
+    lastSun.setDate(lastSat.getDate() - 6);
+    document.getElementById('startDate').value = fmtDate(lastSun);
+    document.getElementById('endDate').value = fmtDate(lastSat);
+  }
+  document.getElementById('presetLastWeek').addEventListener('click', setDefaultDates);
+
+  // ============================================================
+  // FORMATTERS
+  // ============================================================
+  function dollars(amount) {
+    return '$' + (amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function dollarsRound(amount) {
+    return '$' + Math.round(amount || 0).toLocaleString('en-US');
+  }
+  function hours(h) {
+    return (h || 0).toFixed(2);
+  }
+  function roleLabel(role) {
+    return ({ server: 'Server', bartender: 'Bartender', floor_lead: 'Floor Lead', host: 'Host', training: 'Training', non_tipped: 'BOH/Mgmt' })[role] || role;
+  }
+  function dayName(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  // ============================================================
+  // FETCH
+  // ============================================================
+  async function fetchAll(start, end) {
+    const [labor, tips, cash] = await Promise.all([
+      fetch(`/api/payroll-labor?start=${start}&end=${end}`).then(r => r.json()),
+      fetch(`/api/payroll-tips?start=${start}&end=${end}`).then(r => r.json()),
+      fetch(`/api/payroll-cash?start=${start}&end=${end}`).then(r => r.json())
+    ]);
+    [labor, tips, cash].forEach((res, i) => {
+      if (res.error) throw new Error(['Labor', 'Tips', 'Cash'][i] + ': ' + res.error);
+    });
+    return { labor, tips, cash };
+  }
+
+  // ============================================================
+  // TIP POOL COMPUTATION (per-day pooling)
+  // ============================================================
+  function computePayroll({ labor, tips, cash }) {
+    const shifts = labor.shifts || [];
+    const tipsByDay = Object.fromEntries((tips.days || []).map(d => [d.date, d.card_tips_cents / 100]));
+    const cashEntries = cash.entries || [];
+
+    const flags = [];
+    const employeeTotals = {}; // name -> { hours, weighted_hours, card_tips, cash_tips, cash_out, role }
+    const dayDetails = [];
+
+    // --- Aggregate hours per employee across the entire week ---
+    shifts.forEach(s => {
+      if (s.hours == null) return;
+      if (!employeeTotals[s.name]) {
+        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, cash_out: 0, role: s.role };
+      }
+      employeeTotals[s.name].hours += s.hours;
+      employeeTotals[s.name].weighted_hours += s.hours * (s.tip_multiplier || 0);
+      // Promote role to most-tipped role seen (so a server who also trained shows as Server)
+      if ((TIP_MULTIPLIER[s.role] || 0) > (TIP_MULTIPLIER[employeeTotals[s.name].role] || 0)) {
+        employeeTotals[s.name].role = s.role;
+      }
+    });
+
+    // --- Open shifts (no clock-out) ---
+    shifts.filter(s => s.open).forEach(s => {
+      flags.push({ kind: 'Missing Clock-Out', msg: `${s.name} on ${dayName(s.local_date || '')}: no end time recorded.` });
+    });
+
+    // --- Long shifts ---
+    shifts.filter(s => s.hours > 12).forEach(s => {
+      flags.push({ kind: 'Long Shift', msg: `${s.name} on ${dayName(s.local_date)}: ${hours(s.hours)} hrs (>12).` });
+    });
+
+    // --- Weekly card pool distribution ---
+    const weeklyCardPool = (tips.totals?.card_tips_cents || 0) / 100;
+    const totalWeighted = Object.values(employeeTotals).reduce((a, e) => a + e.weighted_hours, 0);
+
+    if (weeklyCardPool > 0 && totalWeighted === 0) {
+      flags.push({ kind: 'Tips With No FOH', msg: `${dollars(weeklyCardPool)} in card tips this week but no eligible FOH hours found in Square.` });
+    }
+
+    Object.values(employeeTotals).forEach(e => {
+      e.card_tips = totalWeighted > 0 ? weeklyCardPool * (e.weighted_hours / totalWeighted) : 0;
+    });
+
+    // --- Cash entries from sheet ---
+    cashEntries.forEach(c => {
+      if (!employeeTotals[c.employee]) {
+        flags.push({ kind: 'Cash Without Shift', msg: `${c.employee} on ${dayName(c.date)}: cash entry of ${dollars(c.cash_tips)} but no Square shift found.` });
+        employeeTotals[c.employee] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, cash_out: 0, role: 'unknown' };
+      }
+      employeeTotals[c.employee].cash_tips += c.cash_tips;
+      employeeTotals[c.employee].cash_out += c.cash_payments;
+    });
+
+    // --- Daily details (informational only, no per-day allocation since pool is weekly) ---
+    const byDay = {};
+    shifts.forEach(s => {
+      if (!s.local_date) return;
+      if (!byDay[s.local_date]) byDay[s.local_date] = [];
+      byDay[s.local_date].push(s);
+    });
+    Object.keys(byDay).sort().forEach(date => {
+      const dayShifts = byDay[date];
+      const dayCash = cashEntries.filter(c => c.date === date);
+      const dayCashTips = dayCash.reduce((a, c) => a + c.cash_tips, 0);
+      dayDetails.push({
+        date,
+        card_pool: tipsByDay[date] || 0,
+        cash_tips: dayCashTips,
+        weighted_hours: dayShifts.reduce((a, s) => a + s.hours * (s.tip_multiplier || 0), 0),
+        shifts: dayShifts.map(s => ({ name: s.name, role: s.role, hours: s.hours }))
+      });
+    });
+
+    // --- Cash entries on days with no shifts at all ---
+    cashEntries.forEach(c => {
+      if (!byDay[c.date]) {
+        flags.push({ kind: 'Cash On Closed Day', msg: `${c.employee} on ${dayName(c.date)}: cash entry but no shifts in Square that day.` });
+      }
+    });
+
+    return { employeeTotals, flags, dayDetails };
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function renderSummary(payroll, raw) {
+    const totalHours = Object.values(payroll.employeeTotals).reduce((a, e) => a + e.hours, 0);
+    const totalCard = (raw.tips.totals?.card_tips_cents || 0) / 100;
+    const totalCashTips = Object.values(payroll.employeeTotals).reduce((a, e) => a + e.cash_tips, 0);
+    const tippedHours = Object.values(payroll.employeeTotals)
+      .filter(e => (TIP_MULTIPLIER[e.role] || 0) > 0)
+      .reduce((a, e) => a + e.hours, 0);
+    const blendedRate = tippedHours > 0 ? (totalCard + totalCashTips) / tippedHours : 0;
+
+    document.getElementById('sumHours').textContent = hours(totalHours);
+    document.getElementById('sumHoursSub').textContent = `${hours(tippedHours)} tipped`;
+    document.getElementById('sumCardTips').textContent = dollarsRound(totalCard);
+    document.getElementById('sumCashTips').textContent = dollarsRound(totalCashTips);
+    document.getElementById('sumTipRate').textContent = dollars(blendedRate);
+  }
+
+  function renderFlags(flags) {
+    const el = document.getElementById('flagsList');
+    if (!flags.length) {
+      el.innerHTML = '<div class="flags-empty">No issues detected. Good to run.</div>';
+      return;
+    }
+    el.innerHTML = flags.map(f => `
+      <div class="flag">
+        <div class="kind">${f.kind}</div>
+        <div class="msg">${f.msg}</div>
+      </div>
+    `).join('');
+  }
+
+  function renderEmployees(payroll) {
+    const sorted = Object.entries(payroll.employeeTotals)
+      .sort((a, b) => (b[1].card_tips + b[1].cash_tips) - (a[1].card_tips + a[1].cash_tips));
+    const body = document.getElementById('employeeBody');
+    let totH = 0, totCard = 0, totCash = 0, totOut = 0;
+    body.innerHTML = sorted.map(([name, e]) => {
+      totH += e.hours; totCard += e.card_tips; totCash += e.cash_tips; totOut += e.cash_out;
+      return `
+        <tr>
+          <td>${name}</td>
+          <td>${roleLabel(e.role)}</td>
+          <td class="num">${hours(e.hours)}</td>
+          <td class="num">${dollars(e.card_tips)}</td>
+          <td class="num">${dollars(e.cash_tips)}</td>
+          <td class="num">${dollars(e.cash_out)}</td>
+          <td class="num">${dollars(e.card_tips + e.cash_tips)}</td>
+        </tr>
+      `;
+    }).join('') + `
+      <tr class="total">
+        <td>Total</td><td></td>
+        <td class="num">${hours(totH)}</td>
+        <td class="num">${dollars(totCard)}</td>
+        <td class="num">${dollars(totCash)}</td>
+        <td class="num">${dollars(totOut)}</td>
+        <td class="num">${dollars(totCard + totCash)}</td>
+      </tr>
+    `;
+  }
+
+  function renderDaily(payroll) {
+    const el = document.getElementById('dailyBlock');
+    el.innerHTML = payroll.dayDetails.map(d => `
+      <div class="day-header">
+        ${dayName(d.date)}
+        <span class="day-meta">${dollars(d.card_pool)} card &middot; ${dollars(d.cash_tips)} cash &middot; ${hours(d.weighted_hours)} weighted hrs</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Role</th><th class="num">Hours</th></tr>
+        </thead>
+        <tbody>
+          ${d.shifts.map(s => `
+            <tr>
+              <td>${s.name}</td>
+              <td>${roleLabel(s.role)}</td>
+              <td class="num">${hours(s.hours)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `).join('');
+  }
+
+  function renderExport(payroll) {
+    const sorted = Object.entries(payroll.employeeTotals)
+      .filter(([, e]) => e.card_tips > 0 || e.cash_tips > 0 || e.hours > 0)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    const colWidths = [22, 14, 8, 12, 12];
+    const pad = (s, w) => s.padEnd(w);
+    const padR = (s, w) => s.padStart(w);
+
+    const header = pad('Employee', colWidths[0]) + pad('Role', colWidths[1]) + padR('Hrs', colWidths[2]) + padR('Card Tips', colWidths[3]) + padR('Cash Tips', colWidths[4]);
+    const rule = '-'.repeat(colWidths.reduce((a, b) => a + b, 0));
+    const lines = [header, rule];
+    sorted.forEach(([name, e]) => {
+      lines.push(
+        pad(name.slice(0, colWidths[0] - 1), colWidths[0]) +
+        pad(roleLabel(e.role).slice(0, colWidths[1] - 1), colWidths[1]) +
+        padR(hours(e.hours), colWidths[2]) +
+        padR(dollars(e.card_tips), colWidths[3]) +
+        padR(dollars(e.cash_tips), colWidths[4])
+      );
+    });
+    document.getElementById('exportBlock').textContent = lines.join('\n');
+  }
+
+  function buildCSV(payroll) {
+    const sorted = Object.entries(payroll.employeeTotals)
+      .filter(([, e]) => e.card_tips > 0 || e.cash_tips > 0 || e.hours > 0)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+    const lines = ['Employee,Role,Hours,Card Tips,Cash Tips,Cash Out,Total Tips'];
+    sorted.forEach(([name, e]) => {
+      lines.push([
+        `"${name}"`,
+        roleLabel(e.role),
+        e.hours.toFixed(2),
+        e.card_tips.toFixed(2),
+        e.cash_tips.toFixed(2),
+        e.cash_out.toFixed(2),
+        (e.card_tips + e.cash_tips).toFixed(2)
+      ].join(','));
+    });
+    return lines.join('\n');
+  }
+
+  // ============================================================
+  // EVENTS
+  // ============================================================
+  let lastPayroll = null;
+
+  document.getElementById('pullBtn').addEventListener('click', async () => {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const errBox = document.getElementById('errorBox');
+    const loading = document.getElementById('loadingBox');
+    const results = document.getElementById('results');
+
+    errBox.classList.add('hidden');
+    results.classList.add('hidden');
+    loading.classList.remove('hidden');
+
+    try {
+      const raw = await fetchAll(start, end);
+      const payroll = computePayroll(raw);
+      lastPayroll = payroll;
+      renderSummary(payroll, raw);
+      renderFlags(payroll.flags);
+      renderEmployees(payroll);
+      renderDaily(payroll);
+      renderExport(payroll);
+      results.classList.remove('hidden');
+    } catch (e) {
+      errBox.textContent = e.message;
+      errBox.classList.remove('hidden');
+    } finally {
+      loading.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('exportBlock').textContent);
+    const btn = document.getElementById('copyBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+
+  document.getElementById('csvBtn').addEventListener('click', () => {
+    if (!lastPayroll) return;
+    const csv = buildCSV(lastPayroll);
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `w10w-payroll-${start}-to-${end}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+</script>
+
+</body>
+</html>
