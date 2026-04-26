@@ -127,6 +127,63 @@
   }
   .flag .msg { margin-top: 4px; font-size: 14px; color: var(--green); }
 
+  /* Compact variance group */
+  .flag-group { margin-bottom: 24px; }
+  .flag-group-header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .flag-group-header .kind {
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--flag); font-weight: 500;
+  }
+  .flag-group-header .count {
+    font-size: 11px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .variance-list {
+    border-left: 2px solid var(--flag);
+    padding-left: 18px;
+  }
+  .variance-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px 200px;
+    gap: 24px;
+    padding: 6px 0;
+    font-size: 14px;
+    align-items: baseline;
+  }
+  .variance-row .name { color: var(--green); }
+  .variance-row .variance {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+  .variance-row .detail {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .variance-row .var-over.var-major   { color: var(--gold); }
+  .variance-row .var-over.var-moderate{ color: var(--gold); opacity: 0.7; }
+  .variance-row .var-over.var-minor   { color: var(--gold); opacity: 0.5; }
+  .variance-row .var-under.var-major   { color: var(--flag); }
+  .variance-row .var-under.var-moderate{ color: var(--flag); opacity: 0.7; }
+  .variance-row .var-under.var-minor   { color: var(--flag); opacity: 0.5; }
+
+  /* Multi-role section */
+  .multi-role-row {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--green);
+    line-height: 1.6;
+    border-bottom: 1px solid #e8e1cf;
+  }
+  .multi-role-row:last-child { border-bottom: none; }
+  .multi-role-row .name { font-weight: 500; }
+  .multi-role-row .breakdown { color: var(--muted); }
+
   /* Tables */
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 12px 12px 12px 0; font-size: 13px; }
@@ -237,6 +294,11 @@
     <section>
       <h2>Flags</h2>
       <div id="flagsList"></div>
+    </section>
+
+    <section id="multiRoleSection" class="hidden">
+      <h2>Multi-Role</h2>
+      <div id="multiRoleList"></div>
     </section>
 
     <section>
@@ -475,6 +537,10 @@
         const sign = e.variance > 0 ? '+' : '';
         flags.push({
           kind: 'Schedule Variance',
+          name: name,
+          scheduled: e.scheduled_hours,
+          worked: e.hours,
+          variance: e.variance,
           msg: `${name}: scheduled ${hours(e.scheduled_hours)}h, worked ${hours(e.hours)}h (${sign}${hours(e.variance)}h)`
         });
       }
@@ -542,7 +608,18 @@
       }
     });
 
-    return { employeeTotals, flags, dayDetails };
+    // --- Multi-role employees (informational, surfaced separately) ---
+    const multiRole = [];
+    Object.entries(employeeTotals).forEach(([name, e]) => {
+      const titles = Object.entries(e.job_title_hours)
+        .filter(([, hrs]) => hrs >= 0.5) // ignore micro-blip clock-ins under 30 min
+        .sort((a, b) => b[1] - a[1]);
+      if (titles.length >= 2) {
+        multiRole.push({ name, titles });
+      }
+    });
+
+    return { employeeTotals, flags, dayDetails, multiRole };
   }
 
   // ============================================================
@@ -571,12 +648,81 @@
       el.innerHTML = '<div class="flags-empty">No issues detected. Good to run.</div>';
       return;
     }
-    el.innerHTML = flags.map(f => `
-      <div class="flag">
-        <div class="kind">${f.kind}</div>
-        <div class="msg">${f.msg}</div>
-      </div>
-    `).join('');
+
+    // Group by kind so we can render Schedule Variance compactly
+    const byKind = {};
+    flags.forEach(f => {
+      if (!byKind[f.kind]) byKind[f.kind] = [];
+      byKind[f.kind].push(f);
+    });
+
+    let html = '';
+
+    // Schedule Variance: compact list, sorted by magnitude desc, severity-colored
+    if (byKind['Schedule Variance']) {
+      const variances = byKind['Schedule Variance']
+        .slice()
+        .sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance));
+      html += `
+        <div class="flag-group">
+          <div class="flag-group-header">
+            <span class="kind">Schedule Variance</span>
+            <span class="count">${variances.length} flagged</span>
+          </div>
+          <div class="variance-list">
+            ${variances.map(v => {
+              const absV = Math.abs(v.variance);
+              const sev = absV > 5 ? 'var-major' : absV > 2 ? 'var-moderate' : 'var-minor';
+              const dir = v.variance > 0 ? 'var-over' : 'var-under';
+              const sign = v.variance > 0 ? '+' : '';
+              return `
+                <div class="variance-row">
+                  <div class="name">${v.name}</div>
+                  <div class="variance ${dir} ${sev}">${sign}${v.variance.toFixed(2)}h</div>
+                  <div class="detail">${hours(v.scheduled)}h sched &middot; ${hours(v.worked)}h worked</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      delete byKind['Schedule Variance'];
+    }
+
+    // All other flag kinds: standalone boxes (rarer, qualitatively distinct)
+    Object.entries(byKind).forEach(([kind, items]) => {
+      items.forEach(f => {
+        html += `
+          <div class="flag">
+            <div class="kind">${kind}</div>
+            <div class="msg">${f.msg}</div>
+          </div>
+        `;
+      });
+    });
+
+    el.innerHTML = html;
+  }
+
+  function renderMultiRole(payroll) {
+    const section = document.getElementById('multiRoleSection');
+    const list = document.getElementById('multiRoleList');
+    const items = payroll.multiRole || [];
+    if (items.length === 0) {
+      section.classList.add('hidden');
+      return;
+    }
+    section.classList.remove('hidden');
+    list.innerHTML = items.map(m => {
+      const parts = m.titles.map(([title, hrs]) => `${title} for ${hours(hrs)} hours`);
+      let breakdown;
+      if (parts.length === 2) {
+        breakdown = `${parts[0]} and ${parts[1]}`;
+      } else {
+        breakdown = parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1];
+      }
+      return `<div class="multi-role-row"><span class="name">${m.name}</span> worked as <span class="breakdown">${breakdown}</span>.</div>`;
+    }).join('');
   }
 
   function renderEmployees(payroll) {
@@ -713,6 +859,7 @@
       lastPayroll = payroll;
       renderSummary(payroll, raw);
       renderFlags(payroll.flags);
+      renderMultiRole(payroll);
       renderEmployees(payroll);
       renderDaily(payroll);
       renderExport(payroll);
