@@ -235,6 +235,11 @@
   <div id="results" class="hidden">
 
     <section>
+      <h2>Flags</h2>
+      <div id="flagsList"></div>
+    </section>
+
+    <section>
       <h2>Summary</h2>
       <div class="summary">
         <div class="stat">
@@ -258,11 +263,6 @@
           <div class="sub">card + cash blended</div>
         </div>
       </div>
-    </section>
-
-    <section>
-      <h2>Flags</h2>
-      <div id="flagsList"></div>
     </section>
 
     <section>
@@ -460,6 +460,13 @@
         });
       }
     });
+
+    // --- Schedule data availability ---
+    if (scheduled?.warning) {
+      flags.push({ kind: 'Schedule Data Unavailable', msg: scheduled.warning });
+    } else if (scheduled && (!scheduled.scheduled_shifts || scheduled.scheduled_shifts === 0)) {
+      flags.push({ kind: 'Schedule Data Empty', msg: 'No published scheduled shifts found in Square for this period. Schedule variance and no-show checks are skipped.' });
+    }
 
     // --- Weekly card and cash pools, distributed by same weighted-hours formula ---
     const weeklyCardPool = (tips.totals?.card_tips_cents || 0) / 100;
