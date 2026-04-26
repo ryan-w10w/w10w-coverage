@@ -226,28 +226,62 @@
     margin-bottom: 24px;
   }
 
-  /* Export modal-ish block */
-  .export-block {
-    margin-top: 32px;
-    background: var(--cream-warm);
-    padding: 24px 28px;
+  /* Tip Entry list (Square Payroll workflow) */
+  .tip-entry-help {
+    font-size: 13px; color: var(--muted);
+    margin: 0 0 24px 0;
   }
-  .export-block h3 {
-    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
-    font-weight: 500; margin: 0 0 16px 0; color: var(--muted);
+  .tip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #e8e1cf;
+    gap: 24px;
+    transition: opacity 0.2s;
   }
-  .export-block pre {
+  .tip-row:last-child { border-bottom: none; }
+  .tip-row.entered { opacity: 0.45; }
+  .tip-row.entered .tip-name,
+  .tip-row.entered .tip-name a { text-decoration: line-through; }
+  .tip-name { font-size: 15px; color: var(--green); }
+  .tip-amount {
     font-family: 'Jost', sans-serif;
-    font-size: 13px;
+    font-size: 17px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
     background: white;
-    padding: 16px;
-    border: 1px solid var(--rule);
-    overflow-x: auto;
-    white-space: pre;
-    line-height: 1.6;
+    border: 1px solid var(--green);
     color: var(--green);
+    padding: 9px 22px;
+    cursor: pointer;
+    letter-spacing: 0;
+    text-transform: none;
+    transition: all 0.15s;
+    min-width: 120px;
+    text-align: center;
   }
-  .copy-row { display: flex; gap: 12px; margin-top: 12px; }
+  .tip-amount:hover { background: var(--green); color: var(--cream); }
+  .tip-row.entered .tip-amount {
+    background: var(--cream-warm);
+    border-color: var(--rule);
+    color: var(--muted);
+  }
+  .tip-amount.copied {
+    background: var(--gold) !important;
+    color: white !important;
+    border-color: var(--gold) !important;
+  }
+  .tip-actions { margin-top: 28px; }
+
+  /* Name link to Square */
+  .name-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted var(--rule);
+    transition: border-color 0.15s;
+  }
+  .name-link:hover { border-bottom-color: var(--green); }
 
   .hidden { display: none !important; }
 </style>
@@ -352,16 +386,12 @@
 
     <section>
       <h2>Square Payroll Entry</h2>
-      <p style="font-size: 13px; color: var(--muted); margin-top: 0;">
-        Total Tips per employee for the period. Both card and cash tips are paid through Square Payroll &mdash; enter the Total Tips amount per employee.
+      <p class="tip-entry-help">
+        Click each total to copy and mark as entered. Sorted alphabetically to match Square Payroll. Only tipped employees shown.
       </p>
-      <div class="export-block">
-        <h3>Copy &amp; Paste Block</h3>
-        <pre id="exportBlock"></pre>
-        <div class="copy-row">
-          <button id="copyBtn">Copy Block</button>
-          <button id="csvBtn" class="ghost">Download CSV</button>
-        </div>
+      <div id="tipEntryList"></div>
+      <div class="tip-actions">
+        <button id="csvBtn" class="ghost">Download CSV</button>
       </div>
     </section>
 
@@ -435,6 +465,10 @@
     const d = new Date(dateStr + 'T12:00:00');
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
+  function nameLink(name, teamMemberId) {
+    if (!teamMemberId) return name;
+    return `<a class="name-link" href="https://app.squareup.com/dashboard/team/team-members/${teamMemberId}" target="_blank" rel="noopener">${name}</a>`;
+  }
 
   // ============================================================
   // FETCH
@@ -471,7 +505,7 @@
     shifts.forEach(s => {
       if (s.hours == null) return;
       if (!employeeTotals[s.name]) {
-        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, scheduled_hours: 0, variance: 0, card_tips: 0, cash_tips: 0, job_title_hours: {} };
+        employeeTotals[s.name] = { team_member_id: s.team_member_id, hours: 0, weighted_hours: 0, scheduled_hours: 0, variance: 0, card_tips: 0, cash_tips: 0, job_title_hours: {} };
       }
       employeeTotals[s.name].hours += s.hours;
       employeeTotals[s.name].weighted_hours += s.hours * (s.tip_multiplier || 0);
@@ -598,7 +632,7 @@
         card_pool: tipsByDay[date] || 0,
         cash_tips: cashByDate[date]?.cash_tips || 0,
         weighted_hours: dayShifts.reduce((a, s) => a + s.hours * (s.tip_multiplier || 0), 0),
-        shifts: dayShifts.map(s => ({ name: s.name, role: s.role, job_title: s.job_title, hours: s.hours }))
+        shifts: dayShifts.map(s => ({ name: s.name, team_member_id: s.team_member_id, role: s.role, job_title: s.job_title, hours: s.hours }))
       });
     });
 
@@ -642,7 +676,7 @@
     document.getElementById('sumTipRate').textContent = dollars(blendedRate);
   }
 
-  function renderFlags(flags) {
+  function renderFlags(flags, employeeTotals) {
     const el = document.getElementById('flagsList');
     if (!flags.length) {
       el.innerHTML = '<div class="flags-empty">No issues detected. Good to run.</div>';
@@ -675,9 +709,10 @@
               const sev = absV > 5 ? 'var-major' : absV > 2 ? 'var-moderate' : 'var-minor';
               const dir = v.variance > 0 ? 'var-over' : 'var-under';
               const sign = v.variance > 0 ? '+' : '';
+              const tmid = employeeTotals[v.name]?.team_member_id;
               return `
                 <div class="variance-row">
-                  <div class="name">${v.name}</div>
+                  <div class="name">${nameLink(v.name, tmid)}</div>
                   <div class="variance ${dir} ${sev}">${sign}${v.variance.toFixed(2)}h</div>
                   <div class="detail">${hours(v.scheduled)}h sched &middot; ${hours(v.worked)}h worked</div>
                 </div>
@@ -721,7 +756,8 @@
       } else {
         breakdown = parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1];
       }
-      return `<div class="multi-role-row"><span class="name">${m.name}</span> worked as <span class="breakdown">${breakdown}</span>.</div>`;
+      const tmid = payroll.employeeTotals[m.name]?.team_member_id;
+      return `<div class="multi-role-row"><span class="name">${nameLink(m.name, tmid)}</span> worked as <span class="breakdown">${breakdown}</span>.</div>`;
     }).join('');
   }
 
@@ -749,7 +785,7 @@
 
       return `
         <tr>
-          <td>${name}</td>
+          <td>${nameLink(name, e.team_member_id)}</td>
           <td>${e.role_display}</td>
           <td class="num">${schedDisplay}</td>
           <td class="num">${hours(e.hours)}${varianceTag}</td>
@@ -784,7 +820,7 @@
         <tbody>
           ${d.shifts.map(s => `
             <tr>
-              <td>${s.name}</td>
+              <td>${nameLink(s.name, s.team_member_id)}</td>
               <td>${s.job_title || roleLabel(s.role)}</td>
               <td class="num">${hours(s.hours)}</td>
             </tr>
@@ -794,29 +830,33 @@
     `).join('');
   }
 
-  function renderExport(payroll) {
+  function renderTipEntry(payroll) {
     const sorted = Object.entries(payroll.employeeTotals)
-      .filter(([, e]) => e.card_tips > 0 || e.cash_tips > 0 || e.hours > 0)
+      .filter(([, e]) => (e.card_tips + e.cash_tips) > 0)
       .sort((a, b) => a[0].localeCompare(b[0]));
 
-    const colWidths = [22, 22, 7, 11, 11, 11];
-    const pad = (s, w) => s.padEnd(w);
-    const padR = (s, w) => s.padStart(w);
+    const list = document.getElementById('tipEntryList');
+    list.innerHTML = sorted.map(([name, e]) => {
+      const total = e.card_tips + e.cash_tips;
+      return `
+        <div class="tip-row" data-name="${name}">
+          <div class="tip-name">${nameLink(name, e.team_member_id)}</div>
+          <button class="tip-amount" type="button" data-amount="${total.toFixed(2)}">${dollars(total)}</button>
+        </div>
+      `;
+    }).join('');
 
-    const header = pad('Employee', colWidths[0]) + pad('Role', colWidths[1]) + padR('Hrs', colWidths[2]) + padR('Card', colWidths[3]) + padR('Cash', colWidths[4]) + padR('Total', colWidths[5]);
-    const rule = '-'.repeat(colWidths.reduce((a, b) => a + b, 0));
-    const lines = [header, rule];
-    sorted.forEach(([name, e]) => {
-      lines.push(
-        pad(name.slice(0, colWidths[0] - 1), colWidths[0]) +
-        pad((e.role_display || '').slice(0, colWidths[1] - 1), colWidths[1]) +
-        padR(hours(e.hours), colWidths[2]) +
-        padR(dollars(e.card_tips), colWidths[3]) +
-        padR(dollars(e.cash_tips), colWidths[4]) +
-        padR(dollars(e.card_tips + e.cash_tips), colWidths[5])
-      );
+    // Wire click → copy + toggle entered
+    list.querySelectorAll('.tip-amount').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const amount = btn.dataset.amount;
+        try { await navigator.clipboard.writeText(amount); } catch (e) { /* clipboard may fail in some browsers */ }
+        const row = btn.closest('.tip-row');
+        row.classList.toggle('entered');
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 600);
+      });
     });
-    document.getElementById('exportBlock').textContent = lines.join('\n');
   }
 
   function buildCSV(payroll) {
@@ -858,11 +898,11 @@
       const payroll = computePayroll(raw);
       lastPayroll = payroll;
       renderSummary(payroll, raw);
-      renderFlags(payroll.flags);
+      renderFlags(payroll.flags, payroll.employeeTotals);
       renderMultiRole(payroll);
       renderEmployees(payroll);
       renderDaily(payroll);
-      renderExport(payroll);
+      renderTipEntry(payroll);
       results.classList.remove('hidden');
     } catch (e) {
       errBox.textContent = e.message;
@@ -870,14 +910,6 @@
     } finally {
       loading.classList.add('hidden');
     }
-  });
-
-  document.getElementById('copyBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(document.getElementById('exportBlock').textContent);
-    const btn = document.getElementById('copyBtn');
-    const orig = btn.textContent;
-    btn.textContent = 'Copied';
-    setTimeout(() => { btn.textContent = orig; }, 1500);
   });
 
   document.getElementById('csvBtn').addEventListener('click', () => {
