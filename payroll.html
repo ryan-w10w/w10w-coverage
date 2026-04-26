@@ -267,7 +267,6 @@
             <th class="num">Hours</th>
             <th class="num">Card Tips</th>
             <th class="num">Cash Tips</th>
-            <th class="num">Cash Out</th>
             <th class="num">Total Tips</th>
           </tr>
         </thead>
@@ -386,16 +385,18 @@
     const shifts = labor.shifts || [];
     const tipsByDay = Object.fromEntries((tips.days || []).map(d => [d.date, d.card_tips_cents / 100]));
     const cashEntries = cash.entries || [];
+    const cashByDate = Object.fromEntries(cashEntries.map(c => [c.date, c]));
+    const cashDuplicates = cash.duplicates || [];
 
     const flags = [];
-    const employeeTotals = {}; // name -> { hours, weighted_hours, card_tips, cash_tips, cash_out, role }
+    const employeeTotals = {}; // name -> { hours, weighted_hours, card_tips, cash_tips, role }
     const dayDetails = [];
 
     // --- Aggregate hours per employee across the entire week ---
     shifts.forEach(s => {
       if (s.hours == null) return;
       if (!employeeTotals[s.name]) {
-        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, cash_out: 0, role: s.role };
+        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, role: s.role };
       }
       employeeTotals[s.name].hours += s.hours;
       employeeTotals[s.name].weighted_hours += s.hours * (s.tip_multiplier || 0);
@@ -415,26 +416,25 @@
       flags.push({ kind: 'Long Shift', msg: `${s.name} on ${dayName(s.local_date)}: ${hours(s.hours)} hrs (>12).` });
     });
 
-    // --- Weekly card pool distribution ---
+    // --- Weekly card and cash pools, distributed by same weighted-hours formula ---
     const weeklyCardPool = (tips.totals?.card_tips_cents || 0) / 100;
+    const weeklyCashPool = (cash.totals?.cash_tips || 0);
     const totalWeighted = Object.values(employeeTotals).reduce((a, e) => a + e.weighted_hours, 0);
 
-    if (weeklyCardPool > 0 && totalWeighted === 0) {
-      flags.push({ kind: 'Tips With No FOH', msg: `${dollars(weeklyCardPool)} in card tips this week but no eligible FOH hours found in Square.` });
+    if ((weeklyCardPool + weeklyCashPool) > 0 && totalWeighted === 0) {
+      flags.push({ kind: 'Tips With No FOH', msg: `${dollars(weeklyCardPool + weeklyCashPool)} in tips this week but no eligible FOH hours found in Square.` });
     }
 
     Object.values(employeeTotals).forEach(e => {
-      e.card_tips = totalWeighted > 0 ? weeklyCardPool * (e.weighted_hours / totalWeighted) : 0;
+      if (totalWeighted > 0) {
+        e.card_tips = weeklyCardPool * (e.weighted_hours / totalWeighted);
+        e.cash_tips = weeklyCashPool * (e.weighted_hours / totalWeighted);
+      }
     });
 
-    // --- Cash entries from sheet ---
-    cashEntries.forEach(c => {
-      if (!employeeTotals[c.employee]) {
-        flags.push({ kind: 'Cash Without Shift', msg: `${c.employee} on ${dayName(c.date)}: cash entry of ${dollars(c.cash_tips)} but no Square shift found.` });
-        employeeTotals[c.employee] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, cash_out: 0, role: 'unknown' };
-      }
-      employeeTotals[c.employee].cash_tips += c.cash_tips;
-      employeeTotals[c.employee].cash_out += c.cash_payments;
+    // --- Duplicate shift reports ---
+    cashDuplicates.forEach(date => {
+      flags.push({ kind: 'Duplicate Shift Report', msg: `${dayName(date)}: multiple shift reports submitted. Using the most recent.` });
     });
 
     // --- Daily details (informational only, no per-day allocation since pool is weekly) ---
@@ -446,12 +446,10 @@
     });
     Object.keys(byDay).sort().forEach(date => {
       const dayShifts = byDay[date];
-      const dayCash = cashEntries.filter(c => c.date === date);
-      const dayCashTips = dayCash.reduce((a, c) => a + c.cash_tips, 0);
       dayDetails.push({
         date,
         card_pool: tipsByDay[date] || 0,
-        cash_tips: dayCashTips,
+        cash_tips: cashByDate[date]?.cash_tips || 0,
         weighted_hours: dayShifts.reduce((a, s) => a + s.hours * (s.tip_multiplier || 0), 0),
         shifts: dayShifts.map(s => ({ name: s.name, role: s.role, hours: s.hours }))
       });
@@ -459,8 +457,8 @@
 
     // --- Cash entries on days with no shifts at all ---
     cashEntries.forEach(c => {
-      if (!byDay[c.date]) {
-        flags.push({ kind: 'Cash On Closed Day', msg: `${c.employee} on ${dayName(c.date)}: cash entry but no shifts in Square that day.` });
+      if (!byDay[c.date] && c.cash_tips > 0) {
+        flags.push({ kind: 'Cash On Closed Day', msg: `${dayName(c.date)}: ${dollars(c.cash_tips)} cash recorded but no shifts in Square that day.` });
       }
     });
 
@@ -504,9 +502,9 @@
     const sorted = Object.entries(payroll.employeeTotals)
       .sort((a, b) => (b[1].card_tips + b[1].cash_tips) - (a[1].card_tips + a[1].cash_tips));
     const body = document.getElementById('employeeBody');
-    let totH = 0, totCard = 0, totCash = 0, totOut = 0;
+    let totH = 0, totCard = 0, totCash = 0;
     body.innerHTML = sorted.map(([name, e]) => {
-      totH += e.hours; totCard += e.card_tips; totCash += e.cash_tips; totOut += e.cash_out;
+      totH += e.hours; totCard += e.card_tips; totCash += e.cash_tips;
       return `
         <tr>
           <td>${name}</td>
@@ -514,7 +512,6 @@
           <td class="num">${hours(e.hours)}</td>
           <td class="num">${dollars(e.card_tips)}</td>
           <td class="num">${dollars(e.cash_tips)}</td>
-          <td class="num">${dollars(e.cash_out)}</td>
           <td class="num">${dollars(e.card_tips + e.cash_tips)}</td>
         </tr>
       `;
@@ -524,7 +521,6 @@
         <td class="num">${hours(totH)}</td>
         <td class="num">${dollars(totCard)}</td>
         <td class="num">${dollars(totCash)}</td>
-        <td class="num">${dollars(totOut)}</td>
         <td class="num">${dollars(totCard + totCash)}</td>
       </tr>
     `;
@@ -582,7 +578,7 @@
     const sorted = Object.entries(payroll.employeeTotals)
       .filter(([, e]) => e.card_tips > 0 || e.cash_tips > 0 || e.hours > 0)
       .sort((a, b) => a[0].localeCompare(b[0]));
-    const lines = ['Employee,Role,Hours,Card Tips,Cash Tips,Cash Out,Total Tips'];
+    const lines = ['Employee,Role,Hours,Card Tips,Cash Tips,Total Tips'];
     sorted.forEach(([name, e]) => {
       lines.push([
         `"${name}"`,
@@ -590,7 +586,6 @@
         e.hours.toFixed(2),
         e.card_tips.toFixed(2),
         e.cash_tips.toFixed(2),
-        e.cash_out.toFixed(2),
         (e.card_tips + e.cash_tips).toFixed(2)
       ].join(','));
     });
