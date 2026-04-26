@@ -9,7 +9,7 @@ const TZ_OFFSET_HOURS = -4; // EDT
 function squareHeaders() {
   return {
     'Square-Version': '2024-08-21',
-    'Authorization': `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+    'Authorization': `Bearer ${process.env.SQUARE_TOKEN}`,
     'Content-Type': 'application/json'
   };
 }
