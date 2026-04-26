@@ -4,7 +4,17 @@
 
 const SQUARE_BASE = 'https://connect.squareup.com';
 const LOCATION_ID = process.env.SQUARE_LOCATION_ID || 'LHSVRCNXBB7E8';
-const TZ_OFFSET_HOURS = -4; // EDT. Adjust to -5 for EST. Square stores UTC; we compare on local-day basis.
+// DST-aware timezone helpers for America/New_York
+function nyToUTCISO(dateStr, h, m, s) {
+  const pad = n => String(n).padStart(2, '0');
+  const timeStr = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  for (const off of ['-04:00', '-05:00']) {
+    const cand = new Date(`${dateStr}T${timeStr}${off}`);
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(cand);
+    if (fmt === dateStr) return cand.toISOString();
+  }
+  return new Date(`${dateStr}T${timeStr}-04:00`).toISOString();
+}
 
 const ROLE_MAP = {
   // Job title -> internal role bucket. Edit as Square jobs evolve.
@@ -107,10 +117,11 @@ async function fetchJobTitles() {
 }
 
 function localDateOf(isoString) {
-  // Returns YYYY-MM-DD for the local (NY) date the timestamp falls into.
-  const d = new Date(isoString);
-  const local = new Date(d.getTime() + TZ_OFFSET_HOURS * 3600 * 1000);
-  return local.toISOString().slice(0, 10);
+  // Returns YYYY-MM-DD for the local (NY) date the timestamp falls into. DST-aware.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date(isoString));
 }
 
 exports.handler = async (event) => {
@@ -120,8 +131,8 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'start and end (YYYY-MM-DD) required' }) };
     }
     // Build wide UTC window so shifts that started/ended just outside local boundaries are still included.
-    const startISO = new Date(`${start}T00:00:00${TZ_OFFSET_HOURS < 0 ? '-' : '+'}0${Math.abs(TZ_OFFSET_HOURS)}:00`).toISOString();
-    const endExclusive = new Date(`${end}T23:59:59${TZ_OFFSET_HOURS < 0 ? '-' : '+'}0${Math.abs(TZ_OFFSET_HOURS)}:00`).toISOString();
+    const startISO = nyToUTCISO(start, 0, 0, 0);
+    const endExclusive = nyToUTCISO(end, 23, 59, 59);
 
     const [shifts, jobs] = await Promise.all([
       fetchAllShifts(startISO, endExclusive),
