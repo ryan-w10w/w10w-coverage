@@ -1,7 +1,11 @@
 // /api/payroll-scheduled?start=YYYY-MM-DD&end=YYYY-MM-DD
-// Fetches PUBLISHED scheduled shifts from Square Labor and aggregates hours per employee.
-// Drafts (unpublished) are ignored. Unpaid breaks are subtracted from scheduled hours.
-// Returns gracefully empty if scheduling isn't available so the rest of the tool still works.
+// Fetches PUBLISHED scheduled shifts from Square Labor.
+// Filters out:
+//   - Unassigned shift slots (template shifts published before staff are assigned)
+//   - Shifts where the team_member_id doesn't resolve to a known team member
+//   - Bogus durations (>24h or negative — usually old recurring templates)
+// Returns per-employee weekly totals AND per-employee per-day breakdown.
+// Daily breakdown enables 45-min daily tolerance in the front-end variance check.
 
 const SQUARE_BASE = 'https://connect.squareup.com';
 const LOCATION_ID = process.env.SQUARE_LOCATION_ID || 'LHSVRCNXBB7E8';
@@ -13,6 +17,12 @@ function squareHeaders() {
     'Authorization': `Bearer ${process.env.SQUARE_TOKEN}`,
     'Content-Type': 'application/json'
   };
+}
+
+function localDateOf(isoString) {
+  const d = new Date(isoString);
+  const local = new Date(d.getTime() + TZ_OFFSET_HOURS * 3600 * 1000);
+  return local.toISOString().slice(0, 10);
 }
 
 async function fetchAllScheduledShifts(startISO, endISO) {
@@ -63,7 +73,6 @@ async function fetchTeamMembers() {
 }
 
 function parseISODuration(d) {
-  // PT1H30M -> 1.5 hours, PT45M -> 0.75, PT2H -> 2
   if (!d) return 0;
   const m = String(d).match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!m) return 0;
@@ -86,20 +95,30 @@ exports.handler = async (event) => {
 
     const byEmployee = {};
     let countedShifts = 0;
+    let skippedUnassigned = 0;
+    let skippedUnknownMember = 0;
+    let skippedBogusDuration = 0;
 
     shifts.forEach(s => {
-      // Only count PUBLISHED shifts. Drafts haven't been communicated to the team.
       const details = s.published_shift_details;
       if (!details || !details.start_at || !details.end_at) return;
 
-      const startAt = details.start_at;
-      const endAt = details.end_at;
-      const memberId = s.team_member_id;
-      const name = members[memberId] || 'Unknown';
+      // Resolve team member. Unassigned slots have no team_member_id and are skipped.
+      const memberId = s.team_member_id || details.team_member_id;
+      if (!memberId) { skippedUnassigned += 1; return; }
 
-      const grossHrs = (new Date(endAt) - new Date(startAt)) / 3600000;
+      const name = members[memberId];
+      if (!name) { skippedUnknownMember += 1; return; }
 
-      // Subtract unpaid breaks from the schedule (matches how actual hours are computed in Square)
+      // Sanity-check duration. Skip multi-day shifts (likely orphaned templates) and negatives.
+      const grossHrs = (new Date(details.end_at) - new Date(details.start_at)) / 3600000;
+      if (grossHrs > 24 || grossHrs < 0) {
+        skippedBogusDuration += 1;
+        console.warn(`Skipping bogus scheduled shift: ${grossHrs}h for ${name} (${details.start_at} to ${details.end_at})`);
+        return;
+      }
+
+      // Subtract unpaid breaks
       let unpaidBreakHrs = 0;
       (details.breaks || []).forEach(b => {
         if (b.is_paid === false) {
@@ -108,9 +127,12 @@ exports.handler = async (event) => {
       });
 
       const netHrs = Math.max(0, grossHrs - unpaidBreakHrs);
-      if (!byEmployee[name]) byEmployee[name] = { hours: 0, shift_count: 0 };
+      const localDate = localDateOf(details.start_at);
+
+      if (!byEmployee[name]) byEmployee[name] = { hours: 0, shift_count: 0, by_date: {} };
       byEmployee[name].hours += netHrs;
       byEmployee[name].shift_count += 1;
+      byEmployee[name].by_date[localDate] = (byEmployee[name].by_date[localDate] || 0) + netHrs;
       countedShifts += 1;
     });
 
@@ -120,6 +142,11 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         employees: byEmployee,
         scheduled_shifts: countedShifts,
+        skipped: {
+          unassigned: skippedUnassigned,
+          unknown_member: skippedUnknownMember,
+          bogus_duration: skippedBogusDuration
+        },
         warning: error
       })
     };
