@@ -98,10 +98,28 @@ exports.handler = async (event) => {
     let skippedUnassigned = 0;
     let skippedUnknownMember = 0;
     let skippedBogusDuration = 0;
+    let skippedOutOfRange = 0;
+    let skippedDuplicate = 0;
+
+    const winStart = new Date(startISO).getTime();
+    const winEnd = new Date(endISO).getTime();
+    const seenIds = new Set();
 
     shifts.forEach(s => {
+      // Dedupe in case Square returns version-history duplicates
+      if (s.id && seenIds.has(s.id)) { skippedDuplicate += 1; return; }
+      if (s.id) seenIds.add(s.id);
+
       const details = s.published_shift_details;
       if (!details || !details.start_at || !details.end_at) return;
+
+      // Defensive client-side date filter: Square's filter is unreliable here,
+      // so we re-check that the shift's published start time falls in our window.
+      const shiftStartMs = new Date(details.start_at).getTime();
+      if (shiftStartMs < winStart || shiftStartMs > winEnd) {
+        skippedOutOfRange += 1;
+        return;
+      }
 
       // Resolve team member. Unassigned slots have no team_member_id and are skipped.
       const memberId = s.team_member_id || details.team_member_id;
@@ -142,10 +160,13 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         employees: byEmployee,
         scheduled_shifts: countedShifts,
+        raw_shifts_received: shifts.length,
         skipped: {
           unassigned: skippedUnassigned,
           unknown_member: skippedUnknownMember,
-          bogus_duration: skippedBogusDuration
+          bogus_duration: skippedBogusDuration,
+          out_of_range: skippedOutOfRange,
+          duplicate: skippedDuplicate
         },
         warning: error
       })
