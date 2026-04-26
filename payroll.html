@@ -148,6 +148,14 @@
     font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
     color: var(--muted); margin-left: 8px;
   }
+  .var-tag {
+    display: inline-block;
+    font-size: 11px;
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .var-tag.var-over { color: var(--gold); }
+  .var-tag.var-under { color: var(--flag); }
 
   /* Day breakdown */
   .day-header { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; margin: 28px 0 12px; color: var(--green); }
@@ -264,7 +272,8 @@
           <tr>
             <th>Name</th>
             <th>Role</th>
-            <th class="num">Hours</th>
+            <th class="num">Scheduled</th>
+            <th class="num">Worked</th>
             <th class="num">Card Tips</th>
             <th class="num">Cash Tips</th>
             <th class="num">Total Tips</th>
@@ -304,6 +313,7 @@
   // ============================================================
   const PIN = '1987';
   const TIP_MULTIPLIER = { server: 1.0, bartender: 1.0, floor_lead: 1.0, host: 0.7, training: 0, non_tipped: 0 };
+  const SCHEDULE_VARIANCE_THRESHOLD = 1.0; // Hours of difference between scheduled and actual that flags
 
   // ============================================================
   // PIN GATE
@@ -367,40 +377,41 @@
   // FETCH
   // ============================================================
   async function fetchAll(start, end) {
-    const [labor, tips, cash] = await Promise.all([
+    const [labor, tips, cash, scheduled] = await Promise.all([
       fetch(`/api/payroll-labor?start=${start}&end=${end}`).then(r => r.json()),
       fetch(`/api/payroll-tips?start=${start}&end=${end}`).then(r => r.json()),
-      fetch(`/api/payroll-cash?start=${start}&end=${end}`).then(r => r.json())
+      fetch(`/api/payroll-cash?start=${start}&end=${end}`).then(r => r.json()),
+      fetch(`/api/payroll-scheduled?start=${start}&end=${end}`).then(r => r.json()).catch(() => ({ employees: {} }))
     ]);
     [labor, tips, cash].forEach((res, i) => {
       if (res.error) throw new Error(['Labor', 'Tips', 'Cash'][i] + ': ' + res.error);
     });
-    return { labor, tips, cash };
+    return { labor, tips, cash, scheduled };
   }
 
   // ============================================================
   // TIP POOL COMPUTATION (per-day pooling)
   // ============================================================
-  function computePayroll({ labor, tips, cash }) {
+  function computePayroll({ labor, tips, cash, scheduled }) {
     const shifts = labor.shifts || [];
     const tipsByDay = Object.fromEntries((tips.days || []).map(d => [d.date, d.card_tips_cents / 100]));
     const cashEntries = cash.entries || [];
     const cashByDate = Object.fromEntries(cashEntries.map(c => [c.date, c]));
     const cashDuplicates = cash.duplicates || [];
+    const scheduledByName = scheduled?.employees || {};
 
     const flags = [];
-    const employeeTotals = {}; // name -> { hours, weighted_hours, card_tips, cash_tips, role }
+    const employeeTotals = {}; // name -> { hours, weighted_hours, scheduled_hours, variance, card_tips, cash_tips, job_title_hours, role_display }
     const dayDetails = [];
 
     // --- Aggregate hours per employee across the entire week ---
     shifts.forEach(s => {
       if (s.hours == null) return;
       if (!employeeTotals[s.name]) {
-        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, job_title_hours: {} };
+        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, scheduled_hours: 0, variance: 0, card_tips: 0, cash_tips: 0, job_title_hours: {} };
       }
       employeeTotals[s.name].hours += s.hours;
       employeeTotals[s.name].weighted_hours += s.hours * (s.tip_multiplier || 0);
-      // Track each job_title's hours so we can display the full role mix (e.g. "Server, Host")
       const title = s.job_title || 'Unknown';
       employeeTotals[s.name].job_title_hours[title] = (employeeTotals[s.name].job_title_hours[title] || 0) + s.hours;
     });
@@ -413,6 +424,12 @@
         .join(', ');
     });
 
+    // Attach scheduled hours and compute variance
+    Object.entries(employeeTotals).forEach(([name, e]) => {
+      e.scheduled_hours = scheduledByName[name]?.hours || 0;
+      e.variance = e.hours - e.scheduled_hours;
+    });
+
     // --- Open shifts (no clock-out) ---
     shifts.filter(s => s.open).forEach(s => {
       flags.push({ kind: 'Missing Clock-Out', msg: `${s.name} on ${dayName(s.local_date || '')}: no end time recorded.` });
@@ -421,6 +438,27 @@
     // --- Long shifts ---
     shifts.filter(s => s.hours > 12).forEach(s => {
       flags.push({ kind: 'Long Shift', msg: `${s.name} on ${dayName(s.local_date)}: ${hours(s.hours)} hrs (>12).` });
+    });
+
+    // --- Schedule variance (hours short or over) ---
+    Object.entries(employeeTotals).forEach(([name, e]) => {
+      if (e.scheduled_hours > 0 && Math.abs(e.variance) > SCHEDULE_VARIANCE_THRESHOLD) {
+        const sign = e.variance > 0 ? '+' : '';
+        flags.push({
+          kind: 'Schedule Variance',
+          msg: `${name}: scheduled ${hours(e.scheduled_hours)}h, worked ${hours(e.hours)}h (${sign}${hours(e.variance)}h)`
+        });
+      }
+    });
+
+    // --- No-shows (scheduled but didn't clock in at all) ---
+    Object.entries(scheduledByName).forEach(([name, sched]) => {
+      if (!employeeTotals[name] && sched.hours > 0) {
+        flags.push({
+          kind: 'No-Show',
+          msg: `${name}: scheduled ${hours(sched.hours)}h but no clock-in recorded.`
+        });
+      }
     });
 
     // --- Weekly card and cash pools, distributed by same weighted-hours formula ---
@@ -444,7 +482,7 @@
       flags.push({ kind: 'Duplicate Shift Report', msg: `${dayName(date)}: multiple shift reports submitted. Using the most recent.` });
     });
 
-    // --- Daily details (informational only, no per-day allocation since pool is weekly) ---
+    // --- Daily details ---
     const byDay = {};
     shifts.forEach(s => {
       if (!s.local_date) return;
@@ -462,7 +500,6 @@
       });
     });
 
-    // --- Cash entries on days with no shifts at all ---
     cashEntries.forEach(c => {
       if (!byDay[c.date] && c.cash_tips > 0) {
         flags.push({ kind: 'Cash On Closed Day', msg: `${dayName(c.date)}: ${dollars(c.cash_tips)} cash recorded but no shifts in Square that day.` });
@@ -510,14 +547,30 @@
     const sorted = Object.entries(payroll.employeeTotals)
       .sort((a, b) => (b[1].card_tips + b[1].cash_tips) - (a[1].card_tips + a[1].cash_tips));
     const body = document.getElementById('employeeBody');
-    let totH = 0, totCard = 0, totCash = 0;
+    let totH = 0, totSched = 0, totCard = 0, totCash = 0;
+
     body.innerHTML = sorted.map(([name, e]) => {
-      totH += e.hours; totCard += e.card_tips; totCash += e.cash_tips;
+      totH += e.hours;
+      totSched += e.scheduled_hours;
+      totCard += e.card_tips;
+      totCash += e.cash_tips;
+
+      const variance = e.variance;
+      let varianceTag = '';
+      if (e.scheduled_hours > 0 && Math.abs(variance) > SCHEDULE_VARIANCE_THRESHOLD) {
+        const cls = variance > 0 ? 'var-over' : 'var-under';
+        const sign = variance > 0 ? '+' : '';
+        varianceTag = ` <span class="var-tag ${cls}">${sign}${variance.toFixed(2)}</span>`;
+      }
+
+      const schedDisplay = e.scheduled_hours > 0 ? hours(e.scheduled_hours) : '—';
+
       return `
         <tr>
           <td>${name}</td>
           <td>${e.role_display}</td>
-          <td class="num">${hours(e.hours)}</td>
+          <td class="num">${schedDisplay}</td>
+          <td class="num">${hours(e.hours)}${varianceTag}</td>
           <td class="num">${dollars(e.card_tips)}</td>
           <td class="num">${dollars(e.cash_tips)}</td>
           <td class="num">${dollars(e.card_tips + e.cash_tips)}</td>
@@ -526,6 +579,7 @@
     }).join('') + `
       <tr class="total">
         <td>Total</td><td></td>
+        <td class="num">${hours(totSched)}</td>
         <td class="num">${hours(totH)}</td>
         <td class="num">${dollars(totCard)}</td>
         <td class="num">${dollars(totCash)}</td>
