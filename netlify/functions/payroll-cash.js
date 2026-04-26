@@ -1,31 +1,32 @@
 // /api/payroll-cash?start=YYYY-MM-DD&end=YYYY-MM-DD
-// Reads nightly Cash Tips (Col R) and Cash Payments (Col S) from the existing payroll sheet.
+// Reads nightly Cash Tips (Col R) and Cash Payments (Col S) from the Shift Report (Responses) sheet.
+// Each row = one shift report submitted for one whole business day. Closing manager fills it out.
 //
-// Sheet structure assumed (adjust COL_* constants if columns differ):
-//   Col A: Date (YYYY-MM-DD or M/D/YYYY)
-//   Col B: Employee Name
-//   Col R: Cash Tips (dollars)
-//   Col S: Cash Payments (dollars, what came out of the till for that person)
+// Sheet structure:
+//   Col A: Timestamp (form submit time, used for dedup only)
+//   Col B: Shift Date (the actual date of the shift, source of truth)
+//   Col R: Cash Tips for the night (whole-team total)
+//   Col S: Cash Payments for the night (whole-team total)
 //
-// Auth: uses a Google service account JSON in env var GOOGLE_SHEETS_SA_JSON
-// (same pattern as the existing /api/sheets function for the Fixed Costs sheet).
+// If multiple reports exist for the same Shift Date, the one with the latest Timestamp wins.
+// All other duplicate dates are returned in `duplicates` so the UI can flag them.
+//
+// Auth: Google service account JSON in env var GOOGLE_SHEETS_SA_JSON.
 // The service account must have Viewer access to the sheet.
 
-const SHEET_ID = '1SJ88Y00YWDPpMrOTg1tzrrLiKI0FCNV3VsQchircvvY';
-const TAB_NAME = 'Payroll'; // Adjust if the tab is named differently
-const RANGE = `${TAB_NAME}!A2:S`; // Skip header row, pull through Col S
+const SHEET_ID = '1XDxDpEQxxEVP0XL3qhqot-KIGecEVRM6LEfxzJtcPg4';
+const TAB_NAME = 'Form Responses 1';
+const RANGE = `${TAB_NAME}!A2:S`;
 
-const COL_DATE = 0;        // A
-const COL_EMPLOYEE = 1;    // B
-const COL_CASH_TIPS = 17;  // R (0-indexed)
+const COL_TIMESTAMP = 0;   // A
+const COL_DATE = 1;        // B (Shift Date)
+const COL_CASH_TIPS = 17;  // R
 const COL_CASH_PAY = 18;   // S
 
 function parseDate(raw) {
   if (!raw) return null;
   const s = String(raw).trim();
-  // ISO-style first
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  // M/D/YYYY or MM/DD/YYYY
   const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (m) {
     const [, mm, dd, yyyy] = m;
@@ -40,8 +41,13 @@ function parseDollars(raw) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function parseTimestamp(raw) {
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
 async function getAccessToken() {
-  // JWT-based service account flow. Avoids pulling in google-auth-library as a dep.
   const sa = JSON.parse(process.env.GOOGLE_SHEETS_SA_JSON);
   const now = Math.floor(Date.now() / 1000);
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
@@ -76,36 +82,49 @@ exports.handler = async (event) => {
     }
 
     const token = await getAccessToken();
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(RANGE)}?valueRenderOption=UNFORMATTED_VALUE`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(RANGE)}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) throw new Error(`Sheets API ${r.status}: ${await r.text()}`);
     const data = await r.json();
     const rows = data.values || [];
 
-    const entries = [];
+    // Dedup by Shift Date using the latest Timestamp
+    const byDate = {};
+    const duplicateDates = new Set();
+
     rows.forEach(row => {
       const date = parseDate(row[COL_DATE]);
-      const employee = (row[COL_EMPLOYEE] || '').toString().trim();
-      if (!date || !employee) return;
+      if (!date) return;
       if (date < start || date > end) return;
+
+      const ts = parseTimestamp(row[COL_TIMESTAMP]);
       const cashTips = parseDollars(row[COL_CASH_TIPS]);
       const cashPay = parseDollars(row[COL_CASH_PAY]);
-      if (cashTips === 0 && cashPay === 0) return;
-      entries.push({ date, employee, cash_tips: cashTips, cash_payments: cashPay });
+
+      if (byDate[date]) {
+        duplicateDates.add(date);
+        if (ts >= byDate[date].timestamp) {
+          byDate[date] = { timestamp: ts, cash_tips: cashTips, cash_payments: cashPay };
+        }
+      } else {
+        byDate[date] = { timestamp: ts, cash_tips: cashTips, cash_payments: cashPay };
+      }
     });
 
-    // Aggregate per-day totals for sanity checks (cash out should match cash tips paid).
-    const byDay = {};
-    entries.forEach(e => {
-      if (!byDay[e.date]) byDay[e.date] = { date: e.date, cash_tips: 0, cash_payments: 0 };
-      byDay[e.date].cash_tips += e.cash_tips;
-      byDay[e.date].cash_payments += e.cash_payments;
-    });
+    const entries = Object.entries(byDate)
+      .map(([date, d]) => ({ date, cash_tips: d.cash_tips, cash_payments: d.cash_payments }))
+      .filter(e => e.cash_tips !== 0 || e.cash_payments !== 0)
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const totals = {
+      cash_tips: entries.reduce((a, e) => a + e.cash_tips, 0),
+      cash_payments: entries.reduce((a, e) => a + e.cash_payments, 0)
+    };
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-      body: JSON.stringify({ entries, by_day: Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date)) })
+      body: JSON.stringify({ entries, totals, duplicates: [...duplicateDates] })
     };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
