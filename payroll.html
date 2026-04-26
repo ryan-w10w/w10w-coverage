@@ -467,22 +467,58 @@
   }
   function nameLink(name, teamMemberId) {
     if (!teamMemberId) return name;
-    return `<a class="name-link" href="https://app.squareup.com/dashboard/team/team-members/${teamMemberId}" target="_blank" rel="noopener">${name}</a>`;
+    return `<a class="name-link" href="https://app.squareup.com/dashboard/shifts/timecards/${teamMemberId}" target="_blank" rel="noopener">${name}</a>`;
   }
 
   // ============================================================
   // FETCH
   // ============================================================
+  async function fetchOne(url, label) {
+    // Resilient single-fetch: retries once on 5xx/network blips,
+    // detects 401/403 with specific message, returns __error on failure.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(url);
+        if (r.status === 401 || r.status === 403) {
+          return { __error: `${label} authorization failed (${r.status}). Square token may have expired and needs renewal.` };
+        }
+        if (r.status >= 500 && attempt === 0) {
+          await new Promise(res => setTimeout(res, 500));
+          continue;
+        }
+        if (!r.ok) {
+          return { __error: `${label} request failed (HTTP ${r.status}).` };
+        }
+        const data = await r.json();
+        if (data.error) {
+          if (/401|403|UNAUTHORIZED|authorization/i.test(data.error)) {
+            return { __error: `${label} authorization failed. Square token may have expired and needs renewal.` };
+          }
+          return { __error: `${label}: ${data.error}` };
+        }
+        return data;
+      } catch (e) {
+        if (attempt === 0) {
+          await new Promise(res => setTimeout(res, 500));
+          continue;
+        }
+        return { __error: `${label} network error: ${e.message || 'connection failed'}` };
+      }
+    }
+  }
+
   async function fetchAll(start, end) {
     const [labor, tips, cash, scheduled] = await Promise.all([
-      fetch(`/api/payroll-labor?start=${start}&end=${end}`).then(r => r.json()),
-      fetch(`/api/payroll-tips?start=${start}&end=${end}`).then(r => r.json()),
-      fetch(`/api/payroll-cash?start=${start}&end=${end}`).then(r => r.json()),
-      fetch(`/api/payroll-scheduled?start=${start}&end=${end}`).then(r => r.json()).catch(() => ({ employees: {} }))
+      fetchOne(`/api/payroll-labor?start=${start}&end=${end}`, 'Labor'),
+      fetchOne(`/api/payroll-tips?start=${start}&end=${end}`, 'Tips'),
+      fetchOne(`/api/payroll-cash?start=${start}&end=${end}`, 'Cash'),
+      fetchOne(`/api/payroll-scheduled?start=${start}&end=${end}`, 'Scheduled')
     ]);
-    [labor, tips, cash].forEach((res, i) => {
-      if (res.error) throw new Error(['Labor', 'Tips', 'Cash'][i] + ': ' + res.error);
-    });
+    // Labor is critical — without it, no computation possible. Hard fail.
+    if (labor.__error) {
+      throw new Error(labor.__error);
+    }
+    // Tips, cash, scheduled degrade gracefully — surfaced as flags downstream.
     return { labor, tips, cash, scheduled };
   }
 
@@ -491,15 +527,25 @@
   // ============================================================
   function computePayroll({ labor, tips, cash, scheduled }) {
     const shifts = labor.shifts || [];
-    const tipsByDay = Object.fromEntries((tips.days || []).map(d => [d.date, d.card_tips_cents / 100]));
-    const cashEntries = cash.entries || [];
+    const tipsAvailable = !tips.__error;
+    const cashAvailable = !cash.__error;
+    const scheduledAvailable = !scheduled.__error;
+
+    const tipsByDay = tipsAvailable
+      ? Object.fromEntries((tips.days || []).map(d => [d.date, d.card_tips_cents / 100]))
+      : {};
+    const cashEntries = cashAvailable ? (cash.entries || []) : [];
     const cashByDate = Object.fromEntries(cashEntries.map(c => [c.date, c]));
-    const cashDuplicates = cash.duplicates || [];
-    const scheduledByName = scheduled?.employees || {};
+    const cashDuplicates = cashAvailable ? (cash.duplicates || []) : [];
+    const scheduledByName = scheduledAvailable ? (scheduled.employees || {}) : {};
 
     const flags = [];
     const employeeTotals = {}; // name -> { hours, weighted_hours, scheduled_hours, variance, card_tips, cash_tips, job_title_hours, role_display }
     const dayDetails = [];
+
+    // Surface upstream API failures as flags so Tanner sees them (don't fail the whole render)
+    if (!tipsAvailable) flags.push({ kind: 'Card Tips Unavailable', msg: tips.__error + ' Card tips will show as $0; rerun later or enter manually from Square Dashboard.' });
+    if (!cashAvailable) flags.push({ kind: 'Cash Tips Unavailable', msg: cash.__error + ' Cash tips will show as $0; rerun later or enter manually from the Shift Report sheet.' });
 
     // --- Aggregate hours per employee across the entire week ---
     shifts.forEach(s => {
@@ -591,15 +637,17 @@
     });
 
     // --- Schedule data availability ---
-    if (scheduled?.warning) {
+    if (!scheduledAvailable) {
+      flags.push({ kind: 'Schedule Data Unavailable', msg: scheduled.__error + ' Schedule variance and no-show checks are skipped.' });
+    } else if (scheduled.warning) {
       flags.push({ kind: 'Schedule Data Unavailable', msg: scheduled.warning });
-    } else if (scheduled && (!scheduled.scheduled_shifts || scheduled.scheduled_shifts === 0)) {
+    } else if (!scheduled.scheduled_shifts || scheduled.scheduled_shifts === 0) {
       flags.push({ kind: 'Schedule Data Empty', msg: 'No published scheduled shifts found in Square for this period. Schedule variance and no-show checks are skipped.' });
     }
 
     // --- Weekly card and cash pools, distributed by same weighted-hours formula ---
-    const weeklyCardPool = (tips.totals?.card_tips_cents || 0) / 100;
-    const weeklyCashPool = (cash.totals?.cash_tips || 0);
+    const weeklyCardPool = tipsAvailable ? ((tips.totals?.card_tips_cents || 0) / 100) : 0;
+    const weeklyCashPool = cashAvailable ? (cash.totals?.cash_tips || 0) : 0;
     const totalWeighted = Object.values(employeeTotals).reduce((a, e) => a + e.weighted_hours, 0);
 
     if ((weeklyCardPool + weeklyCashPool) > 0 && totalWeighted === 0) {
@@ -661,8 +709,10 @@
   // ============================================================
   function renderSummary(payroll, raw) {
     const totalHours = Object.values(payroll.employeeTotals).reduce((a, e) => a + e.hours, 0);
-    const totalCard = (raw.tips.totals?.card_tips_cents || 0) / 100;
-    const totalCashTips = (raw.cash.totals?.cash_tips || 0);
+    const tipsAvailable = !raw.tips.__error;
+    const cashAvailable = !raw.cash.__error;
+    const totalCard = tipsAvailable ? ((raw.tips.totals?.card_tips_cents || 0) / 100) : 0;
+    const totalCashTips = cashAvailable ? (raw.cash.totals?.cash_tips || 0) : 0;
     // Tipped hours = actual shift hours where tip_multiplier > 0 (correctly handles employees with mixed roles)
     const tippedHours = (raw.labor.shifts || [])
       .filter(s => (s.tip_multiplier || 0) > 0 && s.hours)
@@ -671,9 +721,9 @@
 
     document.getElementById('sumHours').textContent = hours(totalHours);
     document.getElementById('sumHoursSub').textContent = `${hours(tippedHours)} tipped`;
-    document.getElementById('sumCardTips').textContent = dollarsRound(totalCard);
-    document.getElementById('sumCashTips').textContent = dollarsRound(totalCashTips);
-    document.getElementById('sumTipRate').textContent = dollars(blendedRate);
+    document.getElementById('sumCardTips').textContent = tipsAvailable ? dollarsRound(totalCard) : 'n/a';
+    document.getElementById('sumCashTips').textContent = cashAvailable ? dollarsRound(totalCashTips) : 'n/a';
+    document.getElementById('sumTipRate').textContent = (tipsAvailable && cashAvailable) ? dollars(blendedRate) : 'n/a';
   }
 
   function renderFlags(flags, employeeTotals) {
