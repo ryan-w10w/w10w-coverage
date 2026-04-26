@@ -313,7 +313,8 @@
   // ============================================================
   const PIN = '1987';
   const TIP_MULTIPLIER = { server: 1.0, bartender: 1.0, floor_lead: 1.0, host: 0.7, training: 0, non_tipped: 0 };
-  const SCHEDULE_VARIANCE_THRESHOLD = 1.0; // Hours of difference between scheduled and actual that flags
+  const SCHEDULE_VARIANCE_THRESHOLD = 1.0; // Total tolerated weekly variance (in hours) that triggers a flag
+  const SCHEDULE_DAILY_TOLERANCE = 0.75;   // Per-day variance under this (45 min) is treated as normal drift and ignored
 
   // ============================================================
   // PIN GATE
@@ -424,10 +425,38 @@
         .join(', ');
     });
 
-    // Attach scheduled hours and compute variance
+    // Build per-employee per-day actual hours for the daily-tolerance comparison
+    const actualByEmployeeDate = {};
+    shifts.forEach(s => {
+      if (!s.local_date || s.hours == null) return;
+      if (!actualByEmployeeDate[s.name]) actualByEmployeeDate[s.name] = {};
+      actualByEmployeeDate[s.name][s.local_date] = (actualByEmployeeDate[s.name][s.local_date] || 0) + s.hours;
+    });
+
+    // Attach scheduled hours, raw variance (for display) and tolerated variance (for flagging)
     Object.entries(employeeTotals).forEach(([name, e]) => {
-      e.scheduled_hours = scheduledByName[name]?.hours || 0;
+      const sched = scheduledByName[name];
+      e.scheduled_hours = sched?.hours || 0;
       e.variance = e.hours - e.scheduled_hours;
+
+      // Per-day comparison: ignore daily deviation under 45 min as normal drift
+      let toleratedVariance = 0;
+      if (sched && sched.by_date) {
+        const allDates = new Set([
+          ...Object.keys(sched.by_date),
+          ...Object.keys(actualByEmployeeDate[name] || {})
+        ]);
+        allDates.forEach(date => {
+          const a = actualByEmployeeDate[name]?.[date] || 0;
+          const sc = sched.by_date[date] || 0;
+          const dayVar = a - sc;
+          if (Math.abs(dayVar) > SCHEDULE_DAILY_TOLERANCE) {
+            const sign = dayVar > 0 ? 1 : -1;
+            toleratedVariance += sign * (Math.abs(dayVar) - SCHEDULE_DAILY_TOLERANCE);
+          }
+        });
+      }
+      e.tolerated_variance = toleratedVariance;
     });
 
     // --- Open shifts (no clock-out) ---
@@ -440,9 +469,9 @@
       flags.push({ kind: 'Long Shift', msg: `${s.name} on ${dayName(s.local_date)}: ${hours(s.hours)} hrs (>12).` });
     });
 
-    // --- Schedule variance (hours short or over) ---
+    // --- Schedule variance (significant after applying daily 45-min tolerance) ---
     Object.entries(employeeTotals).forEach(([name, e]) => {
-      if (e.scheduled_hours > 0 && Math.abs(e.variance) > SCHEDULE_VARIANCE_THRESHOLD) {
+      if (e.scheduled_hours > 0 && Math.abs(e.tolerated_variance) > SCHEDULE_VARIANCE_THRESHOLD) {
         const sign = e.variance > 0 ? '+' : '';
         flags.push({
           kind: 'Schedule Variance',
@@ -564,7 +593,7 @@
 
       const variance = e.variance;
       let varianceTag = '';
-      if (e.scheduled_hours > 0 && Math.abs(variance) > SCHEDULE_VARIANCE_THRESHOLD) {
+      if (e.scheduled_hours > 0 && Math.abs(e.tolerated_variance) > SCHEDULE_VARIANCE_THRESHOLD) {
         const cls = variance > 0 ? 'var-over' : 'var-under';
         const sign = variance > 0 ? '+' : '';
         varianceTag = ` <span class="var-tag ${cls}">${sign}${variance.toFixed(2)}</span>`;
