@@ -26,7 +26,7 @@ async function fetchAllScheduledShifts(startISO, endISO) {
           start_at: { start_at: startISO, end_at: endISO }
         }
       },
-      limit: 200
+      limit: 50
     };
     if (cursor) body.cursor = cursor;
 
