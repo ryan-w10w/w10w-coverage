@@ -135,12 +135,18 @@ exports.handler = async (event) => {
       const startedAt = s.start_at;
       const endedAt = s.end_at;
       const memberId = s.team_member_id || s.employee_id;
-      const jobTitle = jobs[s.job_id] || (members[memberId]?.jobs?.[0]) || 'Unknown';
+      // Square sets the per-shift job title directly at s.wage.title. Prefer that over the
+      // team member's primary job, which is what causes single-role display when a person
+      // worked multiple roles in the week (e.g. a Server who covered a Training shift).
+      const jobTitle = s.wage?.title
+        || jobs[s.wage?.job_id]
+        || jobs[s.job_id]
+        || (members[memberId]?.jobs?.[0])
+        || 'Unknown';
       const role = ROLE_MAP[jobTitle] || 'non_tipped';
       const hours = endedAt
         ? (new Date(endedAt) - new Date(startedAt)) / 3600000
         : null;
-      // Subtract paid breaks if Square tracks them (it doesn't auto for unpaid breaks here; left as-is).
       return {
         shift_id: s.id,
         team_member_id: memberId,

@@ -36,9 +36,9 @@ async function fetchAllScheduledShifts(startISO, endISO) {
       body: JSON.stringify(body)
     });
     if (!r.ok) {
-      // Auth or feature-flag failure: return what we have rather than blowing up the whole pull
-      console.error(`Scheduled shifts API ${r.status}: ${await r.text()}`);
-      return { shifts, error: `Square scheduled-shifts API returned ${r.status}` };
+      const errBody = await r.text();
+      console.error(`Scheduled shifts API ${r.status}: ${errBody}`);
+      return { shifts, error: `Square scheduled-shifts API returned ${r.status}: ${errBody.slice(0, 300)}` };
     }
     const data = await r.json();
     if (data.scheduled_shifts) shifts.push(...data.scheduled_shifts);
