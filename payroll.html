@@ -282,7 +282,7 @@
     <section>
       <h2>Square Payroll Entry</h2>
       <p style="font-size: 13px; color: var(--muted); margin-top: 0;">
-        Card tips per employee for the period. Enter these as Tips in Square Payroll. Cash tips are reported separately for tax declaration only — staff already received the cash.
+        Total Tips per employee for the period. Both card and cash tips are paid through Square Payroll &mdash; enter the Total Tips amount per employee.
       </p>
       <div class="export-block">
         <h3>Copy &amp; Paste Block</h3>
@@ -396,14 +396,21 @@
     shifts.forEach(s => {
       if (s.hours == null) return;
       if (!employeeTotals[s.name]) {
-        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, role: s.role };
+        employeeTotals[s.name] = { hours: 0, weighted_hours: 0, card_tips: 0, cash_tips: 0, job_title_hours: {} };
       }
       employeeTotals[s.name].hours += s.hours;
       employeeTotals[s.name].weighted_hours += s.hours * (s.tip_multiplier || 0);
-      // Promote role to most-tipped role seen (so a server who also trained shows as Server)
-      if ((TIP_MULTIPLIER[s.role] || 0) > (TIP_MULTIPLIER[employeeTotals[s.name].role] || 0)) {
-        employeeTotals[s.name].role = s.role;
-      }
+      // Track each job_title's hours so we can display the full role mix (e.g. "Server, Host")
+      const title = s.job_title || 'Unknown';
+      employeeTotals[s.name].job_title_hours[title] = (employeeTotals[s.name].job_title_hours[title] || 0) + s.hours;
+    });
+
+    // Build role display string per employee: actual Square titles, sorted by hours descending
+    Object.values(employeeTotals).forEach(e => {
+      e.role_display = Object.entries(e.job_title_hours)
+        .sort((a, b) => b[1] - a[1])
+        .map(([title]) => title)
+        .join(', ');
     });
 
     // --- Open shifts (no clock-out) ---
@@ -451,7 +458,7 @@
         card_pool: tipsByDay[date] || 0,
         cash_tips: cashByDate[date]?.cash_tips || 0,
         weighted_hours: dayShifts.reduce((a, s) => a + s.hours * (s.tip_multiplier || 0), 0),
-        shifts: dayShifts.map(s => ({ name: s.name, role: s.role, hours: s.hours }))
+        shifts: dayShifts.map(s => ({ name: s.name, role: s.role, job_title: s.job_title, hours: s.hours }))
       });
     });
 
@@ -471,10 +478,11 @@
   function renderSummary(payroll, raw) {
     const totalHours = Object.values(payroll.employeeTotals).reduce((a, e) => a + e.hours, 0);
     const totalCard = (raw.tips.totals?.card_tips_cents || 0) / 100;
-    const totalCashTips = Object.values(payroll.employeeTotals).reduce((a, e) => a + e.cash_tips, 0);
-    const tippedHours = Object.values(payroll.employeeTotals)
-      .filter(e => (TIP_MULTIPLIER[e.role] || 0) > 0)
-      .reduce((a, e) => a + e.hours, 0);
+    const totalCashTips = (raw.cash.totals?.cash_tips || 0);
+    // Tipped hours = actual shift hours where tip_multiplier > 0 (correctly handles employees with mixed roles)
+    const tippedHours = (raw.labor.shifts || [])
+      .filter(s => (s.tip_multiplier || 0) > 0 && s.hours)
+      .reduce((a, s) => a + s.hours, 0);
     const blendedRate = tippedHours > 0 ? (totalCard + totalCashTips) / tippedHours : 0;
 
     document.getElementById('sumHours').textContent = hours(totalHours);
@@ -508,7 +516,7 @@
       return `
         <tr>
           <td>${name}</td>
-          <td>${roleLabel(e.role)}</td>
+          <td>${e.role_display}</td>
           <td class="num">${hours(e.hours)}</td>
           <td class="num">${dollars(e.card_tips)}</td>
           <td class="num">${dollars(e.cash_tips)}</td>
@@ -541,7 +549,7 @@
           ${d.shifts.map(s => `
             <tr>
               <td>${s.name}</td>
-              <td>${roleLabel(s.role)}</td>
+              <td>${s.job_title || roleLabel(s.role)}</td>
               <td class="num">${hours(s.hours)}</td>
             </tr>
           `).join('')}
@@ -555,20 +563,21 @@
       .filter(([, e]) => e.card_tips > 0 || e.cash_tips > 0 || e.hours > 0)
       .sort((a, b) => a[0].localeCompare(b[0]));
 
-    const colWidths = [22, 14, 8, 12, 12];
+    const colWidths = [22, 22, 7, 11, 11, 11];
     const pad = (s, w) => s.padEnd(w);
     const padR = (s, w) => s.padStart(w);
 
-    const header = pad('Employee', colWidths[0]) + pad('Role', colWidths[1]) + padR('Hrs', colWidths[2]) + padR('Card Tips', colWidths[3]) + padR('Cash Tips', colWidths[4]);
+    const header = pad('Employee', colWidths[0]) + pad('Role', colWidths[1]) + padR('Hrs', colWidths[2]) + padR('Card', colWidths[3]) + padR('Cash', colWidths[4]) + padR('Total', colWidths[5]);
     const rule = '-'.repeat(colWidths.reduce((a, b) => a + b, 0));
     const lines = [header, rule];
     sorted.forEach(([name, e]) => {
       lines.push(
         pad(name.slice(0, colWidths[0] - 1), colWidths[0]) +
-        pad(roleLabel(e.role).slice(0, colWidths[1] - 1), colWidths[1]) +
+        pad((e.role_display || '').slice(0, colWidths[1] - 1), colWidths[1]) +
         padR(hours(e.hours), colWidths[2]) +
         padR(dollars(e.card_tips), colWidths[3]) +
-        padR(dollars(e.cash_tips), colWidths[4])
+        padR(dollars(e.cash_tips), colWidths[4]) +
+        padR(dollars(e.card_tips + e.cash_tips), colWidths[5])
       );
     });
     document.getElementById('exportBlock').textContent = lines.join('\n');
@@ -582,7 +591,7 @@
     sorted.forEach(([name, e]) => {
       lines.push([
         `"${name}"`,
-        roleLabel(e.role),
+        `"${e.role_display || ''}"`,
         e.hours.toFixed(2),
         e.card_tips.toFixed(2),
         e.cash_tips.toFixed(2),
