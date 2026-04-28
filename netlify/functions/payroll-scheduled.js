@@ -44,6 +44,9 @@ async function fetchAllScheduledShifts(startISO, endISO, opts = {}) {
   const maxPages = opts.maxPages || 100;
   do {
     const filter = { location_ids: [LOCATION_ID] };
+    if (opts.teamMemberIds) {
+      filter.team_member_ids = opts.teamMemberIds;
+    }
     if (!opts.nofilter) {
       filter.start_at = { start_at: startISO, end_at: endISO };
     }
@@ -72,6 +75,18 @@ async function fetchAllScheduledShifts(startISO, endISO, opts = {}) {
   return { shifts, error: null, pages };
 }
 
+async function fetchByTeamMember(startISO, endISO, members) {
+  // Fan out per-employee queries in parallel. Workaround for Square's location-level cap.
+  const memberIds = Object.keys(members);
+  const results = await Promise.all(
+    memberIds.map(async (id) => {
+      const { shifts } = await fetchAllScheduledShifts(startISO, endISO, { teamMemberIds: [id], maxPages: 5 });
+      return shifts;
+    })
+  );
+  return results.flat();
+}
+
 async function fetchTeamMembers() {
   const r = await fetch(`${SQUARE_BASE}/v2/team-members/search`, {
     method: 'POST',
@@ -96,20 +111,29 @@ function parseISODuration(d) {
 
 exports.handler = async (event) => {
   try {
-    const { start, end, debug, nofilter } = event.queryStringParameters || {};
+    const { start, end, debug, nofilter, strategy } = event.queryStringParameters || {};
     if (!start || !end) {
       return { statusCode: 400, body: JSON.stringify({ error: 'start and end (YYYY-MM-DD) required' }) };
     }
     const startISO = nyToUTCISO(start, 0, 0, 0);
     const endISO = nyToUTCISO(end, 23, 59, 59);
 
-    // nofilter=1 bypasses Square's date filter entirely (debug only — too slow for prod)
-    const fetchOpts = nofilter ? { nofilter: true, maxPages: 30 } : {};
+    const members = await fetchTeamMembers();
 
-    const [{ shifts, error, pages }, members] = await Promise.all([
-      fetchAllScheduledShifts(startISO, endISO, fetchOpts),
-      fetchTeamMembers()
-    ]);
+    let shifts, error, pages;
+    if (strategy === 'byteam') {
+      // Per-team-member query strategy: fan out one search per employee,
+      // bypasses any per-location cap Square may impose.
+      shifts = await fetchByTeamMember(startISO, endISO, members);
+      error = null;
+      pages = -1;
+    } else {
+      const fetchOpts = nofilter ? { nofilter: true, maxPages: 30 } : {};
+      const result = await fetchAllScheduledShifts(startISO, endISO, fetchOpts);
+      shifts = result.shifts;
+      error = result.error;
+      pages = result.pages;
+    }
 
     const byEmployee = {};
     let countedShifts = 0;
@@ -226,6 +250,7 @@ exports.handler = async (event) => {
       );
       result.debug = {
         window_utc: { start: startISO, end: endISO },
+        strategy: strategy || 'location',
         pages_fetched: pages,
         nofilter_mode: !!nofilter,
         date_distribution: sortedDateCounts,
