@@ -37,17 +37,18 @@ function localDateOf(isoString) {
   }).format(new Date(isoString));
 }
 
-async function fetchAllScheduledShifts(startISO, endISO) {
+async function fetchAllScheduledShifts(startISO, endISO, opts = {}) {
   const shifts = [];
   let cursor;
+  let pages = 0;
+  const maxPages = opts.maxPages || 100;
   do {
+    const filter = { location_ids: [LOCATION_ID] };
+    if (!opts.nofilter) {
+      filter.start_at = { start_at: startISO, end_at: endISO };
+    }
     const body = {
-      query: {
-        filter: {
-          location_ids: [LOCATION_ID],
-          start_at: { start_at: startISO, end_at: endISO }
-        }
-      },
+      query: { filter },
       limit: 50
     };
     if (cursor) body.cursor = cursor;
@@ -60,13 +61,15 @@ async function fetchAllScheduledShifts(startISO, endISO) {
     if (!r.ok) {
       const errBody = await r.text();
       console.error(`Scheduled shifts API ${r.status}: ${errBody}`);
-      return { shifts, error: `Square scheduled-shifts API returned ${r.status}: ${errBody.slice(0, 300)}` };
+      return { shifts, error: `Square scheduled-shifts API returned ${r.status}: ${errBody.slice(0, 300)}`, pages };
     }
     const data = await r.json();
     if (data.scheduled_shifts) shifts.push(...data.scheduled_shifts);
     cursor = data.cursor;
+    pages += 1;
+    if (pages >= maxPages) break;
   } while (cursor);
-  return { shifts, error: null };
+  return { shifts, error: null, pages };
 }
 
 async function fetchTeamMembers() {
@@ -93,15 +96,18 @@ function parseISODuration(d) {
 
 exports.handler = async (event) => {
   try {
-    const { start, end, debug } = event.queryStringParameters || {};
+    const { start, end, debug, nofilter } = event.queryStringParameters || {};
     if (!start || !end) {
       return { statusCode: 400, body: JSON.stringify({ error: 'start and end (YYYY-MM-DD) required' }) };
     }
     const startISO = nyToUTCISO(start, 0, 0, 0);
     const endISO = nyToUTCISO(end, 23, 59, 59);
 
-    const [{ shifts, error }, members] = await Promise.all([
-      fetchAllScheduledShifts(startISO, endISO),
+    // nofilter=1 bypasses Square's date filter entirely (debug only — too slow for prod)
+    const fetchOpts = nofilter ? { nofilter: true, maxPages: 30 } : {};
+
+    const [{ shifts, error, pages }, members] = await Promise.all([
+      fetchAllScheduledShifts(startISO, endISO, fetchOpts),
       fetchTeamMembers()
     ]);
 
@@ -220,6 +226,8 @@ exports.handler = async (event) => {
       );
       result.debug = {
         window_utc: { start: startISO, end: endISO },
+        pages_fetched: pages,
+        nofilter_mode: !!nofilter,
         date_distribution: sortedDateCounts,
         no_details_samples: noDetailsSamples,
         in_range_samples: inRangeSamples,
