@@ -190,10 +190,40 @@ exports.handler = async (event) => {
       warning: error
     };
     if (debug) {
+      // Build date distribution: what dates is Square actually returning?
+      const dateCounts = {};
+      const outOfRangeSamples = [];
+      shifts.forEach(s => {
+        const d = s.published_shift_details || s.draft_shift_details;
+        if (d && d.start_at) {
+          const localDate = localDateOf(d.start_at);
+          dateCounts[localDate] = (dateCounts[localDate] || 0) + 1;
+          // Capture a few out-of-range PUBLISHED shifts to inspect their dates
+          if (s.published_shift_details && outOfRangeSamples.length < 5) {
+            const ms = new Date(s.published_shift_details.start_at).getTime();
+            if (ms < winStart || ms > winEnd) {
+              outOfRangeSamples.push({
+                id: s.id,
+                start_at: s.published_shift_details.start_at,
+                end_at: s.published_shift_details.end_at,
+                team_member_id: s.team_member_id || s.published_shift_details.team_member_id,
+                version: s.version,
+                updated_at: s.updated_at
+              });
+            }
+          }
+        }
+      });
+      // Sort dates ascending for readability
+      const sortedDateCounts = Object.fromEntries(
+        Object.entries(dateCounts).sort(([a], [b]) => a.localeCompare(b))
+      );
       result.debug = {
         window_utc: { start: startISO, end: endISO },
+        date_distribution: sortedDateCounts,
         no_details_samples: noDetailsSamples,
         in_range_samples: inRangeSamples,
+        out_of_range_samples: outOfRangeSamples,
         member_count: Object.keys(members).length
       };
     }
