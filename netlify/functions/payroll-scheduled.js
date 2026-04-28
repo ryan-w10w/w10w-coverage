@@ -93,7 +93,7 @@ function parseISODuration(d) {
 
 exports.handler = async (event) => {
   try {
-    const { start, end } = event.queryStringParameters || {};
+    const { start, end, debug } = event.queryStringParameters || {};
     if (!start || !end) {
       return { statusCode: 400, body: JSON.stringify({ error: 'start and end (YYYY-MM-DD) required' }) };
     }
@@ -112,6 +112,9 @@ exports.handler = async (event) => {
     let skippedBogusDuration = 0;
     let skippedOutOfRange = 0;
     let skippedDuplicate = 0;
+    let skippedNoDetails = 0;
+    const noDetailsSamples = [];
+    const inRangeSamples = [];
 
     const winStart = new Date(startISO).getTime();
     const winEnd = new Date(endISO).getTime();
@@ -123,7 +126,11 @@ exports.handler = async (event) => {
       if (s.id) seenIds.add(s.id);
 
       const details = s.published_shift_details;
-      if (!details || !details.start_at || !details.end_at) return;
+      if (!details || !details.start_at || !details.end_at) {
+        skippedNoDetails += 1;
+        if (debug && noDetailsSamples.length < 3) noDetailsSamples.push(s);
+        return;
+      }
 
       // Defensive client-side date filter: Square's filter is unreliable here,
       // so we re-check that the shift's published start time falls in our window.
@@ -132,6 +139,8 @@ exports.handler = async (event) => {
         skippedOutOfRange += 1;
         return;
       }
+
+      if (debug && inRangeSamples.length < 2) inRangeSamples.push(s);
 
       // Resolve team member. Unassigned slots have no team_member_id and are skipped.
       const memberId = s.team_member_id || details.team_member_id;
@@ -166,22 +175,33 @@ exports.handler = async (event) => {
       countedShifts += 1;
     });
 
+    const result = {
+      employees: byEmployee,
+      scheduled_shifts: countedShifts,
+      raw_shifts_received: shifts.length,
+      skipped: {
+        unassigned: skippedUnassigned,
+        unknown_member: skippedUnknownMember,
+        bogus_duration: skippedBogusDuration,
+        out_of_range: skippedOutOfRange,
+        duplicate: skippedDuplicate,
+        no_details: skippedNoDetails
+      },
+      warning: error
+    };
+    if (debug) {
+      result.debug = {
+        window_utc: { start: startISO, end: endISO },
+        no_details_samples: noDetailsSamples,
+        in_range_samples: inRangeSamples,
+        member_count: Object.keys(members).length
+      };
+    }
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-      body: JSON.stringify({
-        employees: byEmployee,
-        scheduled_shifts: countedShifts,
-        raw_shifts_received: shifts.length,
-        skipped: {
-          unassigned: skippedUnassigned,
-          unknown_member: skippedUnknownMember,
-          bogus_duration: skippedBogusDuration,
-          out_of_range: skippedOutOfRange,
-          duplicate: skippedDuplicate
-        },
-        warning: error
-      })
+      body: JSON.stringify(result)
     };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
