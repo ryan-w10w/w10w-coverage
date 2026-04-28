@@ -1,9 +1,17 @@
 // /api/payroll-scheduled?start=YYYY-MM-DD&end=YYYY-MM-DD
 // Fetches PUBLISHED scheduled shifts from Square Labor.
+//
+// IMPORTANT: Square's location-level /v2/labor/scheduled-shifts/search endpoint is broken.
+// It silently caps responses at ~107 shifts per location and excludes recently-completed weeks
+// regardless of any filter applied. Confirmed via debugging on 2026-04-28.
+// Workaround: query per team member (which works correctly), then aggregate.
+// Cost: ~25 parallel API calls per pull instead of 1, ~5-10 seconds instead of <1.
+//
 // Filters out:
 //   - Unassigned shift slots (template shifts published before staff are assigned)
 //   - Shifts where the team_member_id doesn't resolve to a known team member
 //   - Bogus durations (>24h or negative — usually old recurring templates)
+//   - Duplicates (per-member queries return overlapping shifts when employees share IDs across queries)
 // Returns per-employee weekly totals AND per-employee per-day breakdown.
 // Daily breakdown enables 45-min daily tolerance in the front-end variance check.
 
@@ -76,10 +84,13 @@ async function fetchAllScheduledShifts(startISO, endISO, opts = {}) {
 }
 
 async function fetchByTeamMember(startISO, endISO, members) {
-  // Fan out per-employee queries in parallel. Workaround for Square's location-level cap.
-  const memberIds = Object.keys(members);
+  // Fan out per-employee queries in parallel. Workaround for Square's broken location-level
+  // scheduled-shifts/search endpoint, which silently caps at ~107 shifts regardless of filter.
+  // Per-member queries are uncapped and return correct data.
+  // Filter to ACTIVE members to keep latency manageable (~25 calls for W10W vs ~100 for all-time staff).
+  const activeIds = Object.keys(members).filter(id => members[id].status === 'ACTIVE');
   const results = await Promise.all(
-    memberIds.map(async (id) => {
+    activeIds.map(async (id) => {
       const { shifts } = await fetchAllScheduledShifts(startISO, endISO, { teamMemberIds: [id], maxPages: 5 });
       return shifts;
     })
@@ -88,6 +99,9 @@ async function fetchByTeamMember(startISO, endISO, members) {
 }
 
 async function fetchTeamMembers() {
+  // Returns map of id -> { name, status }. We use ACTIVE members for the fan-out
+  // to keep latency reasonable; Square's per-location query is broken and per-member
+  // is the only reliable path.
   const r = await fetch(`${SQUARE_BASE}/v2/team-members/search`, {
     method: 'POST',
     headers: squareHeaders(),
@@ -97,7 +111,10 @@ async function fetchTeamMembers() {
   const data = await r.json();
   const map = {};
   (data.team_members || []).forEach(tm => {
-    map[tm.id] = [tm.given_name, tm.family_name].filter(Boolean).join(' ').trim() || 'Unknown';
+    map[tm.id] = {
+      name: [tm.given_name, tm.family_name].filter(Boolean).join(' ').trim() || 'Unknown',
+      status: tm.status || 'ACTIVE'
+    };
   });
   return map;
 }
@@ -111,7 +128,7 @@ function parseISODuration(d) {
 
 exports.handler = async (event) => {
   try {
-    const { start, end, debug, nofilter, strategy } = event.queryStringParameters || {};
+    const { start, end, debug } = event.queryStringParameters || {};
     if (!start || !end) {
       return { statusCode: 400, body: JSON.stringify({ error: 'start and end (YYYY-MM-DD) required' }) };
     }
@@ -120,20 +137,10 @@ exports.handler = async (event) => {
 
     const members = await fetchTeamMembers();
 
-    let shifts, error, pages;
-    if (strategy === 'byteam') {
-      // Per-team-member query strategy: fan out one search per employee,
-      // bypasses any per-location cap Square may impose.
-      shifts = await fetchByTeamMember(startISO, endISO, members);
-      error = null;
-      pages = -1;
-    } else {
-      const fetchOpts = nofilter ? { nofilter: true, maxPages: 30 } : {};
-      const result = await fetchAllScheduledShifts(startISO, endISO, fetchOpts);
-      shifts = result.shifts;
-      error = result.error;
-      pages = result.pages;
-    }
+    // Per-team-member query is the only reliable strategy. Square's location-level
+    // scheduled-shifts endpoint returns at most ~107 shifts and excludes recent past weeks.
+    const shifts = await fetchByTeamMember(startISO, endISO, members);
+    const error = null;
 
     const byEmployee = {};
     let countedShifts = 0;
@@ -176,7 +183,7 @@ exports.handler = async (event) => {
       const memberId = s.team_member_id || details.team_member_id;
       if (!memberId) { skippedUnassigned += 1; return; }
 
-      const name = members[memberId];
+      const name = members[memberId]?.name;
       if (!name) { skippedUnknownMember += 1; return; }
 
       // Sanity-check duration. Skip multi-day shifts (likely orphaned templates) and negatives.
@@ -228,7 +235,6 @@ exports.handler = async (event) => {
         if (d && d.start_at) {
           const localDate = localDateOf(d.start_at);
           dateCounts[localDate] = (dateCounts[localDate] || 0) + 1;
-          // Capture a few out-of-range PUBLISHED shifts to inspect their dates
           if (s.published_shift_details && outOfRangeSamples.length < 5) {
             const ms = new Date(s.published_shift_details.start_at).getTime();
             if (ms < winStart || ms > winEnd) {
@@ -244,20 +250,19 @@ exports.handler = async (event) => {
           }
         }
       });
-      // Sort dates ascending for readability
       const sortedDateCounts = Object.fromEntries(
         Object.entries(dateCounts).sort(([a], [b]) => a.localeCompare(b))
       );
+      const activeMembers = Object.values(members).filter(m => m.status === 'ACTIVE').length;
       result.debug = {
         window_utc: { start: startISO, end: endISO },
-        strategy: strategy || 'location',
-        pages_fetched: pages,
-        nofilter_mode: !!nofilter,
+        strategy: 'byteam',
+        active_members_queried: activeMembers,
+        total_members: Object.keys(members).length,
         date_distribution: sortedDateCounts,
         no_details_samples: noDetailsSamples,
         in_range_samples: inRangeSamples,
-        out_of_range_samples: outOfRangeSamples,
-        member_count: Object.keys(members).length
+        out_of_range_samples: outOfRangeSamples
       };
     }
 
